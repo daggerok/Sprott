@@ -1,0 +1,140 @@
+{
+ "ticker": "URNM",
+ "name": "Sprott Uranium Miners ETF",
+ "category": "Critical Materials",
+ "categoryPath": "Critical Materials",
+ "source": {
+  "fundPage": "https://sprottetfs.com/urnm-sprott-uranium-miners-etf/",
+  "catalog": "https://sprottetfs.com/sitemap.xml",
+  "holdingsDownload": "https://sprottetfs.com/urnm-sprott-uranium-miners-etf/",
+  "holdingsSource": "sprottetfs.com \"Download All Holdings\" CSV",
+  "historySource": "Yahoo Finance daily market-price closes / adjusted closes (not official NAV)",
+  "yahooChart": "https://query1.finance.yahoo.com/v8/finance/chart/URNM",
+  "provider": "sprottetfs.com official fund pages; SEC EDGAR N-PORT-P holdings fallback; Yahoo Finance market-history/dividend fallback"
+ },
+ "providerIds": {
+  "fundPage": "https://sprottetfs.com/urnm-sprott-uranium-miners-etf/"
+ },
+ "legalStructure": null,
+ "identifiers": {
+  "cusip": "85208P303",
+  "isin": "US85208P3038",
+  "indexTicker": "URNMX"
+ },
+ "inception": {
+  "fundInceptionDate": "2019-12-03",
+  "shareClassInceptionDate": null,
+  "exchange": "NYSE Arca"
+ },
+ "expenseRatio": {
+  "display": "0.75%",
+  "value": 0.75,
+  "gross": 0.75,
+  "net": 0.75
+ },
+ "nav": {
+  "display": "$47.63",
+  "value": 47.63,
+  "asOfDate": "Sep 30 2026"
+ },
+ "marketPrice": {
+  "display": "$47.50",
+  "value": 47.5,
+  "asOfDate": "Sep 30 2026"
+ },
+ "premiumDiscount": {
+  "display": "-0.27%",
+  "value": -0.27
+ },
+ "aum": {
+  "display": "$1.84 Billion",
+  "value": 1840000000,
+  "asOfDate": "Sep 30 2026",
+  "source": "sprottetfs.com fund page (Total Net Asset Value)"
+ },
+ "yields": {
+  "dividendYield": 3.66,
+  "dividendYieldText": "3.66%",
+  "dividendYieldKind": "indicated (latest distribution x payments per year / market price)",
+  "secYield": null,
+  "secYieldText": "—",
+  "secYieldKind": "not published",
+  "unsubsidizedSecYield": null
+ },
+ "returns": {
+  "monthEnd": {
+   "asOfDate": "Sep 30 2026",
+   "ytd": -13.32,
+   "yr1": -18.52,
+   "yr3": 3.44,
+   "yr5": 8.01,
+   "yr10": null,
+   "sinceInception": 25.01,
+   "mo1": -16.37,
+   "qtd": -9.16
+  },
+  "quarterEnd": {
+   "asOfDate": "Sep 30 2026",
+   "ytd": -13.32,
+   "yr1": -18.52,
+   "yr3": 3.44,
+   "yr5": 8.01,
+   "yr10": null,
+   "sinceInception": 25.01,
+   "mo1": -16.37,
+   "qtd": -9.16
+  },
+  "derivedFrom": "official sprottetfs.com month-end/quarter-end average annual total returns (NAV); missing metrics derived from Yahoo adjusted closes at the same reporting date"
+ },
+ "distributions": {
+  "frequency": "Annually",
+  "paymentsPerYear": 1,
+  "headers": [
+   "Ex-Date",
+   "Amount"
+  ],
+  "rows": [
+   [
+    "12/28/2020",
+    "1.1"
+   ],
+   [
+    "12/28/2021",
+    "4.82"
+   ],
+   [
+    "12/14/2023",
+    "1.75"
+   ],
+   [
+    "12/12/2024",
+    "1.28"
+   ],
+   [
+    "12/18/2025",
+    "1.74"
+   ]
+  ]
+ },
+ "holdings": {
+  "pages": [
+   "holdings/001.json"
+  ],
+  "pageSize": 250,
+  "totalRows": 27,
+  "asOfDate": "2026-09-30",
+  "asOf": "Sep 30 2026",
+  "source": "sprottetfs.com \"Download All Holdings\" CSV",
+  "status": "available"
+ },
+ "history": {
+  "pages": [
+   "history/001.json",
+   "history/002.json"
+  ],
+  "pageSize": 1000,
+  "totalRows": 1715,
+  "asOf": "Oct 01 2026",
+  "source": "Yahoo Finance daily market-price closes / adjusted closes (not official NAV)"
+ }
+}

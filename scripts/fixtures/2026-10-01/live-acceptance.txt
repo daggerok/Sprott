@@ -1,0 +1,38 @@
+live acceptance — 2026-10-01T23:10:11Z
+run: 36939293512 commit: e3f1857a24c4fe9262b63895c1a62f9748f3bf2e runner: GitHub Actions 1000008651 bun: 1.4.2
+
+== isolated acceptance: TICKERS="URNM URNJ SETM" VERBOSE=1 bun scripts/update-data.ts ==
+exit codes: run1=0 run2=0   byte-stable: yes
+config: 
+files: 11   rows: 11 json files
+hashes (both runs):
+a48806bf8bfec7d414ad5ed4e82b3be19317d6fc876345b8b0cac577a2af536a  api/sprott/funds/SETM/history/001.json
+0ea5661f6ff351dc0830d435f094f750e4843005b0d133c4e2727ae0709ff6b9  api/sprott/funds/SETM/holdings/001.json
+6f20942971dc8dbc6323180d7f6c1d1a7e75ec4ba5f4c49ad8021a7a2f456f6f  api/sprott/funds/SETM/meta.json
+b9802de2804e630556f63aadd0e8b37d4fcdf22e1fe12f5a5ebddf5ea63334a1  api/sprott/funds/URNJ/history/001.json
+2ab283959fb81baeb18fa1b5c7ac0e972756cad7767d69a33a12606c28aa9e7b  api/sprott/funds/URNJ/holdings/001.json
+25cccd374cb420486ea3feb7b624d715164e8eab549036e779c47d9ebbea2514  api/sprott/funds/URNJ/meta.json
+204b7a73502cb2e61671c85a2e32ea50cdd7b9f1bd351f01e46f19a5c04ecfda  api/sprott/funds/URNM/history/001.json
+c1e614d296c668dc0c5cf23d1ea34dae342ead0d93d7d1343e9b3721ddb88fea  api/sprott/funds/URNM/history/002.json
+efca85f0b702c887897ba04fe377021c78efc16fdb4e2d3f3ba97abf7dc10c5a  api/sprott/funds/URNM/holdings/001.json
+4702aff994af71c3e7cc4ea7d0c059cb5b0101faa7384d8e4b71fa33beddb8f4  api/sprott/funds/URNM/meta.json
+6ced3ca4209bc65dadcf1572d4a6a4c962e5eb1ef5aeb7e9ead88d38fde8797f  api/sprott/index.json
+-- fund reporter lines --
+-- provider warnings / fallbacks --
+              EDGAR_FALLBACK=true
+[ catalog  ] 13 Sprott ETFs (sprottetfs.com fund navigation / published fallback)
+
+== full generation: bun scripts/update-data.ts (all 13 funds) ==
+byte-stable on rerun: yes
+config: 
+[ catalog  ] 13 Sprott ETFs (sprottetfs.com fund navigation / published fallback)
+[ done     ] 13 funds processed, 0 skipped, 0 failures
+[ done     ] counts: 13 funds / 736 holdings rows / 14111 history rows
+-- fund reporter lines (full) --
+[ 10/13  ] SGDM  updated   history=3073 holdings=49 divs=12 netAssets=$654.24 Million div=0.99
+[ 11/13  ] SLVR  updated   history=430 holdings=78 divs=1 netAssets=$695.63 Million
+[ 12/13  ] URNJ  updated   history=919 holdings=42 divs=3 netAssets=$310.25 Million div=8.23
+[ 13/13  ] URNM  updated   history=1715 holdings=27 divs=5 netAssets=$1.84 Billion div=3.66
+-- provider warnings / fallbacks (full) --
+              EDGAR_FALLBACK=true
+[ catalog  ] 13 Sprott ETFs (sprottetfs.com fund navigation / published fallback)

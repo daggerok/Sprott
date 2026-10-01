@@ -1,0 +1,165 @@
+{
+ "ticker": "SGDJ",
+ "name": "Sprott Junior Gold Miners ETF",
+ "category": "Precious Metals",
+ "categoryPath": "Precious Metals",
+ "source": {
+  "fundPage": "https://sprottetfs.com/sgdj-sprott-junior-gold-miners-etf/",
+  "catalog": "https://sprottetfs.com/sitemap.xml",
+  "holdingsDownload": "https://sprottetfs.com/sgdj-sprott-junior-gold-miners-etf/",
+  "holdingsSource": "sprottetfs.com \"Download All Holdings\" CSV",
+  "historySource": "Yahoo Finance daily market-price closes / adjusted closes (not official NAV)",
+  "yahooChart": "https://query1.finance.yahoo.com/v8/finance/chart/SGDJ",
+  "provider": "sprottetfs.com official fund pages; SEC EDGAR N-PORT-P holdings fallback; Yahoo Finance market-history/dividend fallback"
+ },
+ "providerIds": {
+  "fundPage": "https://sprottetfs.com/sgdj-sprott-junior-gold-miners-etf/"
+ },
+ "legalStructure": null,
+ "identifiers": {
+  "cusip": "85210B 201",
+  "isin": "US85210B2016",
+  "indexTicker": "SOLJGMFT"
+ },
+ "inception": {
+  "fundInceptionDate": "2015-03-30",
+  "shareClassInceptionDate": null,
+  "exchange": "NYSE Arca"
+ },
+ "expenseRatio": {
+  "display": "0.50%",
+  "value": 0.5,
+  "gross": 0.5,
+  "net": 0.5
+ },
+ "nav": {
+  "display": "$89.03",
+  "value": 89.03,
+  "asOfDate": "Sep 30 2026"
+ },
+ "marketPrice": {
+  "display": "$88.55",
+  "value": 88.55,
+  "asOfDate": "Sep 30 2026"
+ },
+ "premiumDiscount": {
+  "display": "-0.54%",
+  "value": -0.54
+ },
+ "aum": {
+  "display": "$336.53 Million",
+  "value": 336530000,
+  "asOfDate": "Sep 30 2026",
+  "source": "sprottetfs.com fund page (Total Net Asset Value)"
+ },
+ "yields": {
+  "dividendYield": 7.95,
+  "dividendYieldText": "7.95%",
+  "dividendYieldKind": "indicated (latest distribution x payments per year / market price)",
+  "secYield": null,
+  "secYieldText": "—",
+  "secYieldKind": "not published",
+  "unsubsidizedSecYield": null
+ },
+ "returns": {
+  "monthEnd": {
+   "asOfDate": "Sep 30 2026",
+   "ytd": 5.2,
+   "yr1": 33.74,
+   "yr3": 60.42,
+   "yr5": 25.01,
+   "yr10": 11.04,
+   "sinceInception": 14.8,
+   "mo1": -9.97,
+   "qtd": 18.91
+  },
+  "quarterEnd": {
+   "asOfDate": "Sep 30 2026",
+   "ytd": 5.2,
+   "yr1": 33.74,
+   "yr3": 60.42,
+   "yr5": 25.01,
+   "yr10": 11.04,
+   "sinceInception": 14.8,
+   "mo1": -9.97,
+   "qtd": 18.91
+  },
+  "derivedFrom": "official sprottetfs.com month-end/quarter-end average annual total returns (NAV); missing metrics derived from Yahoo adjusted closes at the same reporting date"
+ },
+ "distributions": {
+  "frequency": "Annually",
+  "paymentsPerYear": 1,
+  "headers": [
+   "Ex-Date",
+   "Amount"
+  ],
+  "rows": [
+   [
+    "12/23/2015",
+    "0.163"
+   ],
+   [
+    "12/21/2016",
+    "0.16"
+   ],
+   [
+    "12/21/2017",
+    "0.56"
+   ],
+   [
+    "12/20/2018",
+    "0.05"
+   ],
+   [
+    "12/19/2019",
+    "0.22"
+   ],
+   [
+    "12/16/2020",
+    "0.97"
+   ],
+   [
+    "12/15/2021",
+    "0.9"
+   ],
+   [
+    "12/15/2022",
+    "0.71"
+   ],
+   [
+    "12/14/2023",
+    "1.34"
+   ],
+   [
+    "12/12/2024",
+    "2.18"
+   ],
+   [
+    "12/18/2025",
+    "7.04"
+   ]
+  ]
+ },
+ "holdings": {
+  "pages": [
+   "holdings/001.json"
+  ],
+  "pageSize": 250,
+  "totalRows": 32,
+  "asOfDate": "2026-09-30",
+  "asOf": "Sep 30 2026",
+  "source": "sprottetfs.com \"Download All Holdings\" CSV",
+  "status": "available"
+ },
+ "history": {
+  "pages": [
+   "history/001.json",
+   "history/002.json",
+   "history/003.json"
+  ],
+  "pageSize": 1000,
+  "totalRows": 2894,
+  "asOf": "Oct 01 2026",
+  "source": "Yahoo Finance daily market-price closes / adjusted closes (not official NAV)"
+ }
+}
