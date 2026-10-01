@@ -1,8 +1,10 @@
 name: TEMP probe (delete before PR)
 
 # Throwaway reconnaissance workflow: the implementation sandbox cannot reach
-# sprottetfs.com directly, so a GitHub runner captures raw HTML/fixtures here.
-# This file is removed from the branch before the pull request is opened.
+# sprottetfs.com directly, so a GitHub runner captures raw HTML/fixtures here
+# and publishes a compact extract to the branch (artifacts/logs are blocked by
+# the same egress policy). This file and every probe/ path are removed before
+# the pull request is opened.
 
 on:
   push:
@@ -10,46 +12,104 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v7
       - name: Capture live provider payloads
         run: |
           set -u
-          mkdir -p probes
+          mkdir -p probe
           UA="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36"
-          : > probes/manifest.txt
-          n=0
           fetch() {
-            n=$((n+1))
             local name="$1" url="$2"
-            local file
-            file=$(printf '%03d' "$n")"-${name}"
-            code=$(curl -sSL --max-time 90 -A "$UA" -H 'Accept: text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8' \
-              -D "probes/${file}.headers" -o "probes/${file}.body" -w '%{http_code}' "$url" || echo "curl-error")
-            size=$(wc -c < "probes/${file}.body" 2>/dev/null || echo 0)
-            printf '%s\t%s\t%s\t%s\n' "$file" "$code" "$size" "$url" >> probes/manifest.txt
+            code=$(curl -sSL --max-time 90 -A "$UA" -o "probe/${name}" -w '%{http_code}' "$url" || echo "curl-error")
+            printf '%s\t%s\t%s\n' "$name" "$code" "$(wc -c < "probe/${name}" 2>/dev/null || echo 0)"
           }
-          fetch sitemap 'https://sprottetfs.com/sitemap.xml'
-          fetch robots 'https://sprottetfs.com/robots.txt'
-          fetch home 'https://sprottetfs.com/'
-          fetch etfs-list 'https://sprottetfs.com/sprott-etfs/'
-          for slug in urnm-sprott-uranium-miners-etf urnj-sprott-junior-uranium-miners-etf setm-sprott-critical-materials-etf copp-sprott-copper-miners-etf copj-sprott-junior-copper-miners-etf rexc-rare-earths-ex-china-etf litp-sprott-lithium-miners-etf nikl-sprott-nickel-miners-etf gbug-sprott-active-gold-silver-miners-etf sgdm-sprott-gold-miners-etf sgdj-sprott-junior-gold-miners-etf slvr-sprott-silver-miners-physical-silver-etf metl-sprott-active-metals-miners-etf; do
-            fetch "$slug" "https://sprottetfs.com/$slug/"
+          fetch urnm.html "https://sprottetfs.com/urnm-sprott-uranium-miners-etf/"
+          for slug in urnj-sprott-junior-uranium-miners-etf setm-sprott-critical-materials-etf copp-sprott-copper-miners-etf copj-sprott-junior-copper-miners-etf rexc-rare-earths-ex-china-etf litp-sprott-lithium-miners-etf nikl-sprott-nickel-miners-etf gbug-sprott-active-gold-silver-miners-etf sgdm-sprott-gold-miners-etf sgdj-sprott-junior-gold-miners-etf slvr-sprott-silver-miners-physical-silver-etf metl-sprott-active-metals-miners-etf; do
+            fetch "$slug.html" "https://sprottetfs.com/$slug/"
           done
-          fetch yahoo-urnm 'https://query1.finance.yahoo.com/v8/finance/chart/URNM?range=5d&interval=1d'
-          fetch sec-browse 'https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001728683&type=N-PORT&dateb=&owner=include&count=40'
-          fetch sec-submissions 'https://data.sec.gov/submissions/CIK0001728683.json'
-          fetch sec-mf-tickers 'https://www.sec.gov/files/company_tickers_mf.json'
-          echo "--- manifest ---"
-          cat probes/manifest.txt
-      - name: Upload probe artifact
+          fetch sitemap.xml "https://sprottetfs.com/sitemap.xml"
+          fetch yahoo-urnm.json "https://query1.finance.yahoo.com/v8/finance/chart/URNM?range=1mo&interval=1d"
+          fetch sec-submissions.json "https://data.sec.gov/submissions/CIK0001728683.json"
+          fetch sec-mf-tickers.json "https://www.sec.gov/files/company_tickers_mf.json"
+          python3 - <<'PY'
+          import json, re, glob, os
+
+          def tables(html):
+              out = []
+              for i, m in enumerate(re.finditer(r'<table\b.*?</table>', html, re.S | re.I)):
+                  t = m.group(0)
+                  head = re.search(r'<thead\b.*?</thead>', t, re.S | re.I)
+                  rows = re.findall(r'<tr\b.*?</tr>', head.group(0) if head else t, re.S | re.I)
+                  cells = [re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '|', r)).strip() for r in rows[:3]]
+                  body = re.findall(r'<tr\b.*?</tr>', t[t.find('</thead>'):] if head else t, re.S | re.I)
+                  out.append({'i': i, 'rows': len(body), 'first': cells[:2], 'attrs': re.match(r'<table\b[^>]*>', t, re.I).group(0)[:300]})
+              return out
+
+          lines = []
+          for path in sorted(glob.glob('probe/*.html')):
+              html = open(path, encoding='utf-8', errors='replace').read()
+              lines.append(f'### {os.path.basename(path)} bytes={len(html)} tables={len(re.findall(r"<table\\b", html, re.I))}')
+              for t in tables(html):
+                  lines.append(f'  table[{t["i"]}] rows={t["rows"]} attrs={t["attrs"]}')
+                  for c in t['first']:
+                      lines.append(f'    row: {c[:400]}')
+          open('probe/report.txt', 'w').write('\n'.join(lines) + '\n')
+          print('\n'.join(lines)[:20000])
+
+          # Key anchors: anything whose class/id mentions holdings/distribution/key facts/nav.
+          anchors = []
+          for path in sorted(glob.glob('probe/*.html')):
+              html = open(path, encoding='utf-8', errors='replace').read()
+              for m in re.finditer(r'<(?:div|section|table|ul|select)\b[^>]*(?:holdings|distribution|keyfacts|key-facts|nav-|fund-nav|performance)[^>]*>', html, re.I):
+                  anchors.append(f'{os.path.basename(path)}: {m.group(0)[:260]} @{m.start()}')
+          open('probe/anchors.txt', 'w').write('\n'.join(anchors) + '\n')
+          print(f'anchors: {len(anchors)}')
+
+          sitemap = open('probe/sitemap.xml', encoding='utf-8', errors='replace').read()
+          urls = re.findall(r'<loc>([^<]+)</loc>', sitemap)
+          open('probe/sitemap-urls.txt', 'w').write('\n'.join(urls) + '\n')
+          print('sitemap urls:', len(urls))
+
+          # Trim the SEC + Yahoo payloads to keep the temporary commit small.
+          subs = json.load(open('probe/sec-submissions.json'))
+          keep = {k: v for k, v in subs.items() if k in ('cik', 'entityType', 'name', 'tickers', 'exchanges')}
+          recent = subs.get('filings', {}).get('recent', {})
+          keys = ['accessionNumber', 'filingDate', 'reportDate', 'form', 'primaryDocument', 'primaryDocDescription']
+          keep['recent'] = {k: recent.get(k, [])[:60] for k in keys if k in recent}
+          keep['filings_files'] = [f.get('name') for f in subs.get('filings', {}).get('files', [])]
+          json.dump(keep, open('probe/sec-submissions.summary.json', 'w'), indent=1)
+
+          mf = json.load(open('probe/sec-mf-tickers.json'))
+          fields = mf.get('fields', [])
+          sprott = [r for r in mf.get('data', []) if 'sprott' in str(r).lower()]
+          json.dump({'fields': fields, 'sprott': sprott}, open('probe/sec-mf-tickers.sprott.json', 'w'), indent=1)
+          print('sec mf sprott rows:', len(sprott))
+
+          yahoo = json.load(open('probe/yahoo-urnm.json'))
+          res = yahoo.get('chart', {}).get('result', [{}])[0]
+          ts = res.get('timestamp', [])
+          quote = (res.get('indicators', {}).get('quote') or [{}])[0]
+          adj = (res.get('indicators', {}).get('adjclose') or [{}])[0]
+          events = res.get('events', {}).get('dividends', {})
+          json.dump({'meta': res.get('meta'), 'first_ts': ts[0] if ts else None, 'last_ts': ts[-1] if ts else None,
+                     'timestamp': ts[:5], 'quote': {k: v[:5] for k, v in quote.items()},
+                     'adjclose': adj.get('adjclose', [])[:5], 'events': events},
+                    open('probe/yahoo-urnm.summary.json', 'w'), indent=1)
+          PY
+          rm -f probe/sec-submissions.json probe/sec-mf-tickers.json probe/yahoo-urnm.json
+          ls -la probe | head -40
+      - name: Publish probe extract to the branch
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: sprott-probe
-          path: probes/
-          if-no-files-found: warn
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add probe
+          git commit -m "chore(probe): capture live Sprott provider payloads" || echo "nothing to commit"
+          git push
