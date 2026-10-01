@@ -26,6 +26,7 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Offline tests
         run: bun test
+      # temporary trigger touch: the workflow is removed before the PR
       - name: Isolated live acceptance (URNM URNJ SETM, twice) + full generation (twice)
         run: |
           set -x
