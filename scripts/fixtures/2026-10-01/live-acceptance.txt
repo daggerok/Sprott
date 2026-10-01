@@ -1,14 +1,49 @@
-live acceptance — 2026-10-01T23:10:11Z
-run: 36939293512 commit: e3f1857a24c4fe9262b63895c1a62f9748f3bf2e runner: GitHub Actions 1000008651 bun: 1.4.2
+live acceptance — 2026-10-01T23:12:02Z
+run: 36939476094 commit: 9612bf1f1d416298fd8d7ea246ae31ab271be1f5 runner: GitHub Actions 1000008654 bun: 1.4.2
 
 == isolated acceptance: TICKERS="URNM URNJ SETM" VERBOSE=1 bun scripts/update-data.ts ==
 exit codes: run1=0 run2=0   byte-stable: yes
-config: 
-files: 11   rows: 11 json files
-hashes (both runs):
+config: [ config ] Sprott updater: MAX_FETCHES=0 REQUEST_SLEEP=1 CONCURRENCY=2 AUM=: DIVIDEND_YIELD=: EDGAR_FALLBACK=true HISTORY_PAGE_SIZE=1000 HISTORY_RANGE=max HOLDINGS_PAGE_SIZE=250 MAX_RETRIES=2 PERFORMANCE_10Y=: PERFORMANCE_1Y=: PERFORMANCE_3Y=: PERFORMANCE_5Y=: PERFORMANCE_YTD=: SEC_UA=daggerok Sprott ETF feed (https://github.com/daggerok/sprott) SEC_YIELD=: SKIP_SPROTT=false SKIP_YAHOO=false STORE_RAW_DOWNLOADS=false TER=: TICKERS=URNM,URNJ,SETM TOTAL_RETURN_10Y=: TOTAL_RETURN_1Y=: TOTAL_RETURN_3Y=: TOTAL_RETURN_5Y=: TOTAL_RETURN_YTD=: VERBOSE=true 
+files: 46 json files
+hashes (run 1 == run 2):
+5058079ef74a4ac8f6d90d8fa1b6adc8defc898df45f88ae9eb0603e24a6a2ff  api/sprott/funds/COPJ/history/001.json
+7893ee0dfffaacf97b5d4fc90f27974906c2e2c3d199dbdc48e13700680ca449  api/sprott/funds/COPJ/holdings/001.json
+1db0944113162d27da5d080cd5cf8548c369cdc5f17582e4bc4e448d173be8f9  api/sprott/funds/COPJ/meta.json
+04c8d1208175f1630131c57dc498be000d148a4562742d3925295856b42572f1  api/sprott/funds/COPP/history/001.json
+1d4dea561ba8421a6d73447771dbf4baf3b7d4b406b442aa9b258a77f647ba73  api/sprott/funds/COPP/holdings/001.json
+7747ceb9df8f17d31495ec9708b358892dca9dd8f74f44dcb9e463510fbeb09d  api/sprott/funds/COPP/meta.json
+adcc8e24a7b83d687927e3d881953879265f71c06ea607034902d1467a36c531  api/sprott/funds/GBUG/history/001.json
+d7aca31ea94f8f9992f96205b4546fad04709eec7e64ce5e15a1489132852859  api/sprott/funds/GBUG/holdings/001.json
+7c27b2604e5d3a04bfbb1078060bd8b90429a00621c25b78f85e8155eeedcddb  api/sprott/funds/GBUG/meta.json
+b52763189b7cc8741f877f475f80db9cf3958cf519eb1c85f3833c1be4ad1265  api/sprott/funds/LITP/history/001.json
+3c6187653032a8040ab41f98d02b99f02b6fc9943ef5a2a7790859a47d3f51a4  api/sprott/funds/LITP/holdings/001.json
+142ca819d8a9d139d129201d1309163886b7f9c3d58300312a5bb9bfe9af66ee  api/sprott/funds/LITP/meta.json
+b1762404130129ccf35d63d3626c2b362cc3eeac69797b55870c6c6fda9d2265  api/sprott/funds/METL/history/001.json
+846758088deda43808621f6f8311b9e7c3f5f40d314cc9f346130e0dd132bcfe  api/sprott/funds/METL/holdings/001.json
+7a85e63768965195d1c359a5674a55abc5faaf2f41e21476692cedfa3eb54650  api/sprott/funds/METL/meta.json
+a39174194f03ab80c87189f07146603fe7ba6f768876c5c1a3c774fe52ce2b06  api/sprott/funds/NIKL/history/001.json
+0105dc3e1f9d7855e904f277c2f52b6dda9a58221462ce2f6d92ed0844104c1b  api/sprott/funds/NIKL/holdings/001.json
+35747377cd19a6090879e847dd1c83bf882eda99852a2444e661103877c1ccf7  api/sprott/funds/NIKL/meta.json
+e1a1d18e488248b8a139c1e6f9ac522ec28832c791bf1e2767aa53c763bac9de  api/sprott/funds/REXC/history/001.json
+16bf393181ddabef98aa02a6fa39fe78f71bbfbbb263b2aac536b64a9229b68f  api/sprott/funds/REXC/holdings/001.json
+f20d86a6bc78f08a1cdd620bef7e321dd2bdd4a3bf37230934bc84fef162b3cb  api/sprott/funds/REXC/meta.json
 a48806bf8bfec7d414ad5ed4e82b3be19317d6fc876345b8b0cac577a2af536a  api/sprott/funds/SETM/history/001.json
 0ea5661f6ff351dc0830d435f094f750e4843005b0d133c4e2727ae0709ff6b9  api/sprott/funds/SETM/holdings/001.json
 6f20942971dc8dbc6323180d7f6c1d1a7e75ec4ba5f4c49ad8021a7a2f456f6f  api/sprott/funds/SETM/meta.json
+083ba4b6a12f672e4a3ca77d804c5aa0e3949a8f26d93bc34ae5a6ee82120134  api/sprott/funds/SGDJ/history/001.json
+8908d5098cd5d0272810bd073d803bf3ec9365b850615d2013e19cdb01d4b7f7  api/sprott/funds/SGDJ/history/002.json
+68c4fdbd7bb766fa91bc56aea37ce204bde3b7ffcc57b49848e7d64b7b9d8851  api/sprott/funds/SGDJ/history/003.json
+7479754e1c2d008e0e2df1a84f11b12743abfc15d470432ff9672c5b461c899c  api/sprott/funds/SGDJ/holdings/001.json
+6bbd78c60abd0532769fbde7d878e4db908c4bbc68d4112272454e082b23ef4b  api/sprott/funds/SGDJ/meta.json
+33f243f942c623301c710dc62401ab3e7ba66d4e974325d3a7b5f7a754f3452b  api/sprott/funds/SGDM/history/001.json
+56cf96d08fbe9ee2f2555fbc8afe5f6c5920f9af7a2561b4921b5bbda02621d2  api/sprott/funds/SGDM/history/002.json
+a52b779f11574241365c1be05604f5ed2ef84804cc035ca5cc14b6b874deb3b3  api/sprott/funds/SGDM/history/003.json
+7b3f70db84a5124faf14ccd38dfa64d02b7a98e8e3743c3760a8836938f17459  api/sprott/funds/SGDM/history/004.json
+c1ce860058ebc313f5c5b1b1040b3f50211a41e8afb06ffa9f38bdcef16cbf54  api/sprott/funds/SGDM/holdings/001.json
+41c9f878d6a8f9df389c55cf6c47d8eb4358d6d1e7961a43bb645eba3dd5fde7  api/sprott/funds/SGDM/meta.json
+c5f54a4ffaff744d765cb8ab302a1526d55bccdf7512f2407743c2d24133f093  api/sprott/funds/SLVR/history/001.json
+b1853ec769fa17c44cc497fd525a8092263a6cd5a77455383e8fc2a8fe0dbace  api/sprott/funds/SLVR/holdings/001.json
+9830bf864b79d7036a831a81cafbe2ac8f37ee270ad13aeba94657082a20fd2b  api/sprott/funds/SLVR/meta.json
 b9802de2804e630556f63aadd0e8b37d4fcdf22e1fe12f5a5ebddf5ea63334a1  api/sprott/funds/URNJ/history/001.json
 2ab283959fb81baeb18fa1b5c7ac0e972756cad7767d69a33a12606c28aa9e7b  api/sprott/funds/URNJ/holdings/001.json
 25cccd374cb420486ea3feb7b624d715164e8eab549036e779c47d9ebbea2514  api/sprott/funds/URNJ/meta.json
@@ -16,23 +51,53 @@ b9802de2804e630556f63aadd0e8b37d4fcdf22e1fe12f5a5ebddf5ea63334a1  api/sprott/fun
 c1e614d296c668dc0c5cf23d1ea34dae342ead0d93d7d1343e9b3721ddb88fea  api/sprott/funds/URNM/history/002.json
 efca85f0b702c887897ba04fe377021c78efc16fdb4e2d3f3ba97abf7dc10c5a  api/sprott/funds/URNM/holdings/001.json
 4702aff994af71c3e7cc4ea7d0c059cb5b0101faa7384d8e4b71fa33beddb8f4  api/sprott/funds/URNM/meta.json
-6ced3ca4209bc65dadcf1572d4a6a4c962e5eb1ef5aeb7e9ead88d38fde8797f  api/sprott/index.json
+96d5ac494087716840ef9b96265538f8da60734addc608afa8e7105c2000bbf6  api/sprott/index.json
 -- fund reporter lines --
+[  1/3   ] URNJ  unchanged history=919 holdings=42 divs=3 netAssets=$310.25 Million div=8.23
+[  2/3   ] SETM  unchanged history=919 holdings=158 divs=3 netAssets=$526.07 Million div=1.54
+[  3/3   ] URNM  unchanged history=1715 holdings=27 divs=5 netAssets=$1.84 Billion div=3.66
 -- provider warnings / fallbacks --
-              EDGAR_FALLBACK=true
 [ catalog  ] 13 Sprott ETFs (sprottetfs.com fund navigation / published fallback)
 
 == full generation: bun scripts/update-data.ts (all 13 funds) ==
-byte-stable on rerun: yes
-config: 
+byte-stable on rerun: no
+config: [ config ] Sprott updater: MAX_FETCHES=0 REQUEST_SLEEP=1 CONCURRENCY=2 AUM=: DIVIDEND_YIELD=: EDGAR_FALLBACK=true HISTORY_PAGE_SIZE=1000 HISTORY_RANGE=max HOLDINGS_PAGE_SIZE=250 MAX_RETRIES=2 PERFORMANCE_10Y=: PERFORMANCE_1Y=: PERFORMANCE_3Y=: PERFORMANCE_5Y=: PERFORMANCE_YTD=: SEC_UA=daggerok Sprott ETF feed (https://github.com/daggerok/sprott) SEC_YIELD=: SKIP_SPROTT=false SKIP_YAHOO=false STORE_RAW_DOWNLOADS=false TER=: TICKERS=all TOTAL_RETURN_10Y=: TOTAL_RETURN_1Y=: TOTAL_RETURN_3Y=: TOTAL_RETURN_5Y=: TOTAL_RETURN_YTD=: VERBOSE=false 
 [ catalog  ] 13 Sprott ETFs (sprottetfs.com fund navigation / published fallback)
+[ filter   ] 13 of 13 funds pass filters
 [ done     ] 13 funds processed, 0 skipped, 0 failures
 [ done     ] counts: 13 funds / 736 holdings rows / 14111 history rows
+published counts: {'funds': 13, 'holdings': 736, 'history': 14111}
+  COPJ holdings=70 history=919 ter=0.75 aum=162910000 divs=Annually
+  COPP holdings=81 history=646 ter=0.65 aum=279390000 divs=Annually
+  GBUG holdings=45 history=406 ter=0.9 aum=176740000 divs=Unknown
+  LITP holdings=39 history=919 ter=0.65 aum=33430000 divs=Annually
+  METL holdings=46 history=267 ter=0.99 aum=80700000 divs=Unknown
+  NIKL holdings=27 history=886 ter=0.75 aum=53330000 divs=Annually
+  REXC holdings=42 history=118 ter=0.65 aum=81910000 divs=—
+  SETM holdings=158 history=919 ter=0.65 aum=526070000 divs=Annually
+  SGDJ holdings=32 history=2894 ter=0.5 aum=336530000 divs=Annually
+  SGDM holdings=49 history=3073 ter=0.46 aum=654240000 divs=Annually
+  SLVR holdings=78 history=430 ter=0.65 aum=695630000 divs=Unknown
+  URNJ holdings=42 history=919 ter=0.8 aum=310250000 divs=Annually
+  URNM holdings=27 history=1715 ter=0.75 aum=1840000000 divs=Annually
 -- fund reporter lines (full) --
-[ 10/13  ] SGDM  updated   history=3073 holdings=49 divs=12 netAssets=$654.24 Million div=0.99
-[ 11/13  ] SLVR  updated   history=430 holdings=78 divs=1 netAssets=$695.63 Million
-[ 12/13  ] URNJ  updated   history=919 holdings=42 divs=3 netAssets=$310.25 Million div=8.23
-[ 13/13  ] URNM  updated   history=1715 holdings=27 divs=5 netAssets=$1.84 Billion div=3.66
+[  1/13  ] COPP  unchanged history=646 holdings=81 divs=2 netAssets=$279.39 Million div=1.97
+[  2/13  ] COPJ  unchanged history=919 holdings=70 divs=3 netAssets=$162.91 Million div=10.34
+[  3/13  ] GBUG  unchanged history=406 holdings=45 divs=1 netAssets=$176.74 Million
+[  4/13  ] LITP  unchanged history=919 holdings=39 divs=3 netAssets=$33.43 Million div=9.67
+[  5/13  ] METL  unchanged history=267 holdings=46 divs=1 netAssets=$80.70 Million
+[  6/13  ] NIKL  unchanged history=886 holdings=27 divs=3 netAssets=$53.33 Million div=2.97
+[  7/13  ] REXC  unchanged history=118 holdings=42 divs=0 netAssets=$81.91 Million
+[  8/13  ] SETM  unchanged history=919 holdings=158 divs=3 netAssets=$526.07 Million div=1.54
+[  9/13  ] SGDJ  unchanged history=2894 holdings=32 divs=11 netAssets=$336.53 Million div=7.95
+[ 10/13  ] SGDM  unchanged history=3073 holdings=49 divs=12 netAssets=$654.24 Million div=0.99
+[ 11/13  ] SLVR  unchanged history=430 holdings=78 divs=1 netAssets=$695.63 Million
+[ 12/13  ] URNJ  unchanged history=919 holdings=42 divs=3 netAssets=$310.25 Million div=8.23
+[ 13/13  ] URNM  unchanged history=1715 holdings=27 divs=5 netAssets=$1.84 Billion div=3.66
 -- provider warnings / fallbacks (full) --
-              EDGAR_FALLBACK=true
 [ catalog  ] 13 Sprott ETFs (sprottetfs.com fund navigation / published fallback)
+-- rerun diff --
+25c25
+< 083ba4b6a12f672e4a3ca77d804c5aa0e3949a8f26d93bc34ae5a6ee82120134  api/sprott/funds/SGDJ/history/001.json
+---
+> 45e5d25f93ba9281fec334a22b8e0c96a14448947046103625d25fdc703ead6b  api/sprott/funds/SGDJ/history/001.json
