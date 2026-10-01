@@ -830,3 +830,34 @@ REQUEST PACING & CONCURRENCY:
 REPORT BACK WHEN DONE:
   Verify full fund list slug mappings on sprottetfs.com.
 
+
+### 2026-10-01 - Stage 1: live research + UI/package scaffold (completed)
+- Branch feat/sprott-etfs created from main (clean tree except user's untracked .idea/, never committed).
+- Live verification (plain GET, browser UA, HTTP 200, no WAF): https://sprottetfs.com/ home page (menu lists every fund link)
+  and 13 fund pages: urnm, urnj, setm, copp, copj, sgdm, sgdj, slvr, gbug, rexc, litp, nikl, metl.
+  Slug patterns: /<ticker>-<name>-etf/ (rexc and slvr also resolve without trailing slash). Catalog = anchors ending in "-etf".
+- Each fund page (static HTML, same layout for all 13, no JS needed) carries: header block (NAV, NAV daily change, market price,
+  premium/discount, total net asset value, net total expense ratio, "As of <Month D, YYYY>"), Key Facts (exchange, benchmark,
+  ISIN, CUSIP, inception date, adviser, sub-adviser), Fees & Expenses (management fee, other, total annual operating expenses),
+  ETF Fund Details (date, total net assets exact, shares outstanding, number of holdings, median 30-day bid-ask spread),
+  Month-End and Quarter-End performance tables (NAV / Market Price / Benchmark rows; columns 1MO 3MO YTD 1YR 3YR 5YR 10YR S.I.,
+  each with its own "As of" date), Holdings table (Security, Market Value, Symbol, SEDOL, Quantity, Weight; as-of date; the same
+  data is also offered as a data:application/csv "Download All Holdings" link), and DistributionsData table (Ex-Date, Record,
+  Payable, ST/LT capital gains, ordinary income, total; "-" for none).
+- Observed on 2026-10-01 (NAV as of 2026-09-30): URNM NAV 47.63 AUM 1,838,317,077.32 holdings 26 + cash row; SLVR NAV 54.52 holdings 77;
+  METL NAV 25.54 holdings 45; REXC month-end as of 8/31/2026 and quarter-end as of 6/30/2026 (younger than 1 year, S.I. not annualized,
+  1Y/3Y/5Y/10Y shown as "--"); REXC distributions table is a single "-" placeholder row.
+- Sprott publishes NO official daily NAV history, so price/NAV history comes from Yahoo Finance (market-price estimates, labeled as such).
+- Network limits from this environment: data.sec.gov and sec.gov/files returned HTTP 403 (SEC fallback cannot be validated live here, only by
+  fixtures); Yahoo chart returned 200.
+- Scaffold: app.tsx + index.html copied from daggerok/Aberdeen (the sibling that already carries the shared header ETF-count popover, the
+  "00 - None" frequency label and the Use-checkbox-only selection), then only the 8 enumerated substitutions applied:
+  (1) file header comment, (2) localStorage key prefixes sprott-*, (3) INDEX_URL and every api/sprott path, (4) export filename prefix sprott-,
+  (5) human strings naming brand/source: "Search Sprott ETFs ...", "Loading Sprott ETF data ...", Data link to https://sprottetfs.com/ +
+  "SEC EDGAR N-PORT-P (SPROTT FUNDS TRUST, CIK 0001728683 - holdings fallback only) + Yahoo Finance (history/dividend fallback)",
+  (6) tooltip provenance only (aberdeeninvestments.com -> sprottetfs.com, abrdn -> Sprott; "fundDetailsKeyInformation figure" -> "fund page figure"),
+  (8) trust name/CIK. No rows, columns, tooltips keys or layout changed. Diff vs Aberdeen (case-insensitive brand-normalized) = 60 changed lines, all provenance/brand.
+- package.json/bun.lock copied from Aberdeen (devDependencies @types/bun 1.4.2, @types/node 26.6.2 exact; dependencies {}); .github/dependabot.yml
+  copied from ARK. bun install --frozen-lockfile OK. No tsconfig.json, no typescript.
+- Sibling reference commits: Aberdeen e6e244b (branch chore/standardize-config), ARK 0386b0f, Neos 6b7e060 (read-only; Neos not used for app.tsx
+  because its fund-detail rows contain Neos-specific Documents rows that the worklog forbids copying).
