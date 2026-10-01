@@ -65,7 +65,7 @@
     ('SLVR', '/slvr-sprott-silver-miners-physical-silver-etf', 'Sprott Silver Miners & Physical Silver ETF')
     ('METL', '/metl-sprott-active-metals-miners-etf', 'Sprott Active Metals & Miners ETF')
    ld BreadcrumbList {"@type": "BreadcrumbList", "@id": "https://sprottetfs.com/gbug-sprott-active-gold-silver-miners-etf/#breadcrumb", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Sprott ETFs", "item": "https://sprottetfs.com/"}, {"@type": "ListItem", "position": 2, "name": "Landing Page - Investment Strategies", "item": "https://sprottetfs.com/sprott-precious-metals-etfs"}, {"@type": "ListItem",
-### home.html bytes=48118 phv-btn=11
+### home.html bytes=48251 phv-btn=11
    ld BreadcrumbList {"@type": "BreadcrumbList", "@id": "https://sprottetfs.com/#breadcrumb", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Sprott ETFs", "item": "https://sprottetfs.com/"}]}
 ### litp-sprott-lithium-miners-etf.html bytes=186262 phv-btn=14
     ('SETM', '/setm-sprott-critical-materials-etf/', 'Sprott Critical Materials ETF')
