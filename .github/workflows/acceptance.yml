@@ -53,14 +53,14 @@ jobs:
             echo ""
             echo "== isolated acceptance: TICKERS=\"URNM URNJ SETM\" VERBOSE=1 bun scripts/update-data.ts =="
             echo "exit codes: run1=$RC1 run2=$RC2   byte-stable: $STABLE"
-            echo "config: $(grep -m1 -A30 'effective configuration' /tmp/accept/run1.log | tr '\n' ' ' | sed 's/  */ /g')"
-            echo "files: $(wc -l < /tmp/accept/hashes1.txt)   rows: $(find api/sprott -name '*.json' | wc -l) json files"
-            echo "hashes (both runs):"
+            echo "config: $(awk '/^\[ config/{p=1} p&&/^\[ [a-z]/&&!/^\[ config/{p=0} p{print}' /tmp/accept/run1.log | tr '\n' ' ' | sed 's/  */ /g')"
+            echo "files: $(wc -l < /tmp/accept/hashes1.txt) json files"
+            echo "hashes (run 1 == run 2):"
             cat /tmp/accept/hashes1.txt
             echo "-- fund reporter lines --"
-            grep -E '^\[ [0-9]' /tmp/accept/run1.log || true
+            grep -aE '^\[ +[0-9]+/' /tmp/accept/run1.log || true
             echo "-- provider warnings / fallbacks --"
-            grep -iE 'warn|fallback|retry|refus' /tmp/accept/run1.log | head -20 || true
+            grep -aiE 'warn|fallback|retry|refus' /tmp/accept/run1.log | grep -v EDGAR_FALLBACK | head -20 || true
           } >> "$REPORT"
 
           # --- full generation in the working tree (published api/sprott seed) ---
@@ -74,12 +74,13 @@ jobs:
             echo ""
             echo "== full generation: bun scripts/update-data.ts (all 13 funds) =="
             echo "byte-stable on rerun: $FULL_STABLE"
-            echo "config: $(grep -m1 -A30 'effective configuration' /tmp/full1.log | tr '\n' ' ' | sed 's/  */ /g')"
-            grep -E '^\[ catalog|^\[ done' /tmp/full1.log || true
+            echo "config: $(awk '/^\[ config/{p=1} p&&/^\[ [a-z]/&&!/^\[ config/{p=0} p{print}' /tmp/full1.log | tr '\n' ' ' | sed 's/  */ /g')"
+            grep -aE '^\[ catalog|^\[ done|^\[ filter' /tmp/full1.log || true
+            python3 -c "import json; d=json.load(open('api/sprott/index.json')); print('published counts:', d['counts']); [print(' ', f['ticker'], 'holdings=' + str(f['holdings']), 'history=' + str(f['history']), 'ter=' + str(f.get('terValue')), 'aum=' + str(f.get('aumValue')), 'divs=' + str((f.get('distributions') or {}).get('frequency'))) for f in d['funds']]"
             echo "-- fund reporter lines (full) --"
-            grep -E '^\[ [0-9]' /tmp/full1.log || true
+            grep -aE '^\[ +[0-9]+/' /tmp/full1.log || true
             echo "-- provider warnings / fallbacks (full) --"
-            grep -iE 'warn|fallback|retry|refus' /tmp/full1.log | head -20 || true
+            grep -aiE 'warn|fallback|retry|refus' /tmp/full1.log | grep -v EDGAR_FALLBACK | head -20 || true
             if [ "$FULL_STABLE" = no ]; then
               echo "-- rerun diff --"
               diff /tmp/full-hashes1.txt /tmp/full-hashes2.txt | head -20 || true
