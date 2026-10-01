@@ -1,0 +1,119 @@
+copj-sprott-junior-copper-miners-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-small-both"  id="secKeyFacts"> @28119
+copj-sprott-junior-copper-miners-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secPerformance"> @34168
+copj-sprott-junior-copper-miners-etf.html: <div class="performance-data"> @34706
+copj-sprott-junior-copper-miners-etf.html: <div class="performance-data"> @39874
+copj-sprott-junior-copper-miners-etf.html: <div class="performance-data"> @94018
+copj-sprott-junior-copper-miners-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-large-both"  id="secHoldings"> @125829
+copj-sprott-junior-copper-miners-etf.html: <div class="holdings-table"> @126447
+copj-sprott-junior-copper-miners-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secDistributions"> @165205
+copj-sprott-junior-copper-miners-etf.html: <table class="table-responsive"  id="DistributionsData"> @166088
+copp-sprott-copper-miners-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-small-both"  id="secKeyFacts"> @28753
+copp-sprott-copper-miners-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secPerformance"> @34788
+copp-sprott-copper-miners-etf.html: <div class="performance-data"> @35326
+copp-sprott-copper-miners-etf.html: <div class="performance-data"> @40426
+copp-sprott-copper-miners-etf.html: <div class="performance-data"> @79361
+copp-sprott-copper-miners-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-large-both"  id="secHoldings"> @104224
+copp-sprott-copper-miners-etf.html: <div class="holdings-table"> @104842
+copp-sprott-copper-miners-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secDistributions"> @149274
+copp-sprott-copper-miners-etf.html: <table class="table-responsive"  id="DistributionsData"> @150157
+gbug-sprott-active-gold-silver-miners-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-small-both"  id="secKeyFacts"> @27966
+gbug-sprott-active-gold-silver-miners-etf.html: <div class="cell large-12 medium-12 small-12 key-facts-dynamic"> @32255
+gbug-sprott-active-gold-silver-miners-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secPerformance"> @33761
+gbug-sprott-active-gold-silver-miners-etf.html: <div class="performance-data"> @34299
+gbug-sprott-active-gold-silver-miners-etf.html: <div class="performance-data"> @39044
+gbug-sprott-active-gold-silver-miners-etf.html: <div class="performance-data"> @64600
+gbug-sprott-active-gold-silver-miners-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-large-both"  id="secHoldings"> @82321
+gbug-sprott-active-gold-silver-miners-etf.html: <div class="holdings-table"> @82939
+gbug-sprott-active-gold-silver-miners-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secDistributions"> @108005
+gbug-sprott-active-gold-silver-miners-etf.html: <table class="table-responsive"  id="DistributionsData"> @108888
+litp-sprott-lithium-miners-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-small-both"  id="secKeyFacts"> @28407
+litp-sprott-lithium-miners-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secPerformance"> @34355
+litp-sprott-lithium-miners-etf.html: <div class="performance-data"> @34893
+litp-sprott-lithium-miners-etf.html: <div class="performance-data"> @40043
+litp-sprott-lithium-miners-etf.html: <div class="performance-data"> @93366
+litp-sprott-lithium-miners-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-large-both"  id="secHoldings"> @124995
+litp-sprott-lithium-miners-etf.html: <div class="holdings-table"> @125613
+litp-sprott-lithium-miners-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secDistributions"> @147502
+litp-sprott-lithium-miners-etf.html: <table class="table-responsive"  id="DistributionsData"> @148385
+metl-sprott-active-metals-miners-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-small-both"  id="secKeyFacts"> @26992
+metl-sprott-active-metals-miners-etf.html: <div class="cell large-12 medium-12 small-12 key-facts-dynamic"> @31195
+metl-sprott-active-metals-miners-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secPerformance"> @32700
+metl-sprott-active-metals-miners-etf.html: <div class="performance-data"> @33238
+metl-sprott-active-metals-miners-etf.html: <div class="performance-data"> @38226
+metl-sprott-active-metals-miners-etf.html: <div class="performance-data"> @56083
+metl-sprott-active-metals-miners-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-large-both"  id="secHoldings"> @69918
+metl-sprott-active-metals-miners-etf.html: <div class="holdings-table"> @70536
+metl-sprott-active-metals-miners-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secDistributions"> @96103
+metl-sprott-active-metals-miners-etf.html: <table class="table-responsive"  id="DistributionsData"> @96986
+nikl-sprott-nickel-miners-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-small-both"  id="secKeyFacts"> @28302
+nikl-sprott-nickel-miners-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secPerformance"> @34248
+nikl-sprott-nickel-miners-etf.html: <div class="performance-data"> @34786
+nikl-sprott-nickel-miners-etf.html: <div class="performance-data"> @39906
+nikl-sprott-nickel-miners-etf.html: <div class="performance-data"> @92114
+nikl-sprott-nickel-miners-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-large-both"  id="secHoldings"> @122963
+nikl-sprott-nickel-miners-etf.html: <div class="holdings-table"> @123581
+nikl-sprott-nickel-miners-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secDistributions"> @139396
+nikl-sprott-nickel-miners-etf.html: <table class="table-responsive"  id="DistributionsData"> @140279
+rexc-rare-earths-ex-china-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-small-both"  id="secKeyFacts"> @29450
+rexc-rare-earths-ex-china-etf.html: <div class="cell large-12 medium-12 small-12 key-facts-dynamic"> @33902
+rexc-rare-earths-ex-china-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secPerformance"> @35407
+rexc-rare-earths-ex-china-etf.html: <div class="performance-data"> @41012
+rexc-rare-earths-ex-china-etf.html: <div class="performance-data"> @50527
+rexc-rare-earths-ex-china-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-large-both"  id="secHoldings"> @59453
+rexc-rare-earths-ex-china-etf.html: <div class="holdings-table"> @60071
+rexc-rare-earths-ex-china-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secDistributions"> @83770
+rexc-rare-earths-ex-china-etf.html: <table class="table-responsive"  id="DistributionsData"> @84359
+setm-sprott-critical-materials-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-small-both"  id="secKeyFacts"> @28372
+setm-sprott-critical-materials-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secPerformance"> @34322
+setm-sprott-critical-materials-etf.html: <div class="performance-data"> @34860
+setm-sprott-critical-materials-etf.html: <div class="performance-data"> @40040
+setm-sprott-critical-materials-etf.html: <div class="performance-data"> @94184
+setm-sprott-critical-materials-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-large-both"  id="secHoldings"> @126755
+setm-sprott-critical-materials-etf.html: <div class="holdings-table"> @127373
+setm-sprott-critical-materials-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secDistributions"> @212676
+setm-sprott-critical-materials-etf.html: <table class="table-responsive"  id="DistributionsData"> @213559
+sgdj-sprott-junior-gold-miners-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-small-both"  id="secKeyFacts"> @26849
+sgdj-sprott-junior-gold-miners-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secPerformance"> @32765
+sgdj-sprott-junior-gold-miners-etf.html: <div class="performance-data"> @33303
+sgdj-sprott-junior-gold-miners-etf.html: <div class="performance-data"> @38834
+sgdj-sprott-junior-gold-miners-etf.html: <div class="performance-data"> @203555
+sgdj-sprott-junior-gold-miners-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-large-both"  id="secHoldings"> @259707
+sgdj-sprott-junior-gold-miners-etf.html: <div class="holdings-table"> @260326
+sgdj-sprott-junior-gold-miners-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secDistributions"> @278781
+sgdj-sprott-junior-gold-miners-etf.html: <table class="table-responsive"  id="DistributionsData"> @279664
+sgdm-sprott-gold-miners-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-small-both"  id="secKeyFacts"> @25904
+sgdm-sprott-gold-miners-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secPerformance"> @32047
+sgdm-sprott-gold-miners-etf.html: <div class="performance-data"> @32585
+sgdm-sprott-gold-miners-etf.html: <div class="performance-data"> @38249
+sgdm-sprott-gold-miners-etf.html: <div class="performance-data"> @213463
+sgdm-sprott-gold-miners-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-large-both"  id="secHoldings"> @269359
+sgdm-sprott-gold-miners-etf.html: <div class="holdings-table"> @269977
+sgdm-sprott-gold-miners-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secDistributions"> @297145
+sgdm-sprott-gold-miners-etf.html: <table class="table-responsive"  id="DistributionsData"> @298028
+slvr-sprott-silver-miners-physical-silver-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-small-both"  id="secKeyFacts"> @29103
+slvr-sprott-silver-miners-physical-silver-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secPerformance"> @35068
+slvr-sprott-silver-miners-physical-silver-etf.html: <div class="performance-data"> @35606
+slvr-sprott-silver-miners-physical-silver-etf.html: <div class="performance-data"> @40892
+slvr-sprott-silver-miners-physical-silver-etf.html: <div class="performance-data"> @67781
+slvr-sprott-silver-miners-physical-silver-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-large-both"  id="secHoldings"> @86504
+slvr-sprott-silver-miners-physical-silver-etf.html: <div class="holdings-table"> @87122
+slvr-sprott-silver-miners-physical-silver-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secDistributions"> @130357
+slvr-sprott-silver-miners-physical-silver-etf.html: <table class="table-responsive"  id="DistributionsData"> @131240
+urnj-sprott-junior-uranium-miners-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-small-both"  id="secKeyFacts"> @28502
+urnj-sprott-junior-uranium-miners-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secPerformance"> @34452
+urnj-sprott-junior-uranium-miners-etf.html: <div class="performance-data"> @34990
+urnj-sprott-junior-uranium-miners-etf.html: <div class="performance-data"> @40181
+urnj-sprott-junior-uranium-miners-etf.html: <div class="performance-data"> @94321
+urnj-sprott-junior-uranium-miners-etf.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-large-both"  id="secHoldings"> @125914
+urnj-sprott-junior-uranium-miners-etf.html: <div class="holdings-table"> @126532
+urnj-sprott-junior-uranium-miners-etf.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secDistributions"> @150243
+urnj-sprott-junior-uranium-miners-etf.html: <table class="table-responsive"  id="DistributionsData"> @151126
+urnm.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-small-both"  id="secKeyFacts"> @28406
+urnm.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secPerformance"> @34327
+urnm.html: <div class="performance-data"> @34865
+urnm.html: <div class="performance-data"> @40460
+urnm.html: <div class="performance-data"> @138971
+urnm.html: <section class="block-section gridcontentarea-section  bg-color-alice-blue light-bg section-padding-large-both"  id="secHoldings"> @192397
+urnm.html: <div class="holdings-table"> @193015
+urnm.html: <section class="block-section gridcontentarea-section  section-padding-large-both"  id="secDistributions"> @208637
+urnm.html: <table class="table-responsive"  id="DistributionsData"> @209520
