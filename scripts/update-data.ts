@@ -1678,7 +1678,18 @@ export function mergeHistory(previous:JsonRecord[], fresh:ChartDay[]):JsonRecord
     const epoch=Date.parse(String(row.Date));
     if (Number.isFinite(epoch)) byDate.set(new Date(epoch).toISOString().slice(0,10),row);
   }
-  for (const row of historyRows(fresh)) byDate.set(new Date(Date.parse(row.Date)).toISOString().slice(0,10),row);
+  for (const row of historyRows(fresh)) {
+    const key=new Date(Date.parse(row.Date)).toISOString().slice(0,10), published=byDate.get(key);
+    // Yahoo recomputes adjusted closes on every request. A value that sits on
+    // a .xx5 rounding boundary flips the published cent back and forth between
+    // otherwise identical requests, and the feed would churn on every run.
+    // A published row therefore keeps its cent while the fresh value moves by
+    // less than two cents; a genuine restatement or dividend adjustment is
+    // larger and replaces the row normally.
+    const freshAdj=numberOrNull(row['Adj Close']), publishedAdj=published?numberOrNull(published['Adj Close']):null;
+    if (freshAdj!==null && publishedAdj!==null && Math.abs(freshAdj-publishedAdj)<0.02) row['Adj Close']=published!['Adj Close'];
+    byDate.set(key,row);
+  }
   return [...byDate].sort(([a],[b])=>a.localeCompare(b)).map(([,row])=>row);
 }
 function chartDaysFromRows(rows:JsonRecord[]):ChartDay[] {

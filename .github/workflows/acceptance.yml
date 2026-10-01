@@ -113,7 +113,7 @@ jobs:
               "https://query1.finance.yahoo.com/v8/finance/chart/SGDJ?range=max&interval=1d&events=div%2Csplit" \
               -o /tmp/sgdj-chart-probe.json || true
             [ -s /tmp/sgdj-chart-probe.json ] && sha256sum /tmp/sgdj-chart-probe.json || true
-          } >> "$REPORT"
+          } > "$REPORT"
       - name: Commit and push the evidence
         run: |
           set -euo pipefail

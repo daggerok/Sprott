@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 
 import {
   CONTROL_NAMES, annualizedToTotal, batchSelection, cellsIn, decodeEntities, formatEdgarDate,
-  formatUsDate, indicatedYield, inferDistributionFrequency, isoDate, normalizeNumberText, numberOrNull,
+  formatUsDate, indicatedYield, inferDistributionFrequency, isoDate, mergeHistory, normalizeNumberText, numberOrNull,
   parseCatalogNav, parseFeesTable, parseFundPage, parseHoldingsSection, parseLongDate, parseMoneyText,
   parseNport, parsePercentText, parseSitemapFundPages, parseSprottPerformance, parseReturnTable,
   parseDistributionsSection, resolveControls, readConfig, stripHtml, tickerFromSlug, totalToAnnualized,
@@ -348,6 +348,28 @@ describe('repository configuration / Actions override precedence', () => {
     expect(text).not.toMatch(/^  push:/m);
     expect(text).toContain('bun install --frozen-lockfile');
     expect(text).not.toContain('bunx tsc');
+  });
+});
+
+describe('history merge stability', () => {
+  const day = (date: string, adjClose: number) => ({ date, close: 36.540001, adjClose, volume: 9000 });
+  const previous = [{ Date: 'Oct 10 2016', Close: '36.540001', 'Adj Close': '27.69', Volume: '9000' }];
+
+  test('a published adjusted close keeps its cent when Yahoo jitters a rounding boundary', () => {
+    const merged = mergeHistory(previous, [day('2016-10-10', 27.7)]);
+    expect(merged).toHaveLength(1);
+    expect(merged[0]['Adj Close']).toBe('27.69');
+  });
+
+  test('a genuine restatement still replaces the published row', () => {
+    const merged = mergeHistory(previous, [day('2016-10-10', 27.85)]);
+    expect(merged[0]['Adj Close']).toBe('27.85');
+  });
+
+  test('new days merge in date order', () => {
+    const merged = mergeHistory([], [day('2016-10-10', 27.7), day('2016-10-11', 27.9)]);
+    expect(merged.map((row) => row.Date)).toEqual(['Oct 10 2016', 'Oct 11 2016']);
+    expect(merged[0]['Adj Close']).toBe('27.7');
   });
 });
 
