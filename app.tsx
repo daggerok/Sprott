@@ -1567,7 +1567,7 @@ function renderOverviewTable(fund: FundRow): void {
   }
 
   el.tickerCount.textContent = fund.ticker;
-  renderSubtitle(`${fund.ticker} overview · ${rows.length} metrics. Returns are derived from official daily NAV with distributions reinvested (Yahoo adjusted market-price fallback), not published standardized NAV returns.`);
+  renderSubtitle(`${fund.ticker} overview · ${rows.length} metrics. Returns use the official sprottetfs.com month-end/quarter-end NAV total returns; missing metrics are derived from Yahoo adjusted market-price closes, not published standardized NAV returns.`);
 }
 
 function renderDistributionsTable(fund: FundRow): void {
