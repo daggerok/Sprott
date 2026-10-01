@@ -64,7 +64,7 @@ GitHub Personal Access Token: <PASTE_YOUR_TOKEN_HERE>
 CURRENT STATE
 =============
 - Goal: Implement Sprott ETFs holdings-to-watchlist web application in daggerok/Sprott matching sibling parity (Bun-only, zero runtime dependencies, static client app + update-data feed).
-- Status: IMPLEMENTED on branch feat/sprott-etfs (2026-10-01); PR open against main (not merged). Remaining: owner review/merge, then run the update workflow once to publish the first api/sprott snapshot and enable GitHub Pages.
+- Status: IMPLEMENTED on branch feat/sprott-etfs (2026-10-01); PR https://github.com/daggerok/Sprott/pull/1 open against main (not merged). Remaining: owner review/merge, then run the update workflow once to publish the first api/sprott snapshot and enable GitHub Pages.
 - Repository: https://github.com/daggerok/Sprott
 - Branch: feat/sprott-etfs (from main 3f5f537). No api/sprott data is committed on purpose (acceptance output lives in a temp dir; only evidence/ logs and hashes are tracked).
 - Pushed remote baseline: see "Last confirmed pushed SHA" in the stage 4 journal entry below.
@@ -886,3 +886,5 @@ REPORT BACK WHEN DONE:
 - README to the SPEC standard (shared tables via apply-shared-blocks.ts); check-readme.ts: ok; states GitHub Pages deployment pending (https://daggerok.github.io/Sprott/ -> 404 on 2026-10-01).
 - UI template pin recorded in README: daggerok/Aberdeen @ e6e244b625b978cb1b781341f2a00b79484ffc01.
 - Repo About/topics not changed (not in this task's authorization); the plan's section 11 text remains available above.
+- Published: branch pushed (verified on remote: 7fc4a48 at that time); PR https://github.com/daggerok/Sprott/pull/1 opened against main, NOT merged.
+- Last confirmed pushed SHA before this note: 7fc4a48.
