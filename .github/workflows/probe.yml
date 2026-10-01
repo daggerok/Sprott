@@ -14,90 +14,50 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-      - name: Capture live provider payloads
+      - name: Capture catalog candidates
         run: |
           set -x
-          set +e
           mkdir -p probe
-          exec > >(tee -a probe/step.log) 2>&1
           UA="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36"
-          fetch() {
-            name="$1"; url="$2"
-            code=$(curl -sSL --max-time 90 -A "$UA" -o "probe/${name}" -w '%{http_code}' "$url" || echo "curl-error")
-            printf '%s\t%s\t%s\t%s\n' "$name" "$code" "$(wc -c < "probe/${name}" 2>/dev/null || echo 0)" "$url" >> probe/manifest.txt
-          }
-          fetch urnm.html "https://sprottetfs.com/urnm-sprott-uranium-miners-etf/"
-          for slug in urnj-sprott-junior-uranium-miners-etf setm-sprott-critical-materials-etf copp-sprott-copper-miners-etf copj-sprott-junior-copper-miners-etf rexc-rare-earths-ex-china-etf litp-sprott-lithium-miners-etf nikl-sprott-nickel-miners-etf gbug-sprott-active-gold-silver-miners-etf sgdm-sprott-gold-miners-etf sgdj-sprott-junior-gold-miners-etf slvr-sprott-silver-miners-physical-silver-etf metl-sprott-active-metals-miners-etf; do
-            fetch "$slug.html" "https://sprottetfs.com/$slug/"
+          for pair in home:/ etfs-page:/sprott-etfs/ critical:/critical-materials/ precious:/sprott-precious-metals-etfs/; do
+            name="${pair%%:*}"; path="${pair#*:}"
+            curl -sSL --max-time 90 -A "$UA" -o "probe/${name}.html" "https://sprottetfs.com${path}" || true
           done
-          fetch sitemap.xml "https://sprottetfs.com/sitemap.xml"
-          fetch yahoo-urnm.json "https://query1.finance.yahoo.com/v8/finance/chart/URNM?range=1mo&interval=1d"
-          fetch sec-submissions.json "https://data.sec.gov/submissions/CIK0001728683.json"
-          fetch sec-mf-tickers.json "https://www.sec.gov/files/company_tickers_mf.json"
-          python3 - <<'PY' > probe/report.txt 2> probe/python.err
-          import json, re, glob, os
-          def tables(html):
-              out = []
-              for i, m in enumerate(re.finditer(r'<table\b.*?</table>', html, re.S | re.I)):
-                  t = m.group(0)
-                  head = re.search(r'<thead\b.*?</thead>', t, re.S | re.I)
-                  rows = re.findall(r'<tr\b.*?</tr>', head.group(0) if head else t, re.S | re.I)
-                  cells = [re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '|', r)).strip() for r in rows[:3]]
-                  body = re.findall(r'<tr\b.*?</tr>', t[t.find('</thead>'):] if head else t, re.S | re.I)
-                  attrs = re.match(r'<table\b[^>]*>', t, re.I).group(0)[:300]
-                  out.append({'i': i, 'rows': len(body), 'first': cells[:2], 'attrs': attrs})
-              return out
-          lines = []
+          python3 - <<'PY' > probe/catalog-report.txt 2>&1
+          import re, json, glob, os
           for path in sorted(glob.glob('probe/*.html')):
-              html = open(path, encoding='utf-8', errors='replace').read()
-              lines.append('### %s bytes=%d tables=%d' % (os.path.basename(path), len(html), len(re.findall(r'<table\b', html, re.I))))
-              for t in tables(html):
-                  lines.append('  table[%d] rows=%d attrs=%s' % (t['i'], t['rows'], t['attrs']))
-                  for c in t['first']:
-                      lines.append('    row: %s' % c[:400])
-          print('\n'.join(lines))
-          anchors = []
-          for path in sorted(glob.glob('probe/*.html')):
-              html = open(path, encoding='utf-8', errors='replace').read()
-              for m in re.finditer(r'<(?:div|section|table|ul|select)\b[^>]*(?:holdings|distribution|keyfacts|key-facts|nav-|fund-nav|performance)[^>]*>', html, re.I):
-                  anchors.append('%s: %s @%d' % (os.path.basename(path), m.group(0)[:260], m.start()))
-          open('probe/anchors.txt', 'w').write('\n'.join(anchors) + '\n')
-          print('anchors: %d' % len(anchors))
-          sitemap = open('probe/sitemap.xml', encoding='utf-8', errors='replace').read()
-          urls = re.findall(r'<loc>([^<]+)</loc>', sitemap)
-          open('probe/sitemap-urls.txt', 'w').write('\n'.join(urls) + '\n')
-          print('sitemap urls: %d' % len(urls))
-          subs = json.load(open('probe/sec-submissions.json'))
-          keep = {k: v for k, v in subs.items() if k in ('cik', 'entityType', 'name', 'tickers', 'exchanges')}
-          recent = subs.get('filings', {}).get('recent', {})
-          keys = ['accessionNumber', 'filingDate', 'reportDate', 'form', 'primaryDocument', 'primaryDocDescription']
-          keep['recent'] = {k: recent.get(k, [])[:60] for k in keys if k in recent}
-          keep['filings_files'] = [f.get('name') for f in subs.get('filings', {}).get('files', [])]
-          json.dump(keep, open('probe/sec-submissions.summary.json', 'w'), indent=1)
-          mf = json.load(open('probe/sec-mf-tickers.json'))
-          sprott = [r for r in mf.get('data', []) if 'sprott' in str(r).lower()]
-          json.dump({'fields': mf.get('fields', []), 'sprott': sprott}, open('probe/sec-mf-tickers.sprott.json', 'w'), indent=1)
-          print('sec mf sprott rows: %d' % len(sprott))
-          yahoo = json.load(open('probe/yahoo-urnm.json'))
-          res = yahoo.get('chart', {}).get('result', [{}])[0]
-          ts = res.get('timestamp', [])
-          quote = (res.get('indicators', {}).get('quote') or [{}])[0]
-          adj = (res.get('indicators', {}).get('adjclose') or [{}])[0]
-          events = res.get('events', {}).get('dividends', {})
-          json.dump({'meta': res.get('meta'), 'first_ts': ts[0] if ts else None, 'last_ts': ts[-1] if ts else None,
-                     'timestamp': ts[:5], 'quote': {k: v[:5] for k, v in quote.items()},
-                     'adjclose': adj.get('adjclose', [])[:5], 'events': events},
-                    open('probe/yahoo-urnm.summary.json', 'w'), indent=1)
+              h = open(path, encoding='utf-8', errors='replace').read()
+              anchors = re.findall(r'<a\b[^>]*class="[^"]*phv-btn[^"]*"[^>]*>', h)
+              pairs = []
+              for a in re.findall(r'<a\b[^>]*>', h):
+                  if 'phv-btn' not in a: continue
+                  href = re.search(r'href="([^"]+)"', a)
+                  title = re.search(r'title="([^"]+)"', a)
+                  m = re.search(r'>([^<]{1,60})</a>', h[h.find(a):h.find(a)+400])
+                  pairs.append((m.group(1).strip() if m else '', href.group(1) if href else '', title.group(1) if title else ''))
+              print('### %s bytes=%d phv-btn=%d' % (os.path.basename(path), len(h), len(anchors)))
+              for p in pairs:
+                  if len(p[0]) <= 6 and p[0].isupper():
+                      print('   ', p)
+              for b in re.findall(r'<script[^>]*type="application/ld\+json"[^>]*>(.*?)</script>', h, re.S | re.I):
+                  try:
+                      data = json.loads(b)
+                  except Exception as e:
+                      print('   ld+json parse error:', e); continue
+                  items = data.get('@graph') if isinstance(data, dict) else data
+                  for it in (items if isinstance(items, list) else [items]):
+                      t = it.get('@type') if isinstance(it, dict) else None
+                      if t in ('ItemList', 'WebPage', 'Organization', 'BreadcrumbList'):
+                          print('   ld', t, json.dumps(it, ensure_ascii=False)[:400])
           PY
-          echo "python exit: $?" >> probe/python.err
-          rm -f probe/sec-submissions.json probe/sec-mf-tickers.json probe/yahoo-urnm.json
-          ls -la probe >> probe/step.log 2>&1
+          head -80 probe/catalog-report.txt
           exit 0
-      - name: Publish probe extract to the branch
+      - name: Publish catalog report
         if: ${{ !cancelled() }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f probe
-          git commit -m "chore(probe): capture live Sprott provider payloads" || echo "nothing to commit"
+          git add -f probe/catalog-report.txt probe/home.html probe/etfs-page.html probe/critical.html probe/precious.html
+          git commit -m "chore(probe): capture catalog candidates" || echo "nothing to commit"
+          git pull --rebase || true
           git push
