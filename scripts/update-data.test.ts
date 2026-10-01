@@ -95,12 +95,20 @@ describe('Sprott fund page parsing (live fixtures)', () => {
 });
 
 describe('catalog discovery', () => {
-  test('sitemap fund pages are the 13 Sprott ETFs, normalized with a trailing slash', () => {
+  test('the full 315-URL live sitemap yields exactly the 13 Sprott fund pages', () => {
     const pages = parseSitemapFundPages(sitemap);
+    expect(sitemap).toContain('<loc>https://sprottetfs.com/insights/');
     expect(pages).toHaveLength(13);
+    expect(pages).toEqual([...pages].sort());
     expect(pages[0]).toBe('https://sprottetfs.com/copj-sprott-junior-copper-miners-etf/');
     expect(pages).toContain('https://sprottetfs.com/rexc-rare-earths-ex-china-etf/');
     expect(new Set(pages).size).toBe(13);
+    expect(pages.map(tickerFromSlug).sort()).toEqual(
+      ['COPJ', 'COPP', 'GBUG', 'LITP', 'METL', 'NIKL', 'REXC', 'SETM', 'SGDJ', 'SGDM', 'SLVR', 'URNJ', 'URNM'],
+    );
+    // Landing pages that also carry an "-etf"-looking slug must be excluded.
+    expect(pages).not.toContain('https://sprottetfs.com/sprott-precious-metals-etfs/');
+    expect(pages).not.toContain('https://sprottetfs.com/uranium-etfs/');
   });
 
   test('the fund-page navigation list carries ticker, name and canonical URL', () => {

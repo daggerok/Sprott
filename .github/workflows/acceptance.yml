@@ -1,0 +1,96 @@
+name: TEMP live acceptance (delete before PR)
+
+on:
+  push:
+    paths:
+      - '.github/workflows/acceptance.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: acceptance
+  cancel-in-progress: false
+
+jobs:
+  accept:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Offline tests
+        run: bun test
+      - name: Isolated live acceptance (URNM URNJ SETM, twice) + full generation (twice)
+        run: |
+          set -x
+          REPORT="$GITHUB_WORKSPACE/scripts/fixtures/2026-10-01/live-acceptance.txt"
+          {
+            echo "live acceptance — $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "run: ${GITHUB_RUN_ID} commit: ${GITHUB_SHA} runner: ${RUNNER_NAME} bun: $(bun --version)"
+          } > "$REPORT"
+
+          # --- isolated acceptance copy: does NOT touch the checked-out api/ ---
+          rm -rf /tmp/accept && mkdir -p /tmp/accept
+          tar --exclude=.git --exclude=node_modules -cf - . | (cd /tmp/accept && tar xf -)
+          cd /tmp/accept
+          set +e
+          TICKERS="URNM URNJ SETM" VERBOSE=1 bun scripts/update-data.ts > /tmp/accept/run1.log 2>&1
+          RC1=$?
+          find api/sprott -type f | sort | xargs -r sha256sum > /tmp/accept/hashes1.txt
+          TICKERS="URNM URNJ SETM" VERBOSE=1 bun scripts/update-data.ts > /tmp/accept/run2.log 2>&1
+          RC2=$?
+          find api/sprott -type f | sort | xargs -r sha256sum > /tmp/accept/hashes2.txt
+          set -e
+          STABLE=no; diff -q /tmp/accept/hashes1.txt /tmp/accept/hashes2.txt >/dev/null && STABLE=yes
+          {
+            echo ""
+            echo "== isolated acceptance: TICKERS=\"URNM URNJ SETM\" VERBOSE=1 bun scripts/update-data.ts =="
+            echo "exit codes: run1=$RC1 run2=$RC2   byte-stable: $STABLE"
+            echo "config: $(grep -m1 -A30 'effective configuration' /tmp/accept/run1.log | tr '\n' ' ' | sed 's/  */ /g')"
+            echo "files: $(wc -l < /tmp/accept/hashes1.txt)   rows: $(find api/sprott -name '*.json' | wc -l) json files"
+            echo "hashes (both runs):"
+            cat /tmp/accept/hashes1.txt
+            echo "-- fund reporter lines --"
+            grep -E '^\[ [0-9]' /tmp/accept/run1.log || true
+            echo "-- provider warnings / fallbacks --"
+            grep -iE 'warn|fallback|retry|refus' /tmp/accept/run1.log | head -20 || true
+          } >> "$REPORT"
+
+          # --- full generation in the working tree (published api/sprott seed) ---
+          cd "$GITHUB_WORKSPACE"
+          bun scripts/update-data.ts > /tmp/full1.log 2>&1 || echo "full1 rc=$?" >> "$REPORT"
+          find api/sprott -type f | sort | xargs -r sha256sum > /tmp/full-hashes1.txt
+          bun scripts/update-data.ts > /tmp/full2.log 2>&1 || echo "full2 rc=$?" >> "$REPORT"
+          find api/sprott -type f | sort | xargs -r sha256sum > /tmp/full-hashes2.txt
+          FULL_STABLE=no; diff -q /tmp/full-hashes1.txt /tmp/full-hashes2.txt >/dev/null && FULL_STABLE=yes
+          {
+            echo ""
+            echo "== full generation: bun scripts/update-data.ts (all 13 funds) =="
+            echo "byte-stable on rerun: $FULL_STABLE"
+            echo "config: $(grep -m1 -A30 'effective configuration' /tmp/full1.log | tr '\n' ' ' | sed 's/  */ /g')"
+            grep -E '^\[ catalog|^\[ done' /tmp/full1.log || true
+            echo "-- fund reporter lines (full) --"
+            grep -E '^\[ [0-9]' /tmp/full1.log || true
+            echo "-- provider warnings / fallbacks (full) --"
+            grep -iE 'warn|fallback|retry|refus' /tmp/full1.log | head -20 || true
+            if [ "$FULL_STABLE" = no ]; then
+              echo "-- rerun diff --"
+              diff /tmp/full-hashes1.txt /tmp/full-hashes2.txt | head -20 || true
+            fi
+          } >> "$REPORT"
+          tail -5 "$REPORT"
+      - name: Commit generated feed + acceptance evidence
+        if: ${{ !cancelled() }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add api/sprott scripts/fixtures/2026-10-01/live-acceptance.txt
+          git diff --cached --quiet && echo "nothing to commit" && exit 0
+          git commit -m "chore(data): publish the Sprott feed and live acceptance evidence"
+          git push
