@@ -65,46 +65,62 @@ CURRENT STATE
 =============
 - Goal: Implement the Sprott ETFs holdings-to-watchlist web application in daggerok/Sprott with full sibling
   parity (Bun-only, zero runtime dependencies, static client app + generated ./api/sprott feed).
-- Status: Implementation in progress (session 2026-10-01). Reconnaissance, plan reconciliation and closest-sibling
-  analysis complete; feature branch created; live provider probe pending.
+- Status: Implementation checkpoint 1 complete on the feature branch (2026-10-01): updater, config, offline
+  tests, all three workflows + dependabot, and the UI copy are written and verified offline. Remaining: the
+  mandatory live acceptance + api/sprott bootstrap on a GitHub runner, README, prompt update, probe cleanup, PR.
 - Repository: https://github.com/daggerok/Sprott
 - Working branch: `arena/01a0f9aa-sprott` (SESSION-FIXED by the Arena environment, branched from main 3f5f537).
   The plan's `feat/sprott-etfs` name is NOT usable in this session (Arena tracks work by its own branch);
   the pull request is opened from `arena/01a0f9aa-sprott`. Recorded deviation, approved by the session rules.
 - Last confirmed pushed SHA: see the newest CHRONOLOGICAL JOURNAL entry (updated after every push).
-- Closest sibling pinned for copy/parity (this session): daggerok/Aberdeen
-  @ 10a6be3f5cab48aad80b52634e3bdd8123748f7d ("abrdn ETF"). Reason: it is one of the two siblings the plan names
-  for Sprott (HTML-table fund pages + SEC EDGAR N-PORT-P fallback + Yahoo chart history) AND it is the sibling that
-  already carries the requested `scripts/update-data.config.json` + `advanced` JSON dispatch workaround for the
-  GitHub Actions 25-input cap. Reference commit for README parity: same SHA.
+- Copy/parity pins (this session):
+  * Updater shape: daggerok/Aberdeen @ 10a6be3f5cab48aad80b52634e3bdd8123748f7d (HTML-table fund pages +
+    SEC EDGAR N-PORT-P fallback + Yahoo chart history; carries the `scripts/update-data.config.json` +
+    `advanced` JSON workaround for the 25-input Actions cap).
+  * UI copy source + README reference: daggerok/Xtrackers @ 3b1269aee216fe7a72fc7d7621a00088f12f3273
+    (newest sibling; carries the mandated count-badge hover/focus panel, the Trust/CIK attribution in the
+    header + N-PORT upload copy, and the shared Frequency "00 - None" behaviour). The `app.tsx`/`index.html`
+    diff against that sibling is limited to the 8 enumerated substitution categories; fund-detail rows are
+    unchanged.
 - Completed:
-  1. Read the whole .worklog.txt (832 lines) and reconciled it against git/remote/PR state.
-  2. Verified GitHub state: daggerok/Sprott has only .prompt.txt, .worklog.txt, LICENSE, README.md on main;
-     no open PRs; no workflows; Pages not configured; description/topics empty.
-  3. Surveyed the current sibling family (Aberdeen, Neos, Xtrackers, AAM, Invesco, SPDR, Franklin, JPMorgan,
-     Themes) for: scripts/update-data.config.json usage, the 25-input dispatch cap workaround, and workflow sets.
-  4. Confirmed via siblings the GitHub rule "workflow_dispatch permits 25 inputs"
-     (AAM comment) and the Aberdeen workaround: config file defaults + `advanced` JSON input resolved by
-     `resolveControls(file, advanced, inputs, env)` and written to $GITHUB_ENV, plus an offline regression test
-     asserting the workflow never exceeds 25 inputs.
-  5. Live-verified (fetch_page) that sprottetfs.com serves server-rendered fund pages with NAV/AUM/expense data
-     and the 13-ETF nav list: URNM, URNJ, SETM, COPP, COPJ, REXC, LITP, NIKL, GBUG, SGDM, SGDJ, SLVR, METL.
-  6. Determined that this sandbox has an egress allowlist (only github.com + registry.npmjs.org reachable), so
-     live provider acceptance cannot run from the sandbox; it is delegated to GitHub Actions runners, with a
-     temporary probe workflow to capture raw provider payloads for the parser + fixtures.
+  1. Read the whole .worklog.txt and reconciled it against git/remote/PR state; verified the Sprott repo has
+     only .prompt.txt, .worklog.txt, LICENSE, README.md on main, no PRs, no workflows, Pages not configured.
+  2. Surveyed the sibling family for `scripts/update-data.config.json` usage, the 25-input dispatch cap
+     workaround (AAM comment "GitHub permits 25 inputs"; Aberdeen's `advanced` JSON + resolveControls) and the
+     workflow sets (update-data.yml everywhere; Xtrackers adds ci.yml + pages.yml; AAM adds checks.yml).
+  3. Captured live provider payloads with a temporary probe workflow on a GitHub runner (runs 36937869084,
+     36937950856, 36938129007): all 13 fund pages, sitemap.xml, SEC submissions/company_tickers_mf.json and a
+     Yahoo chart payload are committed under `probe/` (temporary; deleted before the PR). Sandbox egress is
+     allowlisted (github.com + registry.npmjs.org only), so `probe/` + `fetch_page` are the only sources of
+     live payloads.
+  4. Wrote `scripts/update-data.ts` (Sprott provider: sitemap catalog + fund-page nav parsing; holdings from
+     the `Download All Holdings` CSV with the rendered table as fallback; distributions table; month-end /
+     quarter-end performance tables; key facts; Yahoo chart merge; SEC EDGAR N-PORT-P fallback; paginated
+     `holdings|history/NNN.json`; `meta.json` + `index.json`), `scripts/update-data.config.json` (28 controls,
+     `:` filter defaults, REQUEST_SLEEP=1/CONCURRENCY=2), `scripts/update-data.test.ts` (31 offline tests) and
+     `scripts/fixtures/2026-10-01/` (URNM/REXC/METL live pages + sitemap).
+  5. Wrote all workflows: `.github/workflows/update-data.yml` (25 dispatch inputs incl. the `advanced` JSON
+     override; resolve step writes resolved controls to $GITHUB_ENV; Sunday schedule; commit only changed
+     api/sprott files), `checks.yml` (offline tests + transpile checks + `git diff --check`), `pages.yml`
+     (main-only Pages deploy, also triggered by a successful data workflow), plus `.github/dependabot.yml`.
+  6. Copied `app.tsx` + `index.html` + `favicon.ico` from daggerok/Xtrackers and applied only the 8
+     substitution categories (brand header comment; localStorage keys; api paths; export prefix; status/
+     subtitle strings; provenance tooltip sentences; unchanged fund-detail rows; Trust name/CIK copy).
+  7. Offline verification so far: `bun test` 31 pass / 0 fail; `bun build --target=bun scripts/update-data.ts`
+     and `bun build --target=browser app.tsx` both bundle; `--help` prints the 28 effective controls; all 13
+     probe pages parse through the provider with the expected values.
 - Next action:
-  1. Push the checkpoint commit (log + probe workflow) to `arena/01a0f9aa-sprott` and collect the probe artifact
-     (raw HTML of all 13 Sprott fund pages, sitemap, SEC and Yahoo payloads).
-  2. Implement the app: package.json/bun.lock, index.html, app.tsx (Aberdeen copy + the 8 substitutions),
-     scripts/update-data.ts, scripts/update-data.config.json, scripts/update-data.test.ts, api/sprott seeds.
-  3. Implement ALL workflows: update-data.yml (25 inputs incl. `advanced` JSON workaround + config-file defaults),
-     checks.yml (offline CI: bun test + bun build transpile checks + git diff --check) and pages.yml (deploy
-     ./api/sprott + app to GitHub Pages), plus .github/dependabot.yml.
-  4. Run the updater live on a GitHub runner (isolated TICKERS subset >= 3) twice, verify byte-stability, then
-     publish the generated api/sprott seed data.
-  5. README + repo metadata, then open the PR from `arena/01a0f9aa-sprott` into main.
-- Blockers: none. Caveat: sandbox egress policy blocks all provider domains, so the mandatory live acceptance is
-  executed on GitHub Actions and its evidence (run ids, logs, artifact hashes) is recorded in this journal.
+  1. Run the mandatory live acceptance on a GitHub runner: isolated double run with
+     `TICKERS="URNM URNJ SETM" VERBOSE=1 bun scripts/update-data.ts`, hash compare, then the full 13-fund
+     generation whose `api/sprott` output is committed as the published seed.
+  2. Commit the acceptance evidence (run id, effective config, counts, hashes) into `.worklog.txt` and a
+     tracked evidence file; verify the generated feed against the UI copy.
+  3. README (pinned sibling reference) + `<title>`/topics/description metadata; update `.prompt.txt`.
+  4. Delete the temporary `probe/` directory and `.github/workflows/probe.yml`; final `bun test` + build check.
+  5. Push and open the PR from `arena/01a0f9aa-sprott` into main; report the update control mapping, the
+     `advanced` workaround and the acceptance results.
+- Blockers: none. Caveat: sandbox egress policy blocks all provider domains, so live acceptance and the
+  api/sprott bootstrap run on GitHub Actions; their run ids and hashes are recorded in this journal.
 
 
 AUTHORITY / USER AMENDMENTS
@@ -904,3 +920,17 @@ REPORT BACK WHEN DONE:
   `.github/workflows/probe.yml` (explicitly marked "delete before PR") to push and to trigger the probe.
   Note: pushing the probe workflow is a temporary means to obtain real provider fixtures; it is removed from the
   branch before the PR is opened so the final tree contains only the intended workflows.
+
+### 2026-10-01 — Implementation checkpoint 1: updater, workflows, config, UI copy
+- Delivered (uncommitted at the time of writing): scripts/update-data.ts (Sprott provider + static feed),
+  scripts/update-data.config.json, scripts/update-data.test.ts, scripts/fixtures/2026-10-01/, all workflows
+  (update-data.yml with the 25-input `advanced` workaround, checks.yml, pages.yml), .github/dependabot.yml,
+  package.json, bun.lock, favicon.ico, .gitignore, app.tsx, index.html.
+- Copy sources: updater shape Aberdeen @10a6be3f; UI/README reference Xtrackers @3b1269a (newest sibling with
+  the mandated header panel and Trust/CIK copy). app.tsx/index.html diff vs Xtrackers maps only to the 8
+  enumerated substitution categories.
+- Offline verification: 31/31 tests pass, both Bun builds succeed, --help prints 28 controls, and every probe
+  page parses (URNM 27 holdings rows / 5 distribution payments; REXC and METL parse cleanly).
+- Evidence capture: probe runs 36937869084 (docs checkpoint), 36937950856 (first capture),
+  36938129007 (green capture, 11s) — the committed probe/ payloads are the fixture source.
+- Next: live acceptance on the runner + api/sprott seed, README, prompt/worklog finalization, probe cleanup, PR.
