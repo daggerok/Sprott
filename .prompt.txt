@@ -38,3 +38,16 @@ GitHub Personal Access Token: <PASTE_YOUR_TOKEN_HERE>
 обновляй .worklog.txt, делай commit и push.
 
 ================================================================================================
+
+================================================================================================
+=== 3rd PROMPT (session 2026-10-01) — config file, all workflows, 25-input cap workaround ===
+
+update .prompt.txt and .worklog.txt files
+
+1) we should now check most closest sibling how does file update-data.config.json was used and do the same
+   and also we must implement all workflows and to workaround of 25 max parameters for github actions
+   similarly how we done already in sibling
+2) do full implementation accordingly and then create a PR
+
+Session note: this session is pinned to branch arena/01a0f9aa-sprott (Arena tracks work by that branch),
+so the plan's feat/sprott-etfs branch name is replaced by arena/01a0f9aa-sprott; the PR is opened from it.

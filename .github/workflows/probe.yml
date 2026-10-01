@@ -1,0 +1,55 @@
+name: TEMP probe (delete before PR)
+
+# Throwaway reconnaissance workflow: the implementation sandbox cannot reach
+# sprottetfs.com directly, so a GitHub runner captures raw HTML/fixtures here.
+# This file is removed from the branch before the pull request is opened.
+
+on:
+  push:
+    branches: [arena/01a0f9aa-sprott]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Capture live provider payloads
+        run: |
+          set -u
+          mkdir -p probes
+          UA="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36"
+          : > probes/manifest.txt
+          n=0
+          fetch() {
+            n=$((n+1))
+            local name="$1" url="$2"
+            local file
+            file=$(printf '%03d' "$n")"-${name}"
+            code=$(curl -sSL --max-time 90 -A "$UA" -H 'Accept: text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8' \
+              -D "probes/${file}.headers" -o "probes/${file}.body" -w '%{http_code}' "$url" || echo "curl-error")
+            size=$(wc -c < "probes/${file}.body" 2>/dev/null || echo 0)
+            printf '%s\t%s\t%s\t%s\n' "$file" "$code" "$size" "$url" >> probes/manifest.txt
+          }
+          fetch sitemap 'https://sprottetfs.com/sitemap.xml'
+          fetch robots 'https://sprottetfs.com/robots.txt'
+          fetch home 'https://sprottetfs.com/'
+          fetch etfs-list 'https://sprottetfs.com/sprott-etfs/'
+          for slug in urnm-sprott-uranium-miners-etf urnj-sprott-junior-uranium-miners-etf setm-sprott-critical-materials-etf copp-sprott-copper-miners-etf copj-sprott-junior-copper-miners-etf rexc-rare-earths-ex-china-etf litp-sprott-lithium-miners-etf nikl-sprott-nickel-miners-etf gbug-sprott-active-gold-silver-miners-etf sgdm-sprott-gold-miners-etf sgdj-sprott-junior-gold-miners-etf slvr-sprott-silver-miners-physical-silver-etf metl-sprott-active-metals-miners-etf; do
+            fetch "$slug" "https://sprottetfs.com/$slug/"
+          done
+          fetch yahoo-urnm 'https://query1.finance.yahoo.com/v8/finance/chart/URNM?range=5d&interval=1d'
+          fetch sec-browse 'https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001728683&type=N-PORT&dateb=&owner=include&count=40'
+          fetch sec-submissions 'https://data.sec.gov/submissions/CIK0001728683.json'
+          fetch sec-mf-tickers 'https://www.sec.gov/files/company_tickers_mf.json'
+          echo "--- manifest ---"
+          cat probes/manifest.txt
+      - name: Upload probe artifact
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: sprott-probe
+          path: probes/
+          if-no-files-found: warn
