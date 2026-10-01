@@ -63,13 +63,25 @@ jobs:
             grep -aiE 'warn|fallback|retry|refus' /tmp/accept/run1.log | grep -v EDGAR_FALLBACK | head -20 || true
           } >> "$REPORT"
 
+          # --- raw Yahoo stability probe (SGDJ pays distributions frequently) ---
+          for n in 1 2; do
+            curl -sS --max-time 60 -A "Mozilla/5.0" -H 'Accept: application/json' \
+              "https://query1.finance.yahoo.com/v8/finance/chart/SGDJ?range=max&interval=1d&events=div%2Csplit" \
+              -o "/tmp/sgdj-chart-$n.json" || echo "sgdj chart $n fetch failed"
+          done
+          sha256sum /tmp/sgdj-chart-1.json /tmp/sgdj-chart-2.json > /tmp/sgdj-chart-hashes.txt || true
+
           # --- full generation in the working tree (published api/sprott seed) ---
           cd "$GITHUB_WORKSPACE"
           bun scripts/update-data.ts > /tmp/full1.log 2>&1 || echo "full1 rc=$?" >> "$REPORT"
           find api/sprott -type f | sort | xargs -r sha256sum > /tmp/full-hashes1.txt
+          rm -rf /tmp/after-run1 && cp -R api/sprott /tmp/after-run1
           bun scripts/update-data.ts > /tmp/full2.log 2>&1 || echo "full2 rc=$?" >> "$REPORT"
           find api/sprott -type f | sort | xargs -r sha256sum > /tmp/full-hashes2.txt
+          bun scripts/update-data.ts > /tmp/full3.log 2>&1 || echo "full3 rc=$?" >> "$REPORT"
+          find api/sprott -type f | sort | xargs -r sha256sum > /tmp/full-hashes3.txt
           FULL_STABLE=no; diff -q /tmp/full-hashes1.txt /tmp/full-hashes2.txt >/dev/null && FULL_STABLE=yes
+          FULL_STABLE_23=no; diff -q /tmp/full-hashes2.txt /tmp/full-hashes3.txt >/dev/null && FULL_STABLE_23=yes
           {
             echo ""
             echo "== full generation: bun scripts/update-data.ts (all 13 funds) =="
@@ -81,9 +93,20 @@ jobs:
             grep -aE '^\[ +[0-9]+/' /tmp/full1.log || true
             echo "-- provider warnings / fallbacks (full) --"
             grep -aiE 'warn|fallback|retry|refus' /tmp/full1.log | grep -v EDGAR_FALLBACK | head -20 || true
+            echo "byte-stable on third run: $FULL_STABLE_23"
+            echo "-- raw Yahoo SGDJ chart hashes (two independent fetches) --"
+            cat /tmp/sgdj-chart-hashes.txt || true
             if [ "$FULL_STABLE" = no ]; then
-              echo "-- rerun diff --"
+              echo "-- changed files run1 -> run2 --"
               diff /tmp/full-hashes1.txt /tmp/full-hashes2.txt | head -20 || true
+              for changed in $(diff /tmp/full-hashes1.txt /tmp/full-hashes2.txt | awk '/^>/{print $3}'); do
+                echo "-- diff ${changed} (run1 -> run2, first 30 lines) --"
+                diff -u "/tmp/after-run1/${changed#api/sprott/}" "$changed" | head -30 || true
+              done
+            fi
+            if [ "$FULL_STABLE_23" = no ]; then
+              echo "-- changed files run2 -> run3 --"
+              diff /tmp/full-hashes2.txt /tmp/full-hashes3.txt | head -20 || true
             fi
           } >> "$REPORT"
           tail -5 "$REPORT"
