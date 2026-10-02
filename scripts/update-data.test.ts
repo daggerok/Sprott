@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 
 import {
-  CONTROL_NAMES, USAGE, configureRequestPacing, createRequestGate, fetchWithRetry, annualizedToTotal, batchSelection, cellsIn, decodeEntities, formatEdgarDate,
+  CONTROL_NAMES, USAGE, configureRequestPacing, createRequestGate, fetchWithRetry, annualizedToTotal, batchSelection, buildMetrics, performanceAsOfDate, priceReturns, storedDateIso, cellsIn, decodeEntities, formatEdgarDate,
   formatUsDate, indicatedYield, inferDistributionFrequency, isoDate, mergeHistory, normalizeNumberText, numberOrNull,
   parseCatalogNav, parseFeesTable, parseFundPage, parseHoldingsSection, parseLongDate, parseMoneyText,
   parseNport, parsePercentText, parseSitemapFundPages, parseSprottPerformance, parseReturnTable,
@@ -289,6 +289,46 @@ describe('derived metrics', () => {
     expect(inferDistributionFrequency([
       { epoch: at('2025-06-30'), amount: 0.1 }, { epoch: at('2025-12-31'), amount: 0.1 },
     ])).toEqual({ frequency: 'Semi-annually', paymentsPerYear: 2 });
+  });
+});
+
+describe('metrics contract (returnsBasis, performanceAsOf)', () => {
+  const days = [
+    { date: '2025-12-31', close: 10, adjClose: 10, volume: 1 },
+    { date: '2026-09-29', close: 11, adjClose: 11, volume: 1 },
+    { date: '2026-09-30', close: 12, adjClose: 12, volume: 1 },
+  ];
+  const derived = priceReturns(days, new Date('2026-09-30T00:00:00Z'));
+  const month = { asOfDate: 'Aug 31 2026', ytd: 5, yr1: 9, yr3: 3, yr5: null, yr10: null, sinceInception: 2 };
+
+  test('stored dates parse back to ISO', () => {
+    expect(storedDateIso('Sep 30 2026')).toBe('2026-09-30');
+    expect(storedDateIso('Sep 30, 2026')).toBe('2026-09-30');
+    expect(storedDateIso('2026-09-30')).toBe('2026-09-30');
+    expect(storedDateIso('—')).toBeNull();
+    expect(storedDateIso(undefined)).toBeNull();
+  });
+
+  test('official returns use the performance table date, not the NAV or Yahoo date', () => {
+    expect(performanceAsOfDate(true, month, derived)).toBe('2026-08-31');
+  });
+
+  test('derived returns use the last Yahoo close date', () => {
+    expect(performanceAsOfDate(false, null, derived)).toBe('2026-09-30');
+    expect(performanceAsOfDate(false, month, derived)).toBe('2026-09-30');
+  });
+
+  test('unknown date is null', () => {
+    expect(performanceAsOfDate(true, null, priceReturns([]))).toBeNull();
+  });
+
+  test('metrics end with returnsBasis then performanceAsOf', () => {
+    const metrics = buildMetrics(month, derived, null, 1.5, 'official test basis', '2026-08-31');
+    const keys = Object.keys(metrics);
+    expect(keys.slice(-2)).toEqual(['returnsBasis', 'performanceAsOf']);
+    expect(metrics.returnsBasis).toBe('official test basis');
+    expect(metrics.performanceAsOf).toBe('2026-08-31');
+    expect(metrics.ytd).toBe(5);
   });
 });
 

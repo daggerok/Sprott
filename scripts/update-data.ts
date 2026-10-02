@@ -1719,11 +1719,30 @@ function mergeDividends(old:JsonRecord,chart:ParsedChart|null):Array<{epoch:numb
   for (const d of chart?.dividends??[]) byDate.set(epochToIsoDate(d.epoch),d);
   return [...byDate.values()].sort((a,b)=>a.epoch-b.epoch);
 }
-export function buildMetrics(month:JsonRecord|null,derived:PriceReturns,secYield:number|null,divYield:number|null):JsonRecord {
+/** ISO date from a stored "Sep 30 2026" / "Sep 30, 2026" / ISO / US date text, or null. */
+export function storedDateIso(text: unknown): string | null {
+  const s = String(text ?? '').trim();
+  const iso = isoDate(s);
+  if (iso) return iso;
+  const m = /^([A-Za-z]{3})[A-Za-z]*\.?\s+(\d{1,2}),?\s+(\d{4})$/.exec(s);
+  if (!m) return null;
+  const month = MONTHS.findIndex((name) => name.toLowerCase() === m[1].toLowerCase());
+  if (month < 0) return null;
+  const out = `${m[3]}-${String(month + 1).padStart(2, '0')}-${m[2].padStart(2, '0')}`;
+  return Number.isFinite(Date.parse(out)) ? out : null;
+}
+
+/** Date the returns are as of: the official performance table date, else the last Yahoo close used. Never the NAV date. */
+export function performanceAsOfDate(official: boolean, month: JsonRecord | null, derived: PriceReturns): string | null {
+  const table = official ? storedDateIso(month?.asOfDate) : null;
+  return table ?? (derived.asOfDate ? storedDateIso(derived.asOfDate) : null);
+}
+
+export function buildMetrics(month:JsonRecord|null,derived:PriceReturns,secYield:number|null,divYield:number|null,returnsBasis:string,performanceAsOf:string|null):JsonRecord {
   const ytd=month?.ytd??derived.ytd, tr1y=month?.yr1??derived.yr1;
   const cagr3y=month?.yr3??derived.cagr3y,cagr5y=month?.yr5??derived.cagr5y,cagr10y=month?.yr10??derived.cagr10y;
   return {ytd,tr1y,cagr3y,cagr5y,cagr10y,tr3y:annualizedToTotal(cagr3y,3),tr5y:annualizedToTotal(cagr5y,5),tr10y:annualizedToTotal(cagr10y,10),
-    siAnn:month?.sinceInception??derived.siAnn,secYield,secYieldText:percent(secYield),dividendYield:divYield,dividendYieldText:percent(divYield)};
+    siAnn:month?.sinceInception??derived.siAnn,secYield,secYieldText:percent(secYield),dividendYield:divYield,dividendYieldText:percent(divYield),returnsBasis,performanceAsOf};
 }
 function mergeSprottDividends(old: JsonRecord, page: JsonRecord | null, chart: ParsedChart | null): Array<{ epoch: number; amount: number }> {
   const byDate = new Map(previousDividends(old).map((dividend) => [epochToIsoDate(dividend.epoch), dividend]));
@@ -1800,14 +1819,17 @@ async function processFund(fund: CatalogFund, config: UpdaterConfig, previousInd
   // A range-limited Yahoo download is not a since-inception return.
   if (!chart?.firstTradeDate || !days.length || Date.parse(days[0].date) / 1000 - chart.firstTradeDate > 7 * 86400) derived.siAnn = null;
   const hasOfficialReturns = Boolean(page?.performance?.month) || Boolean(month && !String(old.returns?.derivedFrom ?? '').startsWith('Yahoo adjusted'));
-  const metrics = buildMetrics(month, derived, secYield, divYield);
+  const returnsBasis = hasOfficialReturns
+    ? 'official sprottetfs.com month-end/quarter-end average annual total returns (NAV); missing metrics derived from Yahoo adjusted closes at the same reporting date'
+    : 'Yahoo adjusted market-price returns, not official NAV';
+  const metrics = buildMetrics(month, derived, secYield, divYield, returnsBasis, performanceAsOfDate(hasOfficialReturns, month, derived));
   if (month) month = { ...month, ytd: month.ytd ?? derived.ytd, mo1: month.mo1 ?? derived.mo1, qtd: month.qtd ?? derived.qtd };
   else if (usable.length) month = { asOfDate: formatEdgarDate(derived.asOfDate!), mo1: derived.mo1, qtd: derived.qtd, ytd: derived.ytd, yr1: derived.yr1, yr3: derived.cagr3y, yr5: derived.cagr5y, yr10: derived.cagr10y, sinceInception: derived.siAnn };
   const filtered = fundFilterReasons({ ticker, aumValue: aum, terValue: ter, metrics }, config);
   if (filtered.length) return null;
   const previousMetrics = previousIndex.metrics ?? {};
   // No fresh source must not null fields from the last successful publication.
-  for (const key of Object.keys(metrics)) if (metrics[key] === null && previousMetrics[key] !== undefined) metrics[key] = previousMetrics[key];
+  for (const key of Object.keys(metrics)) if (key !== 'performanceAsOf' && metrics[key] === null && previousMetrics[key] !== undefined) metrics[key] = previousMetrics[key];
   if (!page && !chart && !Object.keys(old).length) throw new Error(`${ticker}: no usable per-fund source`);
   const name = cleanText(page?.name) || fund.name || cleanText(old.name) || ticker;
   const category = cleanText(page?.category) || cleanText(old.category) || 'ETF';
@@ -1816,9 +1838,6 @@ async function processFund(fund: CatalogFund, config: UpdaterConfig, previousInd
   const oldHistoryHeaders = await readPreviousSheetHeaders(ticker, 'history');
   const historyManifest = await writePages(dir, ticker, 'history', chart?.days.length ? ['Date', 'Close', 'Adj Close', 'Volume'] : oldHistoryHeaders.length ? oldHistoryHeaders : ['Date', 'Close', 'Adj Close', 'Volume'], history, config.historyPageSize);
   const historySource = chart?.days.length ? 'Yahoo Finance daily market-price closes / adjusted closes (not official NAV)' : old.history?.source ?? 'unavailable';
-  const returnsBasis = hasOfficialReturns
-    ? 'official sprottetfs.com month-end/quarter-end average annual total returns (NAV); missing metrics derived from Yahoo adjusted closes at the same reporting date'
-    : 'Yahoo adjusted market-price returns, not official NAV';
   const meta = {
     ticker, name, category, categoryPath: cleanText(old.categoryPath) || category,
     source: { fundPage: fund.fundPage, catalog: CATALOG_PAGE, holdingsDownload: fund.fundPage, holdingsSource: holdings.source, historySource, yahooChart: `${YAHOO_CHART_URL}/${ticker}`, provider: 'sprottetfs.com official fund pages; SEC EDGAR N-PORT-P holdings fallback; Yahoo Finance market-history/dividend fallback' },
