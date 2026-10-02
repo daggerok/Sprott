@@ -8,7 +8,7 @@ import {
   formatUsDate, indicatedYield, inferDistributionFrequency, isoDate, mergeHistory, normalizeNumberText, numberOrNull,
   parseCatalogNav, parseFeesTable, parseFundPage, parseHoldingsSection, parseLongDate, parseMoneyText,
   parseNport, parsePercentText, parseSitemapFundPages, parseSprottPerformance, parseReturnTable,
-  parseDistributionsSection, resolveControls, readConfig, runPool, runtimeControls, stripHtml, tickerFromSlug, totalToAnnualized,
+  parseDistributionsSection, installSystemCa, isCertError, resolveControls, readConfig, runPool, runtimeControls, stripHtml, tickerFromSlug, totalToAnnualized,
 } from './update-data';
 import type { CatalogFund } from './update-data';
 
@@ -396,7 +396,7 @@ describe('resolver validation', () => {
       { UNKNOWN: 1 }, { SEC_UA: 'x\nEVIL=yes' }, { SEC_UA: 'x\rfoo' }, { SEC_UA: 'x\0bad' },
       { CONCURRENCY: 0 }, { MAX_RETRIES: 0 }, { MAX_RETRIES: -1 }, { MAX_RETRIES: '1.5' }, { MAX_FETCHES: 1.5 },
       { HOLDINGS_PAGE_SIZE: 0 }, { HISTORY_PAGE_SIZE: 'x' }, { REQUEST_SLEEP: '-1' }, { REQUEST_SLEEP: 'abc' },
-      { HISTORY_RANGE: 'oops' }, { VERBOSE: 'maybe' }, { SKIP_YAHOO: 'perhaps' }, { AUM: '1:2:3' }, { AUM: '5' },
+      { HISTORY_RANGE: 'oops' }, { VERBOSE: 'maybe' }, { USE_SYSTEM_CA: 'maybe' }, { SKIP_YAHOO: 'perhaps' }, { AUM: '1:2:3' }, { AUM: '5' },
       { TER: '2:1' }, { PERFORMANCE_1Y: 'a:b' }, { TOTAL_RETURN_10Y: '1' },
       { TICKERS: ['URNM'] }, { TICKERS: { a: 1 } }, { TICKERS: null },
     ]) {
@@ -436,6 +436,61 @@ describe('resolver validation', () => {
     await child.exited;
     expect(help).toContain('SEC_UA=<redacted>');
     expect(help.slice(help.indexOf('[ config'))).not.toContain('gmail.com');
+  });
+});
+
+describe('system CA support (USE_SYSTEM_CA)', () => {
+  test('resolver accepts auto/true/false case-insensitively and defaults to auto', () => {
+    expect(resolveControls(file).USE_SYSTEM_CA).toBe('auto');
+    for (const mode of ['auto', 'true', 'false']) {
+      expect(resolveControls(file, {}, {}, { USE_SYSTEM_CA: mode.toUpperCase() }).USE_SYSTEM_CA).toBe(mode);
+    }
+    expect(() => resolveControls(file, {}, {}, { USE_SYSTEM_CA: 'maybe' })).toThrow();
+  });
+
+  test('isCertError detects certificate failures, also through cause', () => {
+    expect(isCertError({ code: 'UNABLE_TO_GET_ISSUER_CERT_LOCALLY' })).toBe(true);
+    expect(isCertError(new Error('unable to get local issuer certificate'))).toBe(true);
+    expect(isCertError(new Error('fetch failed', { cause: new Error('unable to get local issuer certificate') }))).toBe(true);
+    expect(isCertError({ code: 'ECONNRESET' })).toBe(false);
+    expect(isCertError(new Error('HTTP 403 Forbidden'))).toBe(false);
+  });
+
+  test('installSystemCa leaves fetch alone for false/active, restarts for true, wraps fetch for auto', async () => {
+    const original = globalThis.fetch;
+    let calls = 0;
+    const reexec = (() => { calls++; return undefined as never; }) as () => never;
+    try {
+      installSystemCa('false', reexec, false);
+      expect(globalThis.fetch).toBe(original);
+      installSystemCa('auto', reexec, true);
+      expect(globalThis.fetch).toBe(original);
+      // the real reexec never returns, so a throwing stub mirrors that
+      const exits = (() => { calls++; throw new Error('exit'); }) as () => never;
+      expect(() => installSystemCa('true', exits, false)).toThrow('exit');
+      expect(calls).toBe(1);
+      expect(globalThis.fetch).toBe(original);
+
+      calls = 0;
+      globalThis.fetch = (async () => { throw new Error('unable to get local issuer certificate'); }) as unknown as typeof fetch;
+      const certFetch = globalThis.fetch;
+      installSystemCa('auto', reexec, false);
+      expect(globalThis.fetch).not.toBe(certFetch);
+      await globalThis.fetch('https://example.invalid/');
+      expect(calls).toBe(1);
+
+      globalThis.fetch = (async () => { throw new Error('ECONNRESET'); }) as unknown as typeof fetch;
+      installSystemCa('auto', reexec, false);
+      await expect(globalThis.fetch('https://example.invalid/')).rejects.toThrow('ECONNRESET');
+      expect(calls).toBe(1);
+
+      globalThis.fetch = (async () => new Response('ok')) as unknown as typeof fetch;
+      installSystemCa('auto', reexec, false);
+      expect(await (await globalThis.fetch('https://example.invalid/')).text()).toBe('ok');
+      expect(calls).toBe(1);
+    } finally {
+      globalThis.fetch = original;
+    }
   });
 });
 

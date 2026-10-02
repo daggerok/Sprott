@@ -88,6 +88,7 @@ Defaults below are exactly the values in `scripts/update-data.config.json`; blan
 | `SKIP_SPROTT` | `false` | Skip sprottetfs.com pages; retain published data (config/`advanced` only) |
 | `EDGAR_FALLBACK` | `true` | SEC N-PORT-P holdings fallback for funds without a usable holdings sheet |
 | `VERBOSE` | `false` | Provider/fallback/retry detail; the normal compact fund reporter always retains real zero/false and omits missing fields (config/`advanced` only) |
+| `USE_SYSTEM_CA` | `auto` | TLS trust store: `auto` restarts the updater once with Bun's `--use-system-ca` when a request fails with an untrusted-certificate error; `true` always uses the system CA store; `false` never restarts. Not an individual workflow input: use `advanced`, the config file or the CLI environment. |
 | `PERFORMANCE_YTD` | `:` | YTD performance percent min:max (3Y/5Y/10Y annualized) |
 | `PERFORMANCE_1Y` | `:` | 1Y performance percent min:max |
 | `PERFORMANCE_3Y` | `:` | 3Y annualized performance percent min:max |
