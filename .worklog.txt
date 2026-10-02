@@ -1023,3 +1023,8 @@ REPORT BACK WHEN DONE:
   * `bun build --target=bun scripts/update-data.ts --outfile=/dev/null`: 85.0 KB, clean.
   * `bun build --target=browser app.tsx --outfile=/dev/null`: 89.83 KB, clean.
   * `git diff --check`: clean; no duplicate paths or duplicate provider fixtures remain.
+- Published reconciliation:
+  * Pushed merge commit `95c1984` (plus this worklog commit) to `origin/arena/01a0fa39-sprott`.
+  * Opened conflict-free PR #6 (`https://github.com/daggerok/Sprott/pull/6`, base `main`, head `arena/01a0fa39-sprott`)
+    and updated PR #1 (`https://github.com/daggerok/Sprott/pull/1`) description and comment with the fast-forward and
+    single-file commit alternatives.
