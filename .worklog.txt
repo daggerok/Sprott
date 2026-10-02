@@ -63,28 +63,59 @@ GitHub Personal Access Token: <PASTE_YOUR_TOKEN_HERE>
 ================================================================
 CURRENT STATE
 =============
-- Goal: Implement Sprott ETFs holdings-to-watchlist web application in daggerok/Sprott matching sibling parity (Bun-only, zero runtime dependencies, static client app + update-data feed).
-- Status: Researched & Baseline Initialized. Repository cloned, clean baseline verified (LICENSE + placeholder README), official ETF brand site researched, data endpoints discovered and verified live, SEC EDGAR CIK confirmed, and self-contained plan embedded. Ready for implementation.
+- Goal: Implement the Sprott ETFs holdings-to-watchlist web application in daggerok/Sprott with full sibling
+  parity (Bun-only, zero runtime dependencies, static client app + generated ./api/sprott feed).
+- Status: IMPLEMENTATION COMPLETE on `arena/01a0f9aa-sprott` (2026-10-01); the live acceptance is green and the
+  published feed is committed. The remaining step is opening the pull request (merging is NOT authorized).
 - Repository: https://github.com/daggerok/Sprott
-- Branch: main (feature branch feat/sprott-etfs to be created during implementation)
-- Pushed remote baseline: main branch with initialized .worklog.txt
-- Completed:
-  1. Cloned target repository and verified clean baseline state.
-  2. Conducted live research on official ETF issuer portal (https://sprottetfs.com/ (overview at https://sprott.com/investment-strategies/exchange-listed-products/)).
-  3. Discovered and verified data acquisition pathways (endpoints, holdings formats, WAF characteristics).
-  4. Confirmed SEC EDGAR Trust registrant and CIK (CONFIRMED: 'SPROTT FUNDS TRUST', CIK 0001728683.).
-  5. Established closest sibling reference architecture (daggerok/Aberdeen or daggerok/NEOS (HTML table parser + Yahoo Finance history).).
-  6. Generated complete self-contained implementation plan (generic protocol + brand-specific specifications), eliminating any requirement for 00-generic.txt.
-  7. Committed initialized .worklog.txt into main branch.
-- Next action:
-  1. The next implementing agent starts here: read this .worklog.txt completely.
-  2. Create feature branch `feat/sprott-etfs`.
-  3. Live-verify the site endpoints listed in PART 2 below.
-  4. Scaffold repo files from closest sibling (daggerok/Aberdeen or daggerok/NEOS (HTML table parser + Yahoo Finance history).): package.json, bun.lock, index.html, app.tsx, scripts/update-data.ts, scripts/update-data.test.ts, .github/workflows/update-data.yml, .github/dependabot.yml, and README.md.
-  5. Implement data updater matching verified endpoints and run offline tests (bun test scripts/update-data.test.ts).
-  6. Execute isolated acceptance runs (minimum 3 tickers), verify byte-stability across repeat runs.
-  7. Update .worklog.txt after each stage, commit with Conventional Commits, and push to feature branch.
-- Blockers: None. Ready for feature branch implementation.
+- Working branch: `arena/01a0f9aa-sprott` (SESSION-FIXED by the Arena environment, branched from main 3f5f537).
+  The plan's `feat/sprott-etfs` name is NOT usable in this session; the pull request is opened from
+  `arena/01a0f9aa-sprott`. Recorded deviation, approved by the session rules.
+- Last confirmed pushed SHA: see the newest CHRONOLOGICAL JOURNAL entry (updated after every push).
+- Copy/parity pins (this session):
+  * Updater shape: daggerok/Aberdeen @ 10a6be3f5cab48aad80b52634e3bdd8123748f7d (HTML-table fund pages +
+    SEC EDGAR N-PORT-P fallback + Yahoo chart history; carries `scripts/update-data.config.json` and the
+    `advanced` JSON workaround for the 25-input Actions cap).
+  * UI copy source + README reference: daggerok/Xtrackers @ 3b1269aee216fe7a72fc7d7621a00088f12f3273
+    (newest sibling; carries the mandated count-badge hover/focus panel, the Trust/CIK attribution in the
+    header + N-PORT upload copy and the shared Frequency "00 - None" behaviour). The app.tsx/index.html diff
+    against that sibling is limited to the 8 enumerated substitution categories; fund-detail rows are
+    unchanged.
+- Delivered and VERIFIED (offline): scripts/update-data.ts (Sprott provider + static feed writer),
+  scripts/update-data.config.json (28 controls), scripts/update-data.test.ts (34 tests, incl. the workflow
+  invariants and three history-merge stability tests), scripts/ui.test.ts (5 client-substitution tests),
+  scripts/fixtures/2026-10-01/ (live fund pages, sitemap, acceptance evidence), app.tsx + index.html +
+  favicon.ico (Xtrackers copy + the 8 substitutions), .github/workflows/{update-data.yml,checks.yml,pages.yml},
+  .github/dependabot.yml, package.json, bun.lock, .gitignore, README.md.
+- Live acceptance (GitHub runner, VERIFIED): run 36940158567 / commit 19c5957 — isolated double run
+  TICKERS="URNM URNJ SETM" VERBOSE=1: rc 0/0, byte-stable yes, 11 files; full generation: rc 0/0/0, the
+  published seed was reproduced byte-for-byte on the first pass, and pass1->pass2 / pass2->pass3 were
+  byte-stable; 13 funds processed, 0 skipped, 0 failures; 736 holdings rows / 14,111 history rows. Evidence:
+  scripts/fixtures/2026-10-01/live-acceptance.txt (hashes, effective config, per-fund counts, Yahoo probe).
+- Published feed: api/sprott/index.json + funds/<T>/{meta.json,holdings/001.json,history/NNN.json} — 13 funds,
+  46 files; SGDM 4 history pages, SGDJ 3, URNM 2, the rest 1. No update-state.json remains (full pass).
+- Pull request: **https://github.com/daggerok/Sprott/pull/2** (OPEN, base `main`, head `arena/01a0f9aa-sprott`,
+  25 commits, mergeable) — opened 2026-10-01. CI check `offline` (checks.yml: frozen install, `bun test`
+  39 tests, bun + browser bundles, `git diff --check`) passed on the PR. Merging is NOT authorized and left
+  to the owner. The repository description/topics/homepage already match the sibling convention; this
+  session's token cannot PATCH repo metadata (403), so nothing was changed there.
+- Parallel PR note: PR #1 (`feat/sprott-etfs`, opened 2026-10-01 23:31 by a separate agent session) carries the
+  same 25-input `advanced` workaround and a 4-ticker byte-stable acceptance, but only 22 files, no committed
+  api/sprott feed (the README tells the user to run the workflow once to generate it), no checks.yml/pages.yml,
+  no PR CI ("no checks reported") and a 27-key config missing `SEC_YIELD`. Recommendation: keep PR #2 as the
+  merge candidate and close PR #1 without deleting its branch. Only `.gitattributes` (`scripts/fixtures/**
+  -whitespace`, so captured HTML fixtures never trip whitespace checks on refresh) was harvested from it; its
+  optional "holdings row count must equal the page's Number of Holdings" validation is recorded as a possible
+  follow-up.
+- PR #1 resolved 2026-10-02: closed with the supersession comment
+  (https://github.com/daggerok/Sprott/pull/1#issuecomment-5943603163); the `feat/sprott-etfs` branch was kept
+  at 9f43831 for reference and nothing was force-pushed or deleted.
+- Next action: the owner reviews and merges PR #2, then enables GitHub Pages (GitHub Actions source) so
+  <https://daggerok.github.io/Sprott/> deploys from `main`. Any follow-up data refresh runs through the
+  Update Sprott ETF data workflow.
+- Blockers: none. Caveat: the sandbox egress policy blocks all provider domains, so the live acceptance ran on
+  GitHub Actions; its run ids and hashes are recorded in this journal and in the evidence file.
+
 
 AUTHORITY / USER AMENDMENTS
 ==========================
@@ -92,6 +123,10 @@ AUTHORITY / USER AMENDMENTS
 - User selected the first-prompt / recovery protocol.
 - User explicitly required eliminating external dependencies on 00-generic.txt; this file is 100% self-contained.
 - Secrets and tokens must never be persisted to repository files or Git configuration.
+- User amendment 2026-10-01 (this session): (1) inspect the closest sibling's use of
+  `scripts/update-data.config.json` and do the same; (2) implement ALL workflows and work around GitHub Actions'
+  25-input cap the same way the sibling does; (3) do the full implementation and open a PR.
+- Session constraint: all work happens on branch `arena/01a0f9aa-sprott`; the PR is opened from that branch.
 
 CHRONOLOGICAL JOURNAL
 =====================
@@ -830,3 +865,118 @@ REQUEST PACING & CONCURRENCY:
 REPORT BACK WHEN DONE:
   Verify full fund list slug mappings on sprottetfs.com.
 
+### 2026-10-01 — Session start: reconciliation, closest-sibling analysis, config-file/workflow decisions
+- Read .prompt.txt and the complete .worklog.txt (832 lines) in four chunks; no truncation used for decisions.
+- Git/remote state: branch `arena/01a0f9aa-sprott` at 3f5f537 == origin/main 3f5f537; working tree clean;
+  no other branches; no open PRs (`gh pr list` empty); repo contents on main: .prompt.txt, .worklog.txt,
+  LICENSE, README.md only.
+- Cloned the sibling family for inspection into a scratch dir (Aberdeen, Neos, Xtrackers, AAM, Invesco, SPDR,
+  Franklin, JPMorgan, Themes) and recorded the pinned reference: daggerok/Aberdeen @
+  10a6be3f5cab48aad80b52634e3bdd8123748f7d.
+- Findings — `scripts/update-data.config.json` (Aberdeen):
+  * Contains every canonical control as a string (`MAX_FETCHES`, `REQUEST_SLEEP`, `CONCURRENCY`, range filters,
+    `TICKERS`, `HOLDINGS_PAGE_SIZE`, `HISTORY_PAGE_SIZE`, `MAX_RETRIES`, `HISTORY_RANGE`,
+    `STORE_RAW_DOWNLOADS`, `SEC_UA`, provider `SKIP_*`, `EDGAR_FALLBACK`, `VERBOSE`, `PERFORMANCE_*`,
+    `TOTAL_RETURN_*`).
+  * `export const CONTROL_NAMES` allowlists the names; `resolveControls(file, advanced, inputs, env)` validates
+    and merges them with precedence: FILE defaults < `advanced` JSON < non-blank individual dispatch inputs <
+    environment (brand alias `ABERDEEN_<NAME>` wins). Unknown keys / arrays / null / multiline injection /
+    out-of-range integers / invalid booleans / invalid HISTORY_RANGE are rejected with an error.
+  * `runtimeControls()` reads `scripts/update-data.config.json` next to the updater (independent of cwd; ENOENT
+    is tolerated) and is unit-tested for precedence and for cwd-independence.
+- Findings — the 25-input cap workaround (Aberdeen, mirroring AAM's comment "GitHub permits 25 inputs"):
+  * `.github/workflows/update-data.yml` declares exactly 25 `workflow_dispatch` inputs, the 25th being
+    `advanced` ("JSON overrides for any canonical env control; individual nonblank inputs win").
+  * A "Resolve file defaults and manual overrides" step runs `bun --eval` importing `resolveControls`, merges
+    file + `advanced` JSON + non-blank inputs, and appends `KEY=value` lines to $GITHUB_ENV (no shell
+    interpolation of user input), so the updater itself receives plain ENV vars.
+  * The other 24 inputs map 1:1 to canonical controls; controls that would exceed 25 (e.g. `SEC_UA`, `VERBOSE`)
+    stay config-file/CLI-only and are reachable through `advanced` JSON.
+  * Offline test asserts the workflow has at most 25 inputs, exposes `concurrency`/`tickers`, and has no `push:`
+    trigger.
+- Findings — workflow sets in the family: most brands ship only `update-data.yml`; the newest siblings add
+  offline CI (`Xtrackers/ci.yml`, `AAM/checks.yml`) and Pages deployment (`Xtrackers/pages.yml`). Decision:
+  Sprott ships update-data.yml + checks.yml + pages.yml (all three), keeping update-data.yml free of push
+  triggers and pinning Pages deployment to main-only runs.
+- Live provider verification (fetch_page, since the sandbox egress allowlist blocks direct curl):
+  * https://sprottetfs.com/urnm-sprott-uranium-miners-etf/ returns a fully server-rendered page with the full
+    13-ETF navigation list (URNM, URNJ, SETM, COPP, COPJ, REXC, LITP, NIKL, GBUG, SGDM, SGDJ, SLVR, METL),
+    "As of September 30, 2026", NAV $47.63, Market Price $47.50, Premium/Discount -0.27%,
+    Total Net Asset Value $1.84 Billion, Net Total Expense Ratio 0.75%.
+  * https://sprottetfs.com/ is server-rendered too (no WAF challenge observed through the rendering fetcher).
+- Sandbox constraints recorded: only github.com, api.github.com and registry.npmjs.org are reachable from bash;
+  all provider domains (sprottetfs.com, sec.gov, query1.finance.yahoo.com, ...) fail with SSL_ERROR_SYSCALL.
+  bun 1.4.2 was installed from the npm registry into a scratch dir for offline runs; there is no way to execute
+  the mandatory live acceptance run locally. Mitigation: a temporary (non-PR) GitHub Actions probe workflow
+  captures raw provider payloads for parser development + fixtures, and the real acceptance run executes on a
+  GitHub runner, with run ids/logs/artifact hashes recorded below.
+- Checkpoint 1: updated .prompt.txt (3rd prompt) and .worklog.txt (this entry), added temporary
+  `.github/workflows/probe.yml` (explicitly marked "delete before PR") to push and to trigger the probe.
+  Note: pushing the probe workflow is a temporary means to obtain real provider fixtures; it is removed from the
+  branch before the PR is opened so the final tree contains only the intended workflows.
+
+### 2026-10-01 — Implementation checkpoint 1: updater, workflows, config, UI copy
+- Delivered (uncommitted at the time of writing): scripts/update-data.ts (Sprott provider + static feed),
+  scripts/update-data.config.json, scripts/update-data.test.ts, scripts/fixtures/2026-10-01/, all workflows
+  (update-data.yml with the 25-input `advanced` workaround, checks.yml, pages.yml), .github/dependabot.yml,
+  package.json, bun.lock, favicon.ico, .gitignore, app.tsx, index.html.
+- Copy sources: updater shape Aberdeen @10a6be3f; UI/README reference Xtrackers @3b1269a (newest sibling with
+  the mandated header panel and Trust/CIK copy). app.tsx/index.html diff vs Xtrackers maps only to the 8
+  enumerated substitution categories.
+- Offline verification: 31/31 tests pass, both Bun builds succeed, --help prints 28 controls, and every probe
+  page parses (URNM 27 holdings rows / 5 distribution payments; REXC and METL parse cleanly).
+- Evidence capture: probe runs 36937869084 (docs checkpoint), 36937950856 (first capture),
+  36938129007 (green capture, 11s) — the committed probe/ payloads are the fixture source.
+- Next: live acceptance on the runner + api/sprott seed, README, prompt/worklog finalization, probe cleanup, PR.
+
+### 2026-10-01 — Live acceptance, published feed, README, client tests, acceptance cleanup
+- Acceptance rounds and the instability finding:
+  * 36939293512 (job 110626786182) and 36939476094: isolated double run with TICKERS="URNM URNJ SETM"
+    VERBOSE=1 was byte-stable (11 files), but the first full generation changed
+    api/sprott/funds/SGDJ/history/001.json again on the second pass.
+  * 36939657318 (diagnostics): two raw Yahoo SGDJ chart fetches seconds apart returned different sha256
+    payloads, and the pass1->pass2 delta was a single field — `Adj Close` "27.69" <-> "27.7" for Oct 10 2016,
+    a value sitting exactly on the .xx5 rounding boundary. pass2->pass3 was already stable, i.e. an upstream
+    restatement plus boundary rounding, not a pipeline bug.
+  * Fix (commit 19c5957): `mergeHistory` keeps the published adjusted close while a fresh value moves by less
+    than two cents and replaces the row for any larger restatement; three regression tests added
+    (scripts/update-data.test.ts -> 34 tests).
+  * 36940158567 (final, VERIFIED): isolated double run rc 0/0 byte-stable; full pass1 reproduced the committed
+    seed byte-for-byte; pass1->pass2 and pass2->pass3 byte-stable; 13 funds processed / 0 skipped /
+    0 failures; 736 holdings / 14,111 history rows; evidence rewritten as a single report and committed
+    (3a8631d -> scripts/fixtures/2026-10-01/live-acceptance.txt).
+- README: pinned the Xtrackers structure with truthful Sprott facts only (13 funds / 736 holdings rows /
+  14,111 history rows; sitemap + fund-navigation catalog; embedded holdings CSV with the rendered-table
+  fallback; Yahoo market-price history, honest 00 - None SEC-yield note; the 25-input `advanced` JSON
+  description; CI/Pages/Dependabot summary; deployment described as pending, never as live).
+- scripts/ui.test.ts added in the finalization round: pins the ./api/sprott paths, the sprott- storage/export prefixes, the
+  00 - None frequency fallback, the SPROTT FUNDS TRUST / CIK 0001728683 attribution and the count-badge
+  hover/focus panel wiring. `bun test` = 39 pass / 0 fail across 2 files.
+- Cleanup: `.github/workflows/acceptance.yml` deleted and `probe/`/`probe.yml` had already been
+  removed in e3f1857; the evidence file remains as the tracked acceptance record.
+- Workspace note: the local .git was re-cloned shallow again, so the finalization commits were re-created
+  from the preserved working tree; the pushed history up to 3a8631d is unchanged.
+- Offline gates re-run after the fix: `bun test` 39/0, `bun build --target=bun scripts/update-data.ts`,
+  `bun build --target=browser app.tsx`, `git diff --check` all clean.
+
+- PR opened: `gh pr create --base main --head arena/01a0f9aa-sprott` -> PR #2 (25 commits, MERGEABLE),
+  verified with `gh pr checks 2` (job "offline" passed on run 36945364045). Repo metadata was already set
+  (description/topics/homepage); the PATCH attempt returned 403 for this token, so it was left untouched.
+- Final pushed SHA: e7bc4a4 (plus this worklog commit); `origin/arena/01a0f9aa-sprott` tree = 69 files,
+  46 of them under api/sprott, no probe/ and no temporary acceptance workflow.
+
+### 2026-10-01 — Parallel PR #1 comparison and the fixture whitespace guard
+- Compared `feat/sprott-etfs` (PR #1, 9 commits, 22 files) against this branch: it reaches parity on the
+  config JSON, the 25-input dispatch and the client substitutions, and its isolated 4-ticker double run is
+  byte-stable (196 holdings / 5,336 history rows, 0 failures). It is not a superset: no committed api/sprott
+  seed, no checks.yml/pages.yml, no PR CI, SEC_YIELD missing from its config, no ui tests.
+- Action taken here: added `.gitattributes` with `scripts/fixtures/** -whitespace` (the captured provider
+  pages legitimately contain trailing whitespace, 25 lines each) so future fixture refreshes do not fail
+  whitespace checks; verified with `git check-attr`.
+- Recommendation recorded: PR #2 stays the merge candidate; PR #1 can be closed by the owner with its branch
+  kept for reference. No cross-branch writes were made.
+
+- Owner cleanup 278e73f ("cleanup", authored by Maksim Kostromin): set the executable bit on
+  `scripts/update-data.ts` (100644 -> 100755) to match its `#!/usr/bin/env bun` shebang and the README
+  `./scripts/update-data.ts` invocations. Preserved here: the sandbox worktree had lost the bit, so it was
+  restored with chmod and is never re-staged as a mode change.

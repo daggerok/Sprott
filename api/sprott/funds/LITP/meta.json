@@ -1,0 +1,131 @@
+{
+ "ticker": "LITP",
+ "name": "Sprott Lithium Miners ETF",
+ "category": "Critical Materials",
+ "categoryPath": "Critical Materials",
+ "source": {
+  "fundPage": "https://sprottetfs.com/litp-sprott-lithium-miners-etf/",
+  "catalog": "https://sprottetfs.com/sitemap.xml",
+  "holdingsDownload": "https://sprottetfs.com/litp-sprott-lithium-miners-etf/",
+  "holdingsSource": "sprottetfs.com \"Download All Holdings\" CSV",
+  "historySource": "Yahoo Finance daily market-price closes / adjusted closes (not official NAV)",
+  "yahooChart": "https://query1.finance.yahoo.com/v8/finance/chart/LITP",
+  "provider": "sprottetfs.com official fund pages; SEC EDGAR N-PORT-P holdings fallback; Yahoo Finance market-history/dividend fallback"
+ },
+ "providerIds": {
+  "fundPage": "https://sprottetfs.com/litp-sprott-lithium-miners-etf/"
+ },
+ "legalStructure": null,
+ "identifiers": {
+  "cusip": "85208P709",
+  "isin": "US85208P7096",
+  "indexTicker": "NSLITP"
+ },
+ "inception": {
+  "fundInceptionDate": "2023-02-01",
+  "shareClassInceptionDate": null,
+  "exchange": "Nasdaq"
+ },
+ "expenseRatio": {
+  "display": "0.65%",
+  "value": 0.65,
+  "gross": 0.65,
+  "net": 0.65
+ },
+ "nav": {
+  "display": "$9.26",
+  "value": 9.26,
+  "asOfDate": "Sep 30 2026"
+ },
+ "marketPrice": {
+  "display": "$9.20",
+  "value": 9.2,
+  "asOfDate": "Sep 30 2026"
+ },
+ "premiumDiscount": {
+  "display": "-0.65%",
+  "value": -0.65
+ },
+ "aum": {
+  "display": "$33.43 Million",
+  "value": 33430000,
+  "asOfDate": "Sep 30 2026",
+  "source": "sprottetfs.com fund page (Total Net Asset Value)"
+ },
+ "yields": {
+  "dividendYield": 9.67,
+  "dividendYieldText": "9.67%",
+  "dividendYieldKind": "indicated (latest distribution x payments per year / market price)",
+  "secYield": null,
+  "secYieldText": "—",
+  "secYieldKind": "not published",
+  "unsubsidizedSecYield": null
+ },
+ "returns": {
+  "monthEnd": {
+   "asOfDate": "Sep 30 2026",
+   "ytd": -23.6,
+   "yr1": 10.96,
+   "yr3": -9.33,
+   "yr5": null,
+   "yr10": null,
+   "sinceInception": -15.54,
+   "mo1": -22.51,
+   "qtd": -25.74
+  },
+  "quarterEnd": {
+   "asOfDate": "Sep 30 2026",
+   "ytd": -23.6,
+   "yr1": 10.96,
+   "yr3": -9.33,
+   "yr5": null,
+   "yr10": null,
+   "sinceInception": -15.54,
+   "mo1": -22.51,
+   "qtd": -25.74
+  },
+  "derivedFrom": "official sprottetfs.com month-end/quarter-end average annual total returns (NAV); missing metrics derived from Yahoo adjusted closes at the same reporting date"
+ },
+ "distributions": {
+  "frequency": "Annually",
+  "paymentsPerYear": 1,
+  "headers": [
+   "Ex-Date",
+   "Amount"
+  ],
+  "rows": [
+   [
+    "12/14/2023",
+    "0.35"
+   ],
+   [
+    "12/12/2024",
+    "0.44"
+   ],
+   [
+    "12/18/2025",
+    "0.89"
+   ]
+  ]
+ },
+ "holdings": {
+  "pages": [
+   "holdings/001.json"
+  ],
+  "pageSize": 250,
+  "totalRows": 39,
+  "asOfDate": "2026-09-30",
+  "asOf": "Sep 30 2026",
+  "source": "sprottetfs.com \"Download All Holdings\" CSV",
+  "status": "available"
+ },
+ "history": {
+  "pages": [
+   "history/001.json"
+  ],
+  "pageSize": 1000,
+  "totalRows": 919,
+  "asOf": "Oct 01 2026",
+  "source": "Yahoo Finance daily market-price closes / adjusted closes (not official NAV)"
+ }
+}

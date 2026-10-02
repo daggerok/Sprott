@@ -1,0 +1,131 @@
+{
+ "ticker": "SETM",
+ "name": "Sprott Critical Materials ETF",
+ "category": "Critical Materials",
+ "categoryPath": "Critical Materials",
+ "source": {
+  "fundPage": "https://sprottetfs.com/setm-sprott-critical-materials-etf/",
+  "catalog": "https://sprottetfs.com/sitemap.xml",
+  "holdingsDownload": "https://sprottetfs.com/setm-sprott-critical-materials-etf/",
+  "holdingsSource": "sprottetfs.com \"Download All Holdings\" CSV",
+  "historySource": "Yahoo Finance daily market-price closes / adjusted closes (not official NAV)",
+  "yahooChart": "https://query1.finance.yahoo.com/v8/finance/chart/SETM",
+  "provider": "sprottetfs.com official fund pages; SEC EDGAR N-PORT-P holdings fallback; Yahoo Finance market-history/dividend fallback"
+ },
+ "providerIds": {
+  "fundPage": "https://sprottetfs.com/setm-sprott-critical-materials-etf/"
+ },
+ "legalStructure": null,
+ "identifiers": {
+  "cusip": "85208P402",
+  "isin": "US85208P4028",
+  "indexTicker": "NSETM"
+ },
+ "inception": {
+  "fundInceptionDate": "2023-02-01",
+  "shareClassInceptionDate": null,
+  "exchange": "Nasdaq"
+ },
+ "expenseRatio": {
+  "display": "0.65%",
+  "value": 0.65,
+  "gross": 0.65,
+  "net": 0.65
+ },
+ "nav": {
+  "display": "$29.42",
+  "value": 29.42,
+  "asOfDate": "Sep 30 2026"
+ },
+ "marketPrice": {
+  "display": "$29.28",
+  "value": 29.28,
+  "asOfDate": "Sep 30 2026"
+ },
+ "premiumDiscount": {
+  "display": "-0.48%",
+  "value": -0.48
+ },
+ "aum": {
+  "display": "$526.07 Million",
+  "value": 526070000,
+  "asOfDate": "Sep 30 2026",
+  "source": "sprottetfs.com fund page (Total Net Asset Value)"
+ },
+ "yields": {
+  "dividendYield": 1.54,
+  "dividendYieldText": "1.54%",
+  "dividendYieldKind": "indicated (latest distribution x payments per year / market price)",
+  "secYield": null,
+  "secYieldText": "—",
+  "secYieldKind": "not published",
+  "unsubsidizedSecYield": null
+ },
+ "returns": {
+  "monthEnd": {
+   "asOfDate": "Sep 30 2026",
+   "ytd": 2.08,
+   "yr1": 19.67,
+   "yr3": 19.98,
+   "yr5": null,
+   "yr10": null,
+   "sinceInception": 12.23,
+   "mo1": -14.75,
+   "qtd": -5.43
+  },
+  "quarterEnd": {
+   "asOfDate": "Sep 30 2026",
+   "ytd": 2.08,
+   "yr1": 19.67,
+   "yr3": 19.98,
+   "yr5": null,
+   "yr10": null,
+   "sinceInception": 12.23,
+   "mo1": -14.75,
+   "qtd": -5.43
+  },
+  "derivedFrom": "official sprottetfs.com month-end/quarter-end average annual total returns (NAV); missing metrics derived from Yahoo adjusted closes at the same reporting date"
+ },
+ "distributions": {
+  "frequency": "Annually",
+  "paymentsPerYear": 1,
+  "headers": [
+   "Ex-Date",
+   "Amount"
+  ],
+  "rows": [
+   [
+    "12/14/2023",
+    "0.44"
+   ],
+   [
+    "12/12/2024",
+    "0.31"
+   ],
+   [
+    "12/18/2025",
+    "0.45"
+   ]
+  ]
+ },
+ "holdings": {
+  "pages": [
+   "holdings/001.json"
+  ],
+  "pageSize": 250,
+  "totalRows": 158,
+  "asOfDate": "2026-09-30",
+  "asOf": "Sep 30 2026",
+  "source": "sprottetfs.com \"Download All Holdings\" CSV",
+  "status": "available"
+ },
+ "history": {
+  "pages": [
+   "history/001.json"
+  ],
+  "pageSize": 1000,
+  "totalRows": 919,
+  "asOf": "Oct 01 2026",
+  "source": "Yahoo Finance daily market-price closes / adjusted closes (not official NAV)"
+ }
+}
