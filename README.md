@@ -31,7 +31,7 @@ GitHub permits 25 `workflow_dispatch` inputs, so the workflow exposes the 24 nam
 advanced: '{"SEC_UA":"ops contact","VERBOSE":"true","SKIP_YAHOO":"true"}'
 ```
 
-The resolution order is `scripts/update-data.config.json` → `advanced` JSON → nonblank individual inputs → process ENV. A blank input inherits the checked-in JSON, and any **nonblank** value wins, including `0` and `false`.
+The resolution order is `scripts/update-data.config.json` → `advanced` JSON → nonblank individual inputs → protected Actions variable (`vars.SEC_UA`) or process ENV (`SPROTT_<NAME>` alias accepted for every control). A blank input inherits the checked-in JSON, and any **nonblank** value wins, including `0` and `false`. Locally, an explicitly set environment variable overrides the file even when empty.
 
 [scripts/update-data.config.json](scripts/update-data.config.json) is the checked-in runtime default, loaded relative to the updater, not the current working directory. Edit this flat JSON to change defaults locally and in Actions. Only a missing JSON file permits built-in fallbacks; malformed or unreadable configuration fails instead of being silently ignored. `--help` prints the JSON defaults. All supplied filters use **AND** logic.
 
@@ -79,10 +79,10 @@ Defaults below are from `scripts/update-data.config.json`; blank Actions inputs 
 | `SEC_YIELD` | `:` | 30-day SEC-yield range in %, min:max; Sprott publishes none, so an active range filters everything out. |
 | `HOLDINGS_PAGE_SIZE` | `250` | Holdings rows per JSON page |
 | `HISTORY_PAGE_SIZE` | `1000` | Daily history rows per JSON page |
-| `MAX_RETRIES` | `2` | Retries after the initial request (transient HTTP/network failures only) |
+| `MAX_RETRIES` | `2` | Retries after the initial request, integer >= 1 (transient HTTP/network failures only) |
 | `HISTORY_RANGE` | `max` | Yahoo daily history range: `max` or `Ny` (e.g. `5y`); merges with previously published history |
 | `STORE_RAW_DOWNLOADS` | `false` | Keep raw provider payload snapshots beside the feed (config/`advanced` only) |
-| `SEC_UA` | declared UA | SEC contact User-Agent; override with your real contact. Do not put credentials here. |
+| `SEC_UA` | declared UA | SEC contact User-Agent; the Actions variable `SEC_UA` overrides it when nonblank. Do not put credentials here. |
 | `SKIP_YAHOO` | `false` | Skip Yahoo history and dividends; retain published data |
 | `SKIP_SPROTT` | `false` | Skip sprottetfs.com pages; retain published data (config/`advanced` only) |
 | `EDGAR_FALLBACK` | `true` | SEC N-PORT-P holdings fallback for funds without a usable holdings sheet |
