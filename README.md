@@ -61,6 +61,10 @@ Each fund carries a derived `metrics` object that powers the catalog columns sha
 - `siAnn` - since-inception annualized when date/age/coverage support it (not young cumulative SI) -> *SI Ann.*
 - `dividendYield` - indicated rate: latest positive distribution × payments per year ÷ market price
 - `secYield` - a dash placeholder: Sprott publishes none
+- `returnsBasis` - mandatory non-empty text saying how the returns were computed: official sprottetfs.com NAV total returns with gaps derived from Yahoo adjusted closes, or Yahoo adjusted market-price returns (an estimate, not official NAV)
+- `performanceAsOf` - mandatory ISO `YYYY-MM-DD` date the returns are as of: the month-end performance table date on the fund page, or the last Yahoo close date when derived; not the NAV date; `null` only when truly unknown
+
+Both fields are the last two keys of each `metrics` object.
 
 Unavailable data is never published as zero, and no tickers are excluded.
 
