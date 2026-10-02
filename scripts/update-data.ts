@@ -1853,6 +1853,42 @@ export function batchSelection(funds:CatalogFund[],config:UpdaterConfig,cursor:s
   const ordered=i<0?selected:selected.slice(i+1).concat(selected.slice(0,i+1));
   return ordered.slice(0,config.maxFetches);
 }
+// --- TLS trust store (identical in every ETF repo) ---
+const SYSTEM_CA_MARKER = 'ETF_UPDATER_SYSTEM_CA';
+const CERT_ERROR = /UNABLE_TO_GET_ISSUER_CERT|UNABLE_TO_VERIFY_LEAF_SIGNATURE|SELF_SIGNED_CERT|CERT_HAS_EXPIRED|unable to get (?:local )?issuer certificate|self[- ]signed certificate|certificate has expired/i;
+
+export function isCertError(error: unknown): boolean {
+  const e = error as { code?: unknown; message?: unknown; cause?: unknown } | null;
+  return CERT_ERROR.test(`${String(e?.code ?? '')} ${String(e?.message ?? '')}`) || (e?.cause ? isCertError(e.cause) : false);
+}
+
+export function systemCaActive(env: Record<string, string | undefined> = process.env, execArgv: string[] = process.execArgv): boolean {
+  return execArgv.includes('--use-system-ca') || env.NODE_USE_SYSTEM_CA === '1' || env[SYSTEM_CA_MARKER] === '1';
+}
+
+export function reexecWithSystemCa(): never {
+  const child = Bun.spawnSync([process.execPath, '--use-system-ca', ...process.argv.slice(1)], {
+    env: { ...process.env, [SYSTEM_CA_MARKER]: '1' },
+    stdio: ['inherit', 'inherit', 'inherit'],
+  });
+  process.exit(child.exitCode ?? 1);
+}
+
+/** mode: auto (restart once on an untrusted-certificate error), true (restart now), false (never). */
+export function installSystemCa(mode: string, reexec: () => never = reexecWithSystemCa, active: boolean = systemCaActive()): void {
+  if (mode === 'false' || active) return;
+  if (mode === 'true') reexec();
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = (async (...args: Parameters<typeof fetch>) => {
+    try { return await realFetch(...args); }
+    catch (error) {
+      if (!isCertError(error)) throw error;
+      console.error('[ notice   ] TLS certificate not trusted; restarting once with --use-system-ca');
+      return reexec();
+    }
+  }) as typeof fetch;
+}
+
 // File defaults and explicit overrides. Allowlisted scalar values only: the
 // same resolver is used by Actions without interpolating user input into bash.
 // Legacy env names that keep working next to SPROTT_<NAME> and <NAME>.
@@ -1864,7 +1900,7 @@ const ENV_ALIASES: Record<string, string[]> = {
 export const CONTROL_NAMES = [
   'MAX_FETCHES','REQUEST_SLEEP','CONCURRENCY','AUM','TER','DIVIDEND_YIELD','SEC_YIELD','TICKERS',
   'HOLDINGS_PAGE_SIZE','HISTORY_PAGE_SIZE','MAX_RETRIES','HISTORY_RANGE','STORE_RAW_DOWNLOADS',
-  'SEC_UA','SKIP_YAHOO','SKIP_SPROTT','EDGAR_FALLBACK','VERBOSE',
+  'SEC_UA','SKIP_YAHOO','SKIP_SPROTT','EDGAR_FALLBACK','VERBOSE','USE_SYSTEM_CA',
   ...['PERFORMANCE','TOTAL_RETURN'].flatMap(prefix=>['YTD','1Y','3Y','5Y','10Y'].map(period=>`${prefix}_${period}`)),
 ] as const;
 export function resolveControls(file:unknown={},advanced:unknown={},inputs:unknown={},env:Record<string,string|undefined>={}):Record<string,string> {
@@ -1896,6 +1932,11 @@ export function resolveControls(file:unknown={},advanced:unknown={},inputs:unkno
   for(const key of ['STORE_RAW_DOWNLOADS','SKIP_YAHOO','SKIP_SPROTT','EDGAR_FALLBACK','VERBOSE']){
     if(result[key] && !/^(0|1|true|false|yes|no|y|n|on|off)$/i.test(result[key]))throw new Error(`${key}: expected boolean`);
   }
+  if(result.USE_SYSTEM_CA!==undefined){
+    const mode=result.USE_SYSTEM_CA.toLowerCase();
+    if(!['auto','true','false'].includes(mode))throw new Error('USE_SYSTEM_CA: expected auto, true or false');
+    result.USE_SYSTEM_CA=mode;
+  }
   readConfig(result); // validate all min:max filters before a request or write
   return result;
 }
@@ -1915,6 +1956,7 @@ export async function runtimeControls(env:Record<string,string|undefined>=proces
 export async function main(env:Record<string,string|undefined>=process.env):Promise<void> {
   const controls=await runtimeControls(env);
   if(controls.VERBOSE!==undefined)process.env.VERBOSE=controls.VERBOSE;
+  installSystemCa(controls.USE_SYSTEM_CA??'auto');
   const config=readConfig(controls); configureRequestPacing(config.concurrency,config.requestSleep*1000);
   outputPrintConfig('Sprott',config);
   const previous=await readJson(INDEX_FILE), oldFunds=new Map<string,JsonRecord>((previous?.funds??[]).map((f:JsonRecord)=>[f.ticker,f]));
@@ -1986,6 +2028,7 @@ Environment controls:
   SKIP_SPROTT          Do not request sprottetfs.com (keeps published data).
   SKIP_YAHOO           Disable Yahoo history and dividends.
   VERBOSE              Show per-request retries and fallback notices.
+  USE_SYSTEM_CA        TLS trust store: auto (default) restarts once with Bun's --use-system-ca on an untrusted-certificate error, true always uses the system CA store, false never restarts.
 
 Defaults: scripts/update-data.config.json; an explicitly set environment variable overrides the file (SPROTT_<KEY> wins over <KEY>).
 Actions: file < advanced JSON < nonblank inputs < protected variables. Range syntax is strict min:max; an empty side is unbounded.
