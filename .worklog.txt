@@ -117,7 +117,8 @@ CURRENT STATE
   merge commit on top of `main` (`b043c26`) instead of a duplicate implementation. Every add/add conflict was
   resolved by taking `origin/main`'s version, the four superseded fixtures and the dated `evidence/`
   acceptance file were deleted, and the only retained contribution is the ported
-  `scripts/config-docs.test.ts`. Delta vs `main`: 1 file, 96 insertions. Nothing was force-pushed, rebased
+  `scripts/config-docs.test.ts`. Code delta vs `main`: 1 file, 96 lines; total tree delta 2 files,
+  195 insertions / 7 deletions (the second file is this journal). Nothing was force-pushed, rebased
   or merged by this session. See the newest journal entry for the full record.
 - Next action: the owner reviews the reduced PR #1 (delta = `scripts/config-docs.test.ts` only) and decides:
   merge it, commit that single test file straight to `main`, or close PR #1 and drop the branch. Afterwards,
