@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 
 import {
-  CONTROL_NAMES, USAGE, annualizedToTotal, batchSelection, cellsIn, decodeEntities, formatEdgarDate,
+  CONTROL_NAMES, USAGE, configureRequestPacing, createRequestGate, fetchWithRetry, annualizedToTotal, batchSelection, cellsIn, decodeEntities, formatEdgarDate,
   formatUsDate, indicatedYield, inferDistributionFrequency, isoDate, mergeHistory, normalizeNumberText, numberOrNull,
   parseCatalogNav, parseFeesTable, parseFundPage, parseHoldingsSection, parseLongDate, parseMoneyText,
   parseNport, parsePercentText, parseSitemapFundPages, parseSprottPerformance, parseReturnTable,
@@ -460,6 +460,45 @@ describe('worker pool (CONCURRENCY)', () => {
     peak = 0;
     await runPool([1, 2], 15, run);
     expect(peak).toBe(2);
+  });
+});
+
+describe('per-worker request lanes', () => {
+  async function peakFetches(concurrency: number, sleepSeconds: number, items = 9): Promise<number> {
+    const realFetch = globalThis.fetch;
+    let inFlight = 0, peak = 0;
+    globalThis.fetch = (async () => {
+      inFlight++; peak = Math.max(peak, inFlight);
+      await new Promise((resolve) => setTimeout(resolve, 40));
+      inFlight--;
+      return new Response('ok');
+    }) as unknown as typeof fetch;
+    try {
+      configureRequestPacing(concurrency, sleepSeconds * 1000);
+      await runPool(Array.from({ length: items }, (_, i) => i), concurrency, async (i) => {
+        await fetchWithRetry(`https://example.test/${i}`, 'test', {}, 1);
+      });
+    } finally { globalThis.fetch = realFetch; configureRequestPacing(2, 1000); }
+    return peak;
+  }
+
+  test('CONCURRENCY=1 keeps one request in flight, CONCURRENCY=3 reaches 3 with REQUEST_SLEEP>0', async () => {
+    expect(await peakFetches(1, 0.01)).toBe(1);
+    expect(await peakFetches(3, 0.01)).toBe(3);
+  });
+
+  test('lanes pace independently: N callers start together, the next round waits one sleep', async () => {
+    let clock = 0;
+    const waits: number[] = [];
+    const gate = createRequestGate(3, 1000, () => clock, async (ms) => { waits.push(ms); clock += ms; });
+    for (let i = 0; i < 3; i++) await gate();
+    expect(waits).toEqual([]);
+    await gate();
+    expect(waits).toEqual([1000]);
+    const single = createRequestGate(1, 1000, () => 0, async (ms) => { waits.push(ms); });
+    waits.length = 0;
+    await single(); await single();
+    expect(waits).toEqual([1000]);
   });
 });
 
