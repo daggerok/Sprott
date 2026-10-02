@@ -1062,3 +1062,13 @@ owner. Work only on `feat/sprott-etfs`; never touch `main`, never touch the fini
 - Honesty note recorded in the PR description: after the delta reduction the PR contributes exactly one test
   file, so the owner is offered the alternative of committing it straight to `main` (or dropping PR #1)
   instead of merging a PR that would otherwise only add a merge commit.
+- Push VERIFIED: `git push origin feat/sprott-etfs` -> 9f43831..5fdc8a6 (fast-forward, no force).
+  `git ls-remote origin refs/heads/feat/sprott-etfs` = 5fdc8a6c06e8c04c0d1fa331d47577062ac26839 = local HEAD.
+  Branch history on top of `main` (`b043c26`): a6e4d31 (merge) -> 6bdac34 (drop duplicates) -> 4d46312
+  (worklog) -> 5fdc8a6 (port the test). PR #1: OPEN, MERGEABLE, 13 commits.
+- PR #1 checks: `offline` (main's inherited `checks.yml`) passed on the PR — run 36951623394, job
+  110665609284, conclusion success, 6s. That is the same gate set verified locally above.
+- Correction recorded for the next reader: the ported test was first left unstaged, so commits a6e4d31/6bdac34/
+  4d46312 still carried the OLD 158-line `scripts/config-docs.test.ts` (which imports `runtimeControls` and
+  therefore cannot even load against main's updater). It was caught by `git status` before pushing and fixed
+  in 5fdc8a6; the pushed tree is green. Lesson: stage the ported file before committing the merge.
