@@ -41,7 +41,7 @@ function outputConfigEntries(config: Record<string, any>): [string, string][] {
 }
 function outputPrintConfig(brand: string, config: Record<string, any>): void {
   const entries: [string, string][] = [...outputConfigEntries(config), ['VERBOSE', String(outputVerbose())]];
-  console.log(`[ config   ] ${brand} updater:\n${entries.map(([key, value]) => `              ${key}=${/TOKEN|PASSWORD|SECRET|COOKIE/i.test(key) ? '<redacted>' : outputClean(value)}`).join('\n')}`);
+  console.log(`[ config   ] ${brand} updater:\n${entries.map(([key, value]) => `              ${key}=${/TOKEN|PASSWORD|SECRET|COOKIE|^SEC_UA$/i.test(key) ? '<redacted>' : outputClean(value)}`).join('\n')}`);
 }
 function outputHasOutputFilters(config: Record<string, any>): boolean {
   return outputConfigEntries(config).some(([name, value]) =>
@@ -142,7 +142,7 @@ const EDGAR_ARCHIVES = 'https://www.sec.gov/Archives/edgar/data';
 const EDGAR_BROWSE_URL = 'https://www.sec.gov/cgi-bin/browse-edgar';
 const SEC_FUND_TICKERS_URL = 'https://www.sec.gov/files/company_tickers_mf.json';
 const SEC_COMPANY_TICKERS_URL = 'https://www.sec.gov/files/company_tickers.json';
-const SEC_UA_DEFAULT = 'daggerok Sprott ETF feed (https://github.com/daggerok/sprott)';
+const SEC_UA_DEFAULT = 'daggerok ETF feed daggerok@gmail.com';
 // SPROTT FUNDS TRUST (confirmed 2026-09-28: CIK 0001728683). Used only when
 // the SEC ticker table does not resolve this ETF's registrant by itself.
 const SPROTT_TRUST_CIK = '0001728683';
@@ -1845,6 +1845,12 @@ export function batchSelection(funds:CatalogFund[],config:UpdaterConfig,cursor:s
 }
 // File defaults and explicit overrides. Allowlisted scalar values only: the
 // same resolver is used by Actions without interpolating user input into bash.
+// Legacy env names that keep working next to SPROTT_<NAME> and <NAME>.
+const ENV_ALIASES: Record<string, string[]> = {
+  MAX_FETCHES: ['SPROTT_LIMIT'],
+  HISTORY_PAGE_SIZE: ['HISTORICAL_PAGE_SIZE'],
+  STORE_RAW_DOWNLOADS: ['SPROTT_STORE_RAW_DOWNLOADS'],
+};
 export const CONTROL_NAMES = [
   'MAX_FETCHES','REQUEST_SLEEP','CONCURRENCY','AUM','TER','DIVIDEND_YIELD','SEC_YIELD','TICKERS',
   'HOLDINGS_PAGE_SIZE','HISTORY_PAGE_SIZE','MAX_RETRIES','HISTORY_RANGE','STORE_RAW_DOWNLOADS',
@@ -1867,7 +1873,7 @@ export function resolveControls(file:unknown={},advanced:unknown={},inputs:unkno
   };
   apply(file);apply(advanced);apply(inputs,true);
   for(const key of CONTROL_NAMES){
-    const value=env[`SPROTT_${key}`]??env[key];
+    const value=[`SPROTT_${key}`,key,...(ENV_ALIASES[key]??[])].map(name=>env[name]).find(v=>v!==undefined);
     if(value!==undefined)apply({[key]:value});
   }
   for(const key of ['MAX_FETCHES','CONCURRENCY','HOLDINGS_PAGE_SIZE','HISTORY_PAGE_SIZE','MAX_RETRIES']){
@@ -1882,6 +1888,12 @@ export function resolveControls(file:unknown={},advanced:unknown={},inputs:unkno
   }
   readConfig(result); // validate all min:max filters before a request or write
   return result;
+}
+// Bounded worker pool: `size` workers pull items in order until the queue is empty.
+export async function runPool<T>(items:readonly T[],size:number,run:(item:T,index:number)=>Promise<void>):Promise<void> {
+  let next=0;
+  const worker=async()=>{for(;;){const i=next++;if(i>=items.length)return;await run(items[i],i);}};
+  await Promise.all(Array.from({length:Math.max(1,Math.min(size,items.length))},worker));
 }
 export async function runtimeControls(env:Record<string,string|undefined>=process.env):Promise<Record<string,string>> {
   let file:unknown={};
@@ -1916,20 +1928,16 @@ export async function main(env:Record<string,string|undefined>=process.env):Prom
   const state=await readJson(STATE_FILE), queue=batchSelection(catalog,config,state?.cursor??null);
   outputPrintFilter(queue.length,catalog.length,outputHasOutputFilters(config));
   const reporter=outputCreateReporter(API_ROOT,queue.length), result=new Map(oldFunds);
-  let next=0,failures=0,processed=0,skipped=0;
-  async function worker(){
-    for (;;) {
-      const i=next++; if(i>=queue.length)return;
-      const fund=queue[i],before=await reporter.before(fund.ticker);
-      try {
-        const row=await processFund(fund,config,oldFunds.get(fund.ticker)??{});
-        if(row){result.set(fund.ticker,row);processed++;}
-        else skipped++;
-        await reporter.result(fund.ticker,before,row?undefined:'skipped');
-      } catch(e) {failures++;await reporter.result(fund.ticker,before,'failed',errorMessage(e));}
-    }
-  }
-  await Promise.all(Array.from({length:config.concurrency},worker));
+  let failures=0,processed=0,skipped=0;
+  await runPool(queue,config.concurrency,async(fund)=>{
+    const before=await reporter.before(fund.ticker);
+    try {
+      const row=await processFund(fund,config,oldFunds.get(fund.ticker)??{});
+      if(row){result.set(fund.ticker,row);processed++;}
+      else skipped++;
+      await reporter.result(fund.ticker,before,row?undefined:'skipped');
+    } catch(e) {failures++;await reporter.result(fund.ticker,before,'failed',errorMessage(e));}
+  });
   if (!result.size) throw new Error('No publishable funds; not replacing the index');
   const funds=[...result.values()].sort((a,b)=>a.ticker.localeCompare(b.ticker));
   const counts={funds:funds.length,holdings:funds.reduce((s,f)=>s+f.holdings,0),history:funds.reduce((s,f)=>s+f.history,0)};
@@ -1951,7 +1959,7 @@ Environment controls:
   TICKERS              Space/comma/semicolon separated ETF tickers. ANDed with other filters.
   MAX_FETCHES          0 means all selected funds; positive values resume at the saved cursor.
   REQUEST_SLEEP        Seconds between request starts, including retries (default 1).
-  CONCURRENCY          Parallel fund workers; request starts stay paced (default 2).
+  CONCURRENCY          Parallel fund workers sharing one request-start gate (default 2).
   MAX_RETRIES          Retries after the first request, integer >= 1 (default 2).
   HOLDINGS_PAGE_SIZE   Holdings rows per static JSON page (default 250).
   HISTORY_PAGE_SIZE    History rows per static JSON page (default 1000).
@@ -1963,7 +1971,7 @@ Environment controls:
   PERFORMANCE_YTD|1Y|3Y|5Y|10Y   Annualized return percent min:max.
   TOTAL_RETURN_YTD|1Y|3Y|5Y|10Y  Cumulative total-return percent min:max.
   STORE_RAW_DOWNLOADS  Keep raw provider JSON snapshots beside the feed (default false).
-  SEC_UA               Contact-bearing User-Agent for SEC EDGAR.
+  SEC_UA               Contact-bearing User-Agent for SEC EDGAR (default "daggerok ETF feed daggerok@gmail.com"; redacted in logs).
   EDGAR_FALLBACK       Enable Form N-PORT-P holdings fallback (default true).
   SKIP_SPROTT          Do not request sprottetfs.com (keeps published data).
   SKIP_YAHOO           Disable Yahoo history and dividends.
