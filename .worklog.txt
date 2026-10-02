@@ -99,6 +99,14 @@ CURRENT STATE
   39 tests, bun + browser bundles, `git diff --check`) passed on the PR. Merging is NOT authorized and left
   to the owner. The repository description/topics/homepage already match the sibling convention; this
   session's token cannot PATCH repo metadata (403), so nothing was changed there.
+- Parallel PR note: PR #1 (`feat/sprott-etfs`, opened 2026-10-01 23:31 by a separate agent session) carries the
+  same 25-input `advanced` workaround and a 4-ticker byte-stable acceptance, but only 22 files, no committed
+  api/sprott feed (the README tells the user to run the workflow once to generate it), no checks.yml/pages.yml,
+  no PR CI ("no checks reported") and a 27-key config missing `SEC_YIELD`. Recommendation: keep PR #2 as the
+  merge candidate and close PR #1 without deleting its branch. Only `.gitattributes` (`scripts/fixtures/**
+  -whitespace`, so captured HTML fixtures never trip whitespace checks on refresh) was harvested from it; its
+  optional "holdings row count must equal the page's Number of Holdings" validation is recorded as a possible
+  follow-up.
 - Next action: the owner reviews and merges PR #2, then enables GitHub Pages (GitHub Actions source) so
   <https://daggerok.github.io/Sprott/> deploys from `main`. Any follow-up data refresh runs through the
   Update Sprott ETF data workflow.
@@ -953,3 +961,19 @@ REPORT BACK WHEN DONE:
   (description/topics/homepage); the PATCH attempt returned 403 for this token, so it was left untouched.
 - Final pushed SHA: e7bc4a4 (plus this worklog commit); `origin/arena/01a0f9aa-sprott` tree = 69 files,
   46 of them under api/sprott, no probe/ and no temporary acceptance workflow.
+
+### 2026-10-01 — Parallel PR #1 comparison and the fixture whitespace guard
+- Compared `feat/sprott-etfs` (PR #1, 9 commits, 22 files) against this branch: it reaches parity on the
+  config JSON, the 25-input dispatch and the client substitutions, and its isolated 4-ticker double run is
+  byte-stable (196 holdings / 5,336 history rows, 0 failures). It is not a superset: no committed api/sprott
+  seed, no checks.yml/pages.yml, no PR CI, SEC_YIELD missing from its config, no ui tests.
+- Action taken here: added `.gitattributes` with `scripts/fixtures/** -whitespace` (the captured provider
+  pages legitimately contain trailing whitespace, 25 lines each) so future fixture refreshes do not fail
+  whitespace checks; verified with `git check-attr`.
+- Recommendation recorded: PR #2 stays the merge candidate; PR #1 can be closed by the owner with its branch
+  kept for reference. No cross-branch writes were made.
+
+- Owner cleanup 278e73f ("cleanup", authored by Maksim Kostromin): set the executable bit on
+  `scripts/update-data.ts` (100644 -> 100755) to match its `#!/usr/bin/env bun` shebang and the README
+  `./scripts/update-data.ts` invocations. Preserved here: the sandbox worktree had lost the bit, so it was
+  restored with chmod and is never re-staged as a mode change.
