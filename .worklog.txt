@@ -66,8 +66,14 @@ CURRENT STATE
 - Goal: Implement the Sprott ETFs holdings-to-watchlist web application in daggerok/Sprott with full sibling
   parity (Bun-only, zero runtime dependencies, static client app + generated ./api/sprott feed).
 - Status: IMPLEMENTATION COMPLETE on `arena/01a0f9aa-sprott` (2026-10-01); the live acceptance is green and the
-  published feed is committed. The remaining step is opening the pull request (merging is NOT authorized).
+  published feed is committed. PR #2 was opened and has been MERGED into `main` (`b043c26`, including the
+  dependabot bumps of `actions/configure-pages` 5 -> 6 and `actions/upload-pages-artifact` 4 -> 5), so `main`
+  now carries the canonical implementation. PR #1 (`feat/sprott-etfs`) has been reduced to a minimal
+  incremental delta on top of that merged implementation and is waiting for the owner's review.
 - Repository: https://github.com/daggerok/Sprott
+- Working branch (2026-10-02 session): `feat/sprott-etfs` (session-fixed by the Arena environment; the merged
+  PR #2 branch `arena/01a0f9aa-sprott` and `main` are read-only for this session). The earlier deviation note
+  below stays as recorded history for the first session.
 - Working branch: `arena/01a0f9aa-sprott` (SESSION-FIXED by the Arena environment, branched from main 3f5f537).
   The plan's `feat/sprott-etfs` name is NOT usable in this session; the pull request is opened from
   `arena/01a0f9aa-sprott`. Recorded deviation, approved by the session rules.
@@ -107,12 +113,16 @@ CURRENT STATE
   -whitespace`, so captured HTML fixtures never trip whitespace checks on refresh) was harvested from it; its
   optional "holdings row count must equal the page's Number of Holdings" validation is recorded as a possible
   follow-up.
-- PR #1 resolved 2026-10-02: closed with the supersession comment
-  (https://github.com/daggerok/Sprott/pull/1#issuecomment-5943603163); the `feat/sprott-etfs` branch was kept
-  at 9f43831 for reference and nothing was force-pushed or deleted.
-- Next action: the owner reviews and merges PR #2, then enables GitHub Pages (GitHub Actions source) so
-  <https://daggerok.github.io/Sprott/> deploys from `main`. Any follow-up data refresh runs through the
-  Update Sprott ETF data workflow.
+- PR #1 reduced 2026-10-02 (this session): the owner reopened it, so it is OPEN again and now carries a
+  merge commit on top of `main` (`b043c26`) instead of a duplicate implementation. Every add/add conflict was
+  resolved by taking `origin/main`'s version, the four superseded fixtures and the dated `evidence/`
+  acceptance file were deleted, and the only retained contribution is the ported
+  `scripts/config-docs.test.ts`. Delta vs `main`: 1 file, 96 insertions. Nothing was force-pushed, rebased
+  or merged by this session. See the newest journal entry for the full record.
+- Next action: the owner reviews the reduced PR #1 (delta = `scripts/config-docs.test.ts` only) and decides:
+  merge it, commit that single test file straight to `main`, or close PR #1 and drop the branch. Afterwards,
+  GitHub Pages (GitHub Actions source) must be enabled so <https://daggerok.github.io/Sprott/> deploys from
+  `main`. Any follow-up data refresh runs through the Update Sprott ETF data workflow.
 - Blockers: none. Caveat: the sandbox egress policy blocks all provider domains, so the live acceptance ran on
   GitHub Actions; its run ids and hashes are recorded in this journal and in the evidence file.
 
@@ -980,3 +990,85 @@ REPORT BACK WHEN DONE:
   `scripts/update-data.ts` (100644 -> 100755) to match its `#!/usr/bin/env bun` shebang and the README
   `./scripts/update-data.ts` invocations. Preserved here: the sandbox worktree had lost the bit, so it was
   restored with chmod and is never re-staged as a mode change.
+
+### 2026-10-02 — PR #1 reduced to an incremental delta on top of the merged PR #2
+
+Instruction (5th prompt, session 2026-10-02): reopen PR #1 and turn it into a conflict-free, minimal
+incremental contribution on top of `main` (which already contains the merged PR #2), then hand it to the
+owner. Work only on `feat/sprott-etfs`; never touch `main`, never touch the finished
+`arena/01a0f9aa-sprott`, never force-push, never store secrets, and do not merge anything.
+
+- Reconciled state first: `main` = `b043c26` (dependabot bump #4 on top of the PR #2 merge 55dab57);
+  `origin/feat/sprott-etfs` = 9f43831 (PR #1 head, 22 files); PR #1 was already OPEN — the owner reopened it
+  at 2026-10-02T01:20:17Z after the earlier supersession closure, so `gh pr reopen 1` reported
+  "already open" and only the announcement comment was needed
+  (https://github.com/daggerok/Sprott/pull/1#issuecomment-5943892551). The comment states that the PR is
+  being reduced to an incremental delta and that a duplicate implementation will not be merged.
+- Local sandbox note: the clone was shallow and its refspec only covered `main`, so
+  `git fetch origin --unshallow` plus `git fetch origin feat/sprott-etfs:refs/remotes/origin/feat/sprott-etfs`
+  were needed before `git checkout feat/sprott-etfs` was possible. Merge base of the two branches: 3f5f537.
+- Merge: `git merge --no-ff origin/main` with a merge commit (no rebase, no force-push), commit a6e4d31
+  "merge(main): take the merged PR #2 implementation as the base for the delta".
+- Conflict resolution rule: take `main`'s version of every path both branches introduced (`--theirs` is
+  `origin/main` in a merge). 10 paths actually conflicted — .gitattributes, .github/workflows/update-data.yml,
+  .worklog.txt, README.md, app.tsx, index.html, package.json, scripts/update-data.config.json,
+  scripts/update-data.test.ts, scripts/update-data.ts — and were resolved with
+  `git checkout --theirs -- <path>` (no hand-merging). The other 4 paths the prompt lists
+  (.github/dependabot.yml, .gitignore, bun.lock, favicon.ico) were already byte-identical on both branches, so
+  git merged them without a conflict; the result was still verified blob-for-blob against `origin/main`.
+  After the merge, all 14 paths compare equal to `origin/main` (`git rev-parse :0:<path>` vs
+  `origin/main:<path>`), i.e. the merge result is `main`'s verified tree: config parity, the 25-input
+  `advanced` workaround, the SGDJ history dead-band fix and the published feed.
+- Duplicates deleted (commit 6bdac34): `scripts/fixtures/REXC-fund-page.html`,
+  `scripts/fixtures/SGDM-fund-page.html`, `scripts/fixtures/URNM-fund-page.html`,
+  `scripts/fixtures/catalog-menu.html` (replaced by main's dated `scripts/fixtures/2026-10-01/` set) and
+  `evidence/live-acceptance-2026-10-01.txt` (it documents a superseded revision of the updater — no
+  `SEC_YIELD` control and catalog discovery from the site menu; main's
+  `scripts/fixtures/2026-10-01/live-acceptance.txt` is the authoritative acceptance record and is the one
+  README.md links to). The now-empty `evidence/` directory was removed.
+- Only retained contribution: `scripts/config-docs.test.ts`, ported to `main`'s files. It asserts against
+  `main`'s README.md, `scripts/update-data.config.json` and `.github/workflows/update-data.yml` and keeps only
+  the coverage `scripts/update-data.test.ts` does not already have:
+  * README update-controls table parity — every canonical control is documented exactly once and each
+    documented default equals the checked-in config value (`TICKERS` -> "all", `SEC_UA` -> "declared UA" are
+    the two prose renderings).
+  * the documented `advanced:` JSON example names only real controls and resolves against the config file.
+  * README shared structure — heading order, "Deployment is pending" (never claims Pages is live), the
+    non-affiliation notice, the verification commands.
+  * Sprott appears exactly once in the brands table and once in the siblings table, and the brand table stays
+    alphabetically sorted.
+  * the README-linked live-acceptance evidence file exists on disk.
+  * `--help` prints every control from the checked-in config when the updater runs from an unrelated cwd
+    (the config is resolved relative to the script, not the process cwd).
+  * the `SEC_UA` default is an identifying contact and never contains an `@`/credential.
+  Deliberately NOT ported (already covered by main's `scripts/update-data.test.ts`): the resolveControls
+  layering/invalid-input cases, the `CONTROL_NAMES`/config-key equality, and the workflow input-cap,
+  schedule, no-push-trigger and resolver-step invariants. `runtimeControls` is not exported by main's
+  updater, so the cwd-independence check spawns the CLI instead of importing it — main's implementation was
+  left untouched. Nothing from the old `scripts/update-data.test.ts` was ported: its parsers target the
+  superseded revision (site-menu catalog, rendered-table holdings, no `SEC_YIELD`), so those tests cannot
+  run against main's updater.
+- Offline verification on `feat/sprott-etfs` (bun 1.4.2, installed from the npm registry into the sandbox):
+  `bun install --frozen-lockfile` OK (4 packages); `bun test` = 47 pass / 0 fail across 3 files
+  (34 update-data + 5 ui + 8 config-docs); `bun build --target=bun scripts/update-data.ts --outfile=/dev/null`
+  OK (85.0 KB); `bun build --target=browser app.tsx --outfile=/dev/null` OK (89.83 KB); `git diff --check`
+  clean. These are exactly the steps of main's inherited `checks.yml` `offline` job, so that check is
+  expected to pass on the PR. One failure was found and fixed while porting: the evidence-link assertion used
+  a case-sensitive `toContain('Live acceptance')` while main's evidence file starts with lowercase
+  "live acceptance — 2026-10-01T23:20:58Z"; it now matches case-insensitively.
+- Tree hygiene verified: no path exists twice in the index or the working tree, and only one copy of each
+  provider fixture remains (`git ls-files scripts/fixtures` = the four dated main fixtures plus main's
+  live-acceptance.txt). `git diff origin/main --stat` = 1 file changed, 96 insertions.
+- Honesty note recorded in the PR description: after the delta reduction the PR contributes exactly one test
+  file, so the owner is offered the alternative of committing it straight to `main` (or dropping PR #1)
+  instead of merging a PR that would otherwise only add a merge commit.
+- Push VERIFIED: `git push origin feat/sprott-etfs` -> 9f43831..5fdc8a6 (fast-forward, no force).
+  `git ls-remote origin refs/heads/feat/sprott-etfs` = 5fdc8a6c06e8c04c0d1fa331d47577062ac26839 = local HEAD.
+  Branch history on top of `main` (`b043c26`): a6e4d31 (merge) -> 6bdac34 (drop duplicates) -> 4d46312
+  (worklog) -> 5fdc8a6 (port the test). PR #1: OPEN, MERGEABLE, 13 commits.
+- PR #1 checks: `offline` (main's inherited `checks.yml`) passed on the PR — run 36951623394, job
+  110665609284, conclusion success, 6s. That is the same gate set verified locally above.
+- Correction recorded for the next reader: the ported test was first left unstaged, so commits a6e4d31/6bdac34/
+  4d46312 still carried the OLD 158-line `scripts/config-docs.test.ts` (which imports `runtimeControls` and
+  therefore cannot even load against main's updater). It was caught by `git status` before pushing and fixed
+  in 5fdc8a6; the pushed tree is green. Lesson: stage the ported file before committing the merge.
