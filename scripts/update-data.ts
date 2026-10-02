@@ -41,7 +41,7 @@ function outputConfigEntries(config: Record<string, any>): [string, string][] {
 }
 function outputPrintConfig(brand: string, config: Record<string, any>): void {
   const entries: [string, string][] = [...outputConfigEntries(config), ['VERBOSE', String(outputVerbose())]];
-  console.log(`[ config   ] ${brand} updater:\n${entries.map(([key, value]) => `              ${key}=${/TOKEN|PASSWORD|SECRET|COOKIE/i.test(key) ? '<redacted>' : outputClean(value)}`).join('\n')}`);
+  console.log(`[ config   ] ${brand} updater:\n${entries.map(([key, value]) => `              ${key}=${/TOKEN|PASSWORD|SECRET|COOKIE|^SEC_UA$/i.test(key) ? '<redacted>' : outputClean(value)}`).join('\n')}`);
 }
 function outputHasOutputFilters(config: Record<string, any>): boolean {
   return outputConfigEntries(config).some(([name, value]) =>
@@ -142,7 +142,7 @@ const EDGAR_ARCHIVES = 'https://www.sec.gov/Archives/edgar/data';
 const EDGAR_BROWSE_URL = 'https://www.sec.gov/cgi-bin/browse-edgar';
 const SEC_FUND_TICKERS_URL = 'https://www.sec.gov/files/company_tickers_mf.json';
 const SEC_COMPANY_TICKERS_URL = 'https://www.sec.gov/files/company_tickers.json';
-const SEC_UA_DEFAULT = 'daggerok Sprott ETF feed (https://github.com/daggerok/sprott)';
+const SEC_UA_DEFAULT = 'daggerok ETF feed daggerok@gmail.com';
 // SPROTT FUNDS TRUST (confirmed 2026-09-28: CIK 0001728683). Used only when
 // the SEC ticker table does not resolve this ETF's registrant by itself.
 const SPROTT_TRUST_CIK = '0001728683';
@@ -395,7 +395,7 @@ export function readConfig(env: Record<string, string | undefined> = process.env
     holdingsPageSize: parsePositiveInt(envValue(env, 'HOLDINGS_PAGE_SIZE'), HOLDINGS_PAGE_SIZE_FALLBACK),
     historyPageSize: parsePositiveInt(envValue(env, 'HISTORY_PAGE_SIZE', ['HISTORICAL_PAGE_SIZE']), HISTORY_PAGE_SIZE_FALLBACK),
     storeRawDownloads: parseBoolean(envValue(env, 'STORE_RAW_DOWNLOADS', ['SPROTT_STORE_RAW_DOWNLOADS']), false),
-    maxRetries: parseNonNegativeFloat(envValue(env, 'MAX_RETRIES'), MAX_RETRIES_FALLBACK),
+    maxRetries: parsePositiveInt(envValue(env, 'MAX_RETRIES'), MAX_RETRIES_FALLBACK),
     tickers: envValue(env, 'TICKERS')
       .split(/[\s,;]+/)
       .map(sanitizeTicker)
@@ -1853,10 +1853,11 @@ export const CONTROL_NAMES = [
 ] as const;
 export function resolveControls(file:unknown={},advanced:unknown={},inputs:unknown={},env:Record<string,string|undefined>={}):Record<string,string> {
   const result:Record<string,string>={};
+  const known=new Set<string>(CONTROL_NAMES);
   const apply=(value:unknown,skipEmpty=false)=>{
     if (!value || typeof value!=='object' || Array.isArray(value)) throw new Error('Configuration must be a JSON object');
     for (const [key,raw] of Object.entries(value)) {
-      if (!CONTROL_NAMES.includes(key)) throw new Error(`Unknown updater control: ${key}`);
+      if (!known.has(key)) throw new Error(`Unknown updater control: ${key}`);
       if (skipEmpty && (raw===''||raw===undefined||raw===null)) continue;
       if (!['string','number','boolean'].includes(typeof raw)) throw new Error(`${key}: expected string, number or boolean`);
       const text=String(raw);
@@ -1871,7 +1872,7 @@ export function resolveControls(file:unknown={},advanced:unknown={},inputs:unkno
   }
   for(const key of ['MAX_FETCHES','CONCURRENCY','HOLDINGS_PAGE_SIZE','HISTORY_PAGE_SIZE','MAX_RETRIES']){
     const v=result[key];if(v===undefined||v==='')continue;
-    const min=['MAX_FETCHES','MAX_RETRIES'].includes(key)?0:1;
+    const min=key==='MAX_FETCHES'?0:1;
     if(!/^\d+$/.test(v)||!Number.isSafeInteger(Number(v))||Number(v)<min)throw new Error(`${key}: expected integer >= ${min}`);
   }
   if(result.REQUEST_SLEEP && (!Number.isFinite(Number(result.REQUEST_SLEEP))||Number(result.REQUEST_SLEEP)<0))throw new Error('REQUEST_SLEEP: expected nonnegative seconds');
@@ -1882,7 +1883,7 @@ export function resolveControls(file:unknown={},advanced:unknown={},inputs:unkno
   readConfig(result); // validate all min:max filters before a request or write
   return result;
 }
-async function runtimeControls(env:Record<string,string|undefined>):Promise<Record<string,string>> {
+export async function runtimeControls(env:Record<string,string|undefined>):Promise<Record<string,string>> {
   let file:unknown={};
   try {file=JSON.parse(await readFile(new URL('./update-data.config.json',import.meta.url),'utf8'));}
   catch(e) {if((e as NodeJS.ErrnoException).code!=='ENOENT')throw e;}
@@ -1942,11 +1943,41 @@ export async function main(env:Record<string,string|undefined>=process.env):Prom
   if(env.GITHUB_STEP_SUMMARY)await appendFile(env.GITHUB_STEP_SUMMARY,`### Sprott update\n\n${processed} processed; ${skipped} skipped; ${failures} failed.\n${counts.funds} funds / ${counts.holdings} holdings / ${counts.history} history rows.\n`);
   if(failures)process.exitCode=1;
 }
+export const USAGE=`Sprott ETF static-feed updater (zero runtime dependencies; Bun only).
+
+Usage: bun ./scripts/update-data.ts [--help]
+
+Environment controls:
+  TICKERS              Space/comma/semicolon separated ETF tickers. ANDed with other filters.
+  MAX_FETCHES          0 means all selected funds; positive values resume at the saved cursor.
+  REQUEST_SLEEP        Seconds between request starts, including retries (default 1).
+  CONCURRENCY          Parallel fund workers; request starts stay paced (default 2).
+  MAX_RETRIES          Retries after the first request, integer >= 1 (default 2).
+  HOLDINGS_PAGE_SIZE   Holdings rows per static JSON page (default 250).
+  HISTORY_PAGE_SIZE    History rows per static JSON page (default 1000).
+  HISTORY_RANGE        Yahoo daily history range: max or Ny (default max).
+  AUM                  Dollar min:max; K/M/B/T suffixes or nano/micro/small/mid/large presets.
+  TER                  Net expense-ratio percent min:max.
+  DIVIDEND_YIELD       Indicated dividend yield percent min:max.
+  SEC_YIELD            30-day SEC yield percent min:max (Sprott publishes none).
+  PERFORMANCE_YTD|1Y|3Y|5Y|10Y   Annualized return percent min:max.
+  TOTAL_RETURN_YTD|1Y|3Y|5Y|10Y  Cumulative total-return percent min:max.
+  STORE_RAW_DOWNLOADS  Keep raw provider JSON snapshots beside the feed (default false).
+  SEC_UA               Contact-bearing User-Agent for SEC EDGAR.
+  EDGAR_FALLBACK       Enable Form N-PORT-P holdings fallback (default true).
+  SKIP_SPROTT          Do not request sprottetfs.com (keeps published data).
+  SKIP_YAHOO           Disable Yahoo history and dividends.
+  VERBOSE              Show per-request retries and fallback notices.
+
+Defaults: scripts/update-data.config.json; an explicitly set environment variable overrides the file (SPROTT_<KEY> wins over <KEY>).
+Actions: file < advanced JSON < nonblank inputs < protected variables. Range syntax is strict min:max; an empty side is unbounded.
+
+Examples:
+  TICKERS="URNM URNJ SETM" bun ./scripts/update-data.ts
+  MAX_FETCHES=3 bun ./scripts/update-data.ts
+  AUM="100M:" TER=":0.7" bun ./scripts/update-data.ts
+`;
 if(import.meta.main){
-  if(process.argv.some(a=>a==='--help'||a==='-h')){
-    console.log('Sprott ETF updater — bun scripts/update-data.ts\nCanonical environment controls (SPROTT_ aliases accepted):');
-    outputPrintConfig('Sprott effective configuration',readConfig(await runtimeControls(process.env)));
-    console.log('Defaults: scripts/update-data.config.json; explicit environment overrides the file. Actions: file < advanced JSON < individual inputs.');
-    console.log('Ranges: min:max (inclusive, AND). AUM: amounts with K/M/B/T or nano/micro/small/mid/large.\nMAX_FETCHES=0: full pass/reset cursor; positive: resumable batch.\nTICKERS: comma/space/semicolon-separated allowlist; others keep published data.\nREQUEST_SLEEP: seconds per conservative request gate. CONCURRENCY: fund workers.\nHISTORY_RANGE: max or Ny; merges with prior history. SKIP_*: skip provider.\nSTORE_RAW_DOWNLOADS: source JSON snapshots. SEC_UA: real identifying contact.\nVERBOSE=1: per-request fallback diagnostics.');
-  }else await main().catch(e=>{console.error(`[ done     ] ${errorMessage(e)}`);process.exitCode=1;});
+  if(process.argv.some(a=>a==='--help'||a==='-h'))console.log(USAGE);
+  else await main().catch(e=>{console.error(`[ done     ] ${errorMessage(e)}`);process.exitCode=1;});
 }
