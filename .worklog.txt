@@ -1110,3 +1110,28 @@ owner. Work only on `feat/sprott-etfs`; never touch `main`, never touch the fini
     branches.
 - Blockers: none. No secrets, tokens or auth headers were stored anywhere; no force-push, rebase of the
   merged history, or merge was performed by this session.
+
+### 2026-10-02 (final) — the owner unified all four branches into `main`; this branch is now a backup
+
+- The owner merged PR #6 as `2118c0b` ("chore: unify all branches (arena/01a0f9aa-sprott,
+  chore/standardize-config, feat/sprott-etfs) into main"), a `--no-ff` merge that makes every commit of all
+  four branches an ancestor of `main`. It preserved this session's verified artifacts (the 46-file
+  `api/sprott` feed, `scripts/fixtures/2026-10-01/`, `scripts/ui.test.ts`, the pinned `SEC_UA` default and
+  all 8 checks of `scripts/config-docs.test.ts` from `c66d807`) and integrated `chore/standardize-config`'s
+  `resolveControls`/`readConfig` enhancements (exported `runtimeControls`, `MAX_RETRIES >= 1`), the
+  `.github/workflows/update-data.yml` hardening (`persist-credentials: false`, `PROTECTED_SEC_UA`, a
+  runtime-only credential-helper push) and the extra unit tests. `main`'s own `.worklog.txt` entry records
+  this; the precise delta wording this branch contributed ("Code delta vs `main`: 1 file, 96 lines; total
+  tree delta 2 files, 195 insertions / 7 deletions") survives on `main` at lines 120-121.
+- Consequence for this branch: `git diff origin/main HEAD` is now 6 files, +56/-153, because `main` moved
+  past it. PR #7 (the single consolidated PR for this session) is therefore SUPERSEDED and must not be
+  merged — doing so would revert the unification. Its description was rewritten to lead with a
+  "SUPERSEDED — DO NOT MERGE" notice, and the recommendation to the owner is to close PR #7 and delete the
+  `feat/sprott-etfs` branch, which is already contained in `main` via `c66d807` and `2118c0b`. Closing and
+  deleting are the owner's decisions and were not performed here.
+- `main` after `2118c0b` is VERIFIED green: `Offline checks` (run 36953692109) and `pages-build-deployment`
+  (run 36953691343) both succeeded; the owner's journal records `bun test` 52 pass / 0 fail across 3 files,
+  both `bun build` targets clean and `git diff --check` clean. The app is live at
+  <https://daggerok.github.io/Sprott/>.
+- Nothing further is pending from this session. No force-push, no rebase of merged history, no merge and no
+  branch deletion was performed by this session; no secrets were stored.
