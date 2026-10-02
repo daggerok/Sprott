@@ -71,8 +71,8 @@ Defaults below are exactly the values in `scripts/update-data.config.json`; blan
 | Environment variable | Default | Meaning |
 | --- | --: | --- |
 | `MAX_FETCHES` | `0` | Batch evaluation size: positive resumes the scoped cursor in `api/sprott/update-state.json`; `0` is a full selected pass and resets the cursor. |
-| `REQUEST_SLEEP` | `1` | Minimum seconds between outgoing request starts, including retries. One gate is shared by all workers (conservative for sprottetfs.com), so a higher `CONCURRENCY` overlaps slow responses without raising the request rate. |
-| `CONCURRENCY` | `2` | Parallel fund workers (worker pool). With `REQUEST_SLEEP=0` requests run fully in parallel. |
+| `REQUEST_SLEEP` | `1` | Minimum seconds between outgoing request starts on each worker lane, including retries. Every worker paces itself, so the overall rate is about `CONCURRENCY / REQUEST_SLEEP` requests per second. |
+| `CONCURRENCY` | `2` | Parallel fund workers (worker pool), each with its own request lane. With `REQUEST_SLEEP=0` requests are not paced. |
 | `TICKERS` | all | Space/comma/semicolon allowlist, e.g. `URNM URNJ SETM`; empty means all funds. |
 | `AUM` | `:` | Total net assets range: USD amounts or K/M/B/T suffixes; nano/micro/small/mid/large presets; inclusive min:max. |
 | `TER` | `:` | Net total expense ratio range in % (strict min:max). |

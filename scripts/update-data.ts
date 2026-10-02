@@ -1159,14 +1159,24 @@ function distributionRows(dividends: Array<{ epoch: number; amount: number }>): 
 }
 
 
-// Conservative single gate: the brand plan requires this until concurrent
-// gateway traffic has been verified. Reserve BEFORE awaiting (no races).
-let requestSleepMs = REQUEST_SLEEP_FALLBACK * 1000;
-let nextRequestAt = 0;
-async function paceRequests(): Promise<void> {
-  const start = Math.max(Date.now(), nextRequestAt);
-  nextRequestAt = start + requestSleepMs;
-  if (start > Date.now()) await sleep(start - Date.now());
+// Per-worker request lanes: sprottetfs.com, Yahoo and SEC are direct (no
+// proxy), so each of the CONCURRENCY lanes paces its own request starts by
+// REQUEST_SLEEP. A caller takes the lane that frees up first, so N workers give
+// about N times the throughput of one. Reserve BEFORE awaiting (no races).
+export function createRequestGate(concurrency: number, sleepMs: number, now = Date.now, wait = sleep): () => Promise<void> {
+  const lanes = Array.from({ length: Math.max(1, concurrency) }, () => 0);
+  return async () => {
+    const time = now();
+    let lane = 0;
+    for (let i = 1; i < lanes.length; i++) if (lanes[i] < lanes[lane]) lane = i;
+    const delay = Math.max(0, lanes[lane] - time);
+    lanes[lane] = Math.max(time, lanes[lane]) + Math.max(0, sleepMs);
+    if (delay) await wait(delay);
+  };
+}
+let paceRequests = createRequestGate(CONCURRENCY_FALLBACK, REQUEST_SLEEP_FALLBACK * 1000);
+export function configureRequestPacing(concurrency: number, sleepMs: number): void {
+  paceRequests = createRequestGate(concurrency, sleepMs);
 }
 
 export function samePublishedContent(previous: string, value: unknown): boolean {
@@ -1905,7 +1915,7 @@ export async function runtimeControls(env:Record<string,string|undefined>=proces
 export async function main(env:Record<string,string|undefined>=process.env):Promise<void> {
   const controls=await runtimeControls(env);
   if(controls.VERBOSE!==undefined)process.env.VERBOSE=controls.VERBOSE;
-  const config=readConfig(controls); requestSleepMs=config.requestSleep*1000;nextRequestAt=0;
+  const config=readConfig(controls); configureRequestPacing(config.concurrency,config.requestSleep*1000);
   outputPrintConfig('Sprott',config);
   const previous=await readJson(INDEX_FILE), oldFunds=new Map<string,JsonRecord>((previous?.funds??[]).map((f:JsonRecord)=>[f.ticker,f]));
   let catalog:CatalogFund[]|null=null;
@@ -1958,8 +1968,8 @@ Usage: bun ./scripts/update-data.ts [--help]
 Environment controls:
   TICKERS              Space/comma/semicolon separated ETF tickers. ANDed with other filters.
   MAX_FETCHES          0 means all selected funds; positive values resume at the saved cursor.
-  REQUEST_SLEEP        Seconds between request starts, including retries (default 1).
-  CONCURRENCY          Parallel fund workers sharing one request-start gate (default 2).
+  REQUEST_SLEEP        Seconds between request starts on each worker lane, including retries (default 1).
+  CONCURRENCY          Parallel fund workers, each with its own request lane (default 2); throughput is about CONCURRENCY / REQUEST_SLEEP requests per second.
   MAX_RETRIES          Retries after the first request, integer >= 1 (default 2).
   HOLDINGS_PAGE_SIZE   Holdings rows per static JSON page (default 250).
   HISTORY_PAGE_SIZE    History rows per static JSON page (default 1000).
