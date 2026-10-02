@@ -16,16 +16,18 @@ function outputNote(message: string): void { if (outputVerbose()) console.warn(m
 function outputConfigEntries(config: Record<string, any>): [string, string][] {
   const values = new Map<string, string>();
   const aliases: Record<string, string> = {
-    requestSleepSeconds: 'REQUEST_SLEEP',
-    aumRange: 'AUM', terRange: 'TER', dividendYieldRange: 'DIVIDEND_YIELD',
+    requestSleepSeconds: 'REQUEST_SLEEP', categories: 'CATEGORY',
+    aumRange: 'AUM', terRange: 'TER', dividendYieldRange: 'DIVIDEND_YIELD', secYieldRange: 'SEC_YIELD',
     performanceRanges: 'PERFORMANCE', totalReturnRanges: 'TOTAL_RETURN',
+    skipVanEck: 'SKIP_VANECK', skipProShares: 'SKIP_PROSHARES',
+    skipWisdomTree: 'SKIP_WISDOMTREE', skipGoldmanSachs: 'SKIP_GOLDMANSACHS',
   };
   const range = (v: any): string => v?.source ?? `${Number.isFinite(v?.min) ? v.min : ''}:${Number.isFinite(v?.max) ? v.max : ''}`;
   for (const [key, value] of Object.entries(config)) {
     const name = aliases[key] ?? key.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase();
     if (name === 'PERFORMANCE' || name === 'TOTAL_RETURN') {
       for (const period of ['YTD', '1Y', '3Y', '5Y', '10Y']) values.set(`${name}_${period}`, range(value?.[period]));
-    } else if (['AUM', 'TER', 'DIVIDEND_YIELD'].includes(name)) {
+    } else if (['AUM', 'TER', 'DIVIDEND_YIELD', 'SEC_YIELD'].includes(name)) {
       values.set(name, range(value));
     } else {
       values.set(name, value instanceof Set ? [...value].join(',') || 'all' : Array.isArray(value) ? value.join(',') || 'all' : outputClean(value));
@@ -43,7 +45,7 @@ function outputPrintConfig(brand: string, config: Record<string, any>): void {
 }
 function outputHasOutputFilters(config: Record<string, any>): boolean {
   return outputConfigEntries(config).some(([name, value]) =>
-    /^(TICKERS|AUM|TER|DIVIDEND_YIELD|PERFORMANCE_|TOTAL_RETURN_)/.test(name) &&
+    /^(TICKERS|CATEGORY|AUM|TER|DIVIDEND_YIELD|SEC_YIELD|PERFORMANCE_|TOTAL_RETURN_)/.test(name) &&
     !['', ':', 'null', 'all'].includes(value));
 }
 function outputPrintFilter(selected: number, total: number, deferred = false): void {
@@ -124,45 +126,34 @@ function outputCreateReporter(root: URL | string, total: number) {
   };
 }
 
-
-
-
-// Sprott official fund pages + SEC N-PORT holdings fallback + Yahoo market history.
-// Shared helpers copied from daggerok/JPMorgan @ c1ef7858 via the Aberdeen sibling; provider adapter below.
-
 import { mkdir, readFile, writeFile, readdir, rm, appendFile, rename } from 'node:fs/promises';
-type JsonRecord = Record<string, any>;
 
+type JsonRecord = Record<string, any>;
 const SPROTT_SITE = 'https://sprottetfs.com';
-const CATALOG_PAGE = `${SPROTT_SITE}/`;
+const SITEMAP_URL = `${SPROTT_SITE}/sitemap.xml`;
+const CATALOG_PAGE = SITEMAP_URL;
 const YAHOO_CHART_URL = 'https://query1.finance.yahoo.com/v8/finance/chart';
 const YAHOO_SEARCH_URL = 'https://query1.finance.yahoo.com/v1/finance/search';
 const YAHOO_BROWSER_UA =
-  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36';
-
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36';
 const SEC_DATA_HOST = 'https://data.sec.gov';
 const SEC_EFTS_HOST = 'https://efts.sec.gov/LATEST';
 const EDGAR_ARCHIVES = 'https://www.sec.gov/Archives/edgar/data';
 const EDGAR_BROWSE_URL = 'https://www.sec.gov/cgi-bin/browse-edgar';
-// Official SEC lookup tables (public, no key): ETF/mutual-fund ticker ->
-// registrant CIK + series/class ids, and operating company name -> ticker.
 const SEC_FUND_TICKERS_URL = 'https://www.sec.gov/files/company_tickers_mf.json';
 const SEC_COMPANY_TICKERS_URL = 'https://www.sec.gov/files/company_tickers.json';
-const SEC_UA_DEFAULT = 'daggerok Sprott ETF feed (https://github.com/daggerok/Sprott)';
-// SPROTT FUNDS TRUST, the registrant of every Sprott ETF in the catalog.
+const SEC_UA_DEFAULT = 'daggerok Sprott ETF feed (https://github.com/daggerok/sprott)';
+// SPROTT FUNDS TRUST (confirmed 2026-09-28: CIK 0001728683). Used only when
+// the SEC ticker table does not resolve this ETF's registrant by itself.
 const SPROTT_TRUST_CIK = '0001728683';
-
 const API_ROOT = new URL('../api/sprott/', import.meta.url);
-
 const INDEX_FILE = new URL('index.json', API_ROOT);
 const STATE_FILE = new URL('update-state.json', API_ROOT);
-
 const HOLDINGS_PAGE_SIZE_FALLBACK = 250;
 const HISTORY_PAGE_SIZE_FALLBACK = 1000;
 const CONCURRENCY_FALLBACK = 2;
 const REQUEST_SLEEP_FALLBACK = 1;
 const MAX_RETRIES_FALLBACK = 2;
-
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 function pad3(value: number): string {
   return String(value).padStart(3, '0');
@@ -216,13 +207,6 @@ function round(value: number, digits: number): number {
   return Math.round(value * factor) / factor;
 }
 
-// am.jpmorgan.com publishes yields and returns as fractions (0.0536 = 5.36%);
-// expense ratios and premium/discount figures arrive in percent already.
-export function fractionToPercent(value: unknown): number | null {
-  const number = numberOrNull(value);
-  return number === null ? null : round(number * 100, 4);
-}
-
 // "2026-06-30" -> "Jun 30 2026" (the display style shared with the sibling apps).
 export function formatEdgarDate(iso: string): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
@@ -257,8 +241,7 @@ export function toIsoDate(raw: unknown): string {
   return text;
 }
 
-// "2026-08-21" -> "08/21/2026" (how am.jpmorgan.com renders dates in its
-// workbooks and CSV reports).
+// "2026-08-21" -> epoch seconds at UTC midnight (inverse of epochToIsoDate).
 export function isoToEpoch(iso: string): number | null {
   const value = Date.parse(`${toIsoDate(iso)}T00:00:00Z`);
   return Number.isFinite(value) ? Math.floor(value / 1000) : null;
@@ -294,6 +277,7 @@ type UpdaterConfig = {
   aumRange?: Range & { source?: string };
   terRange?: Range;
   dividendYieldRange?: Range;
+  secYieldRange?: Range;
   performanceRanges: RangeMap;
   totalReturnRanges: RangeMap;
 };
@@ -407,10 +391,10 @@ export function readConfig(env: Record<string, string | undefined> = process.env
   return {
     concurrency: parsePositiveInt(envValue(env, 'CONCURRENCY'), CONCURRENCY_FALLBACK),
     requestSleep: parseNonNegativeFloat(envValue(env, 'REQUEST_SLEEP'), REQUEST_SLEEP_FALLBACK),
-    maxFetches: parsePositiveInt(envValue(env, 'MAX_FETCHES'), 0),
+    maxFetches: parsePositiveInt(envValue(env, 'MAX_FETCHES', ['SPROTT_LIMIT']), 0),
     holdingsPageSize: parsePositiveInt(envValue(env, 'HOLDINGS_PAGE_SIZE'), HOLDINGS_PAGE_SIZE_FALLBACK),
     historyPageSize: parsePositiveInt(envValue(env, 'HISTORY_PAGE_SIZE', ['HISTORICAL_PAGE_SIZE']), HISTORY_PAGE_SIZE_FALLBACK),
-    storeRawDownloads: parseBoolean(envValue(env, 'STORE_RAW_DOWNLOADS'), false),
+    storeRawDownloads: parseBoolean(envValue(env, 'STORE_RAW_DOWNLOADS', ['SPROTT_STORE_RAW_DOWNLOADS']), false),
     maxRetries: parseNonNegativeFloat(envValue(env, 'MAX_RETRIES'), MAX_RETRIES_FALLBACK),
     tickers: envValue(env, 'TICKERS')
       .split(/[\s,;]+/)
@@ -424,6 +408,7 @@ export function readConfig(env: Record<string, string | undefined> = process.env
     aumRange: parseAumRange(envValue(env, 'AUM')),
     terRange: parseRange(envValue(env, 'TER'), 'TER'),
     dividendYieldRange: parseRange(envValue(env, 'DIVIDEND_YIELD'), 'DIVIDEND_YIELD'),
+    secYieldRange: parseRange(envValue(env, 'SEC_YIELD'), 'SEC_YIELD'),
     performanceRanges: parseRanges(env, 'PERFORMANCE'),
     totalReturnRanges: parseRanges(env, 'TOTAL_RETURN'),
   };
@@ -611,8 +596,8 @@ export function pickSearchTicker(name: string, payload: JsonRecord): string | nu
 }
 
 // ---------------------------------------------------------------------------
-// SEC EDGAR fallback layer: N-PORT-P positions for funds am.jpmorgan.com does
-// not publish holdings for, resolved through the EDGAR full-text search API.
+// SEC EDGAR fallback layer: N-PORT-P positions for funds whose fund page does
+// not carry a downloadable holdings sheet, resolved through EDGAR.
 // ---------------------------------------------------------------------------
 
 export type NportAccession = { accession: string; filed: string; reportDate: string; url: string };
@@ -789,8 +774,8 @@ export function parseNport(xml: string): ParsedNport {
 }
 
 // EDGAR full-text search maps a fund ticker to the registrant that filed its
-// N-PORT-P, so the fallback works for every JPMorgan ETF without a hand-kept
-// CIK table.
+// N-PORT-P, so the fallback finds the right filing without a hand-kept table;
+// SPROTT_TRUST_CIK is only the last-resort default.
 export function eftsSearchUrl(query: string): string {
   const params = new URLSearchParams({
     q: `"${query}"`,
@@ -982,10 +967,9 @@ function annualized(start: number, end: number, years: number): number | null {
 }
 
 // Total returns from an adjusted daily series anchored to the last trading day
-// at or before `now`. The series is the official JPMorgan NAV with published
-// distributions reinvested (or Yahoo adjusted closes in the fallback path).
-// JPMorgan publishes official returns for every fund, so these only fill the
-// gaps (young funds, quarter-to-date) and drive the History-derived blocks.
+// at or before `now`. The series is the Yahoo adjusted market-price history
+// (Sprott publishes official NAV returns on every fund page, so these only
+// fill the gaps and drive the History-derived blocks).
 export function priceReturns(days: ChartDay[], now = new Date(), coveredFrom: string | null = null): PriceReturns {
   const empty: PriceReturns = { ...EMPTY_PRICE_RETURNS };
   if (!days.length) return empty;
@@ -1072,6 +1056,7 @@ export function fundFilterReasons(
   if (config.dividendYieldRange && !inRange(numberOrNull(candidate.metrics.dividendYield), config.dividendYieldRange)) {
     reasons.push('DIVIDEND_YIELD');
   }
+  if (!inRange(numberOrNull(candidate.metrics.secYield), config.secYieldRange)) reasons.push('SEC_YIELD');
   for (const period of RETURN_PERIODS) {
     const performance = config.performanceRanges[period];
     if (performance && !inRange(annualizedValue(candidate.metrics, period), performance)) reasons.push(`PERFORMANCE_${period}`);
@@ -1174,22 +1159,15 @@ function distributionRows(dividends: Array<{ epoch: number; amount: number }>): 
 }
 
 
-
-// One pacing lane per concurrent worker (sized from config.concurrency in main()).
-// The site is a plain static host without bot protection, so concurrency multiplies
-// throughput; every lane still waits REQUEST_SLEEP between its own request starts.
-// The lane is chosen and reserved synchronously, so concurrent callers never share a slot.
+// Conservative single gate: the brand plan requires this until concurrent
+// gateway traffic has been verified. Reserve BEFORE awaiting (no races).
 let requestSleepMs = REQUEST_SLEEP_FALLBACK * 1000;
-let requestGates: number[] = [0];
+let nextRequestAt = 0;
 async function paceRequests(): Promise<void> {
-  const now = Date.now();
-  let lane = 0;
-  for (let i = 1; i < requestGates.length; i++) if (requestGates[i] < requestGates[lane]) lane = i;
-  const start = Math.max(now, requestGates[lane]);
-  requestGates[lane] = start + Math.max(0, requestSleepMs);
-  if (start > now) await sleep(start - now);
+  const start = Math.max(Date.now(), nextRequestAt);
+  nextRequestAt = start + requestSleepMs;
+  if (start > Date.now()) await sleep(start - Date.now());
 }
-
 
 export function samePublishedContent(previous: string, value: unknown): boolean {
   try { return outputContentKey(JSON.parse(previous)) === outputContentKey(value); }
@@ -1218,253 +1196,432 @@ export function isoDate(value: unknown): string | null {
   const result = m ? `${m[1]}-${m[2]}-${m[3]}` : us ? `${us[3]}-${us[1].padStart(2,'0')}-${us[2].padStart(2,'0')}` : null;
   return result && Number.isFinite(Date.parse(result)) ? result : null;
 }
+// ---------------------------------------------------------------------------
+// Sprott provider adapter.
+// sprottetfs.com serves complete, server-rendered fund pages (Umbraco):
+//   * any fund page carries the fund navigation list with every Sprott ETF
+//     (ticker, name, canonical URL) — that list is the catalog, discovered
+//     through sitemap.xml so new funds appear without a code change;
+//   * the pricing block, "Key Facts", the holdings table (plus the
+//     "Download All Holdings" data-URI CSV), the distribution table and the
+//     month-/quarter-end performance tables are all plain HTML on the page.
+// Holdings fall back to SEC EDGAR N-PORT-P (SPROTT FUNDS TRUST) and price
+// history/dividends fall back to Yahoo Finance; the last resort is the
+// previously published data.
+// ---------------------------------------------------------------------------
+
+/** Decodes the HTML entities the Umbraco pages actually emit. */
+export function decodeEntities(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#0?39;|&apos;|&rsquo;|&#8217;/gi, "'")
+    .replace(/&mdash;/gi, '—')
+    .replace(/&ndash;/gi, '–')
+    .replace(/&#x([0-9a-f]+);/gi, (_match, hex: string) => String.fromCharCode(Number.parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_match, code: string) => String.fromCharCode(Number(code)));
+}
+
+export function stripHtml(value: unknown): string {
+  return decodeEntities(String(value ?? '').replace(/<[^>]*>/g, ' ')).replace(/\s+/g, ' ').trim();
+}
+
+function tagAttribute(tag: string, name: string): string | null {
+  const doubleQuoted = new RegExp(`\\b${name}\\s*=\\s*"([^"]*)"`, 'i').exec(tag);
+  if (doubleQuoted) return decodeEntities(doubleQuoted[1]);
+  const singleQuoted = new RegExp(`\\b${name}\\s*=\\s*'([^']*)'`, 'i').exec(tag);
+  return singleQuoted ? decodeEntities(singleQuoted[1]) : null;
+}
+
+export function tablesIn(html: unknown): string[] {
+  return [...String(html ?? '').matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)].map((match) => match[0]);
+}
+
+export function rowsIn(table: string): string[] {
+  return [...String(table ?? '').matchAll(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi)].map((match) => match[0]);
+}
+
+export function cellsIn(row: string): string[] {
+  return [...String(row ?? '').matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)].map((match) => stripHtml(match[1]));
+}
+
+function jsonLdGraphs(html: unknown): JsonRecord[] {
+  const items: JsonRecord[] = [];
+  for (const match of String(html ?? '').matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)) {
+    try {
+      const data = JSON.parse(match[1]);
+      const list = Array.isArray(data) ? data : Array.isArray(data?.['@graph']) ? data['@graph'] : [data];
+      for (const item of list) if (item && typeof item === 'object') items.push(item as JsonRecord);
+    } catch {
+      // Malformed JSON-LD on an otherwise healthy page is not a provider failure.
+    }
+  }
+  return items;
+}
+
+/** "1.84 Billion" -> 1840000000, "$47.63" -> 47.63; null when unparseable. */
+export function parseMoneyText(raw: unknown): number | null {
+  const text = stripHtml(raw).replace(/[$,\s]/g, '');
+  const match = /^([+-]?\d+(?:\.\d+)?)([KMBT])?/i.exec(text);
+  if (!match) return null;
+  const suffix = (match[2] ?? '').toUpperCase();
+  const scale = suffix ? ({ K: 1e3, M: 1e6, B: 1e9, T: 1e12 } as Record<string, number>)[suffix] : 1;
+  const value = Number(match[1]) * (scale ?? 1);
+  // Scaling must not leak binary-float noise into the published feed.
+  return Number.isFinite(value) ? round(value, 2) : null;
+}
+
+export function parsePercentText(raw: unknown): number | null {
+  const match = /([+-]?\d+(?:\.\d+)?)\s*%/.exec(stripHtml(raw));
+  return match ? Number(match[1]) : null;
+}
+
+/** "September 30, 2026" -> "2026-09-30"; null when the month is unknown. */
+export function parseLongDate(raw: unknown): string | null {
+  const match = /([A-Za-z]+)\s+(\d{1,2}),\s*(\d{4})/.exec(stripHtml(raw));
+  if (!match) return null;
+  const month = MONTHS.findIndex((name) => name.toLowerCase() === match[1].slice(0, 3).toLowerCase());
+  if (month < 0) return null;
+  return `${match[3]}-${String(month + 1).padStart(2, '0')}-${match[2].padStart(2, '0')}`;
+}
+
+/** Number-ish feed text without currency/percent decoration; keeps placeholders. */
+function numberText(raw: unknown): string {
+  const value = numberOrNull(raw);
+  return value === null ? cleanText(raw) : String(value);
+}
 
 // ---------------------------------------------------------------------------
-// Sprott adapter: the static HTML fund pages of sprottetfs.com (no JS, no WAF)
+// Catalog: sitemap discovery + the fund-page navigation list
 // ---------------------------------------------------------------------------
+
 export type CatalogFund = {
-  ticker: string; name: string; assetClass: string; fundPage: string;
-  nav: number | null; navDate: string | null;
+  ticker: string;
+  name: string;
+  fundPage: string;
+  assetClass: string;
+  isin: string;
+  nav: number | null;
+  navDate: string | null;
 };
 
-const NAMED_ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', reg: '', trade: '' };
-export function decodeEntities(raw: string): string {
-  return raw.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (whole, body: string) => {
-    if (body[0] === '#') {
-      const code = body[1].toLowerCase() === 'x' ? Number.parseInt(body.slice(2), 16) : Number.parseInt(body.slice(1), 10);
-      return Number.isFinite(code) && code > 0 && code < 0x110000 ? String.fromCodePoint(code) : whole;
-    }
-    return NAMED_ENTITIES[body.toLowerCase()] ?? whole;
-  });
-}
-/** Visible text of an HTML fragment: tags removed, entities decoded, whitespace collapsed. */
-export function htmlText(fragment: string): string {
-  const stripped = String(fragment ?? '')
-    .replace(/<!--[\s\S]*?-->/g, ' ')
-    .replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, ' ')
-    .replace(/<br\s*\/?>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ');
-  return decodeEntities(stripped).replace(/[®™]/g, '').replace(/ /g, ' ').replace(/\s+/g, ' ').trim();
+export function parseSitemapFundPages(xml: unknown): string[] {
+  const urls = [...String(xml ?? '').matchAll(/<loc>([^<]+)<\/loc>/gi)].map((match) => decodeEntities(match[1]).trim());
+  const pages = urls
+    .filter((url) => /^https:\/\/sprottetfs\.com\/[a-z0-9-]+-etf\/?$/i.test(url))
+    .map((url) => (url.endsWith('/') ? url : `${url}/`));
+  return [...new Set(pages)].sort();
 }
 
-const LONG_MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
-/** "September 30, 2026" -> "2026-09-30"; also accepts "9/30/2026" and ISO dates. */
-export function longDateToIso(raw: unknown): string | null {
-  const text = String(raw ?? '').trim();
-  const long = /^([A-Za-z]+)\.?\s+(\d{1,2}),?\s+(\d{4})$/.exec(text);
-  if (long) {
-    const month = LONG_MONTHS.findIndex((name) => name.startsWith(long[1].toLowerCase()) && long[1].length >= 3);
-    if (month < 0) return null;
-    const iso = `${long[3]}-${String(month + 1).padStart(2, '0')}-${long[2].padStart(2, '0')}`;
-    return Number.isFinite(Date.parse(`${iso}T00:00:00Z`)) ? iso : null;
-  }
-  return isoDate(text);
+export function tickerFromSlug(url: string): string {
+  const slug = String(url).replace(/\/+$/, '').split('/').pop() ?? '';
+  return sanitizeTicker(slug.split('-')[0] ?? '');
 }
 
-const SPROTT_FUND_PATH = /^(?:https?:\/\/(?:www\.)?sprottetfs\.com)?\/([a-z0-9]{2,6})-[a-z0-9-]+-etf\/?$/i;
-export function categoryLabel(group: string): string {
-  return group.replace(/^Sprott\s+/i, '').replace(/\s+ETFs$/i, '').replace(/\s+/g, ' ').trim() || 'ETF';
-}
-/** Fund roster from the site menu: fund links grouped under their top-level menu heading. */
-export function parseCatalog(html: string): CatalogFund[] {
+/** The site-wide fund list rendered on every fund page (`a.phv-btn` entries). */
+export function parseCatalogNav(html: unknown): CatalogFund[] {
   const funds = new Map<string, CatalogFund>();
-  const add = (href: string, label: string, assetClass: string): void => {
-    const match = SPROTT_FUND_PATH.exec(href);
-    if (!match) return;
-    const ticker = sanitizeTicker(match[1]);
-    const path = href.replace(/^https?:\/\/(?:www\.)?sprottetfs\.com/i, '').replace(/\/+$/, '');
-    const fundPage = `${SPROTT_SITE}${path}/`;
-    const previous = funds.get(ticker);
-    if (previous) {
-      if (previous.fundPage !== fundPage) throw new Error(`Duplicate catalog ticker ${ticker} with different pages`);
-      return;
-    }
-    const name = htmlText(label);
-    if (!ticker || !name) throw new Error('Catalog entry lacks identity (refuse invented tickers)');
-    funds.set(ticker, { ticker, name, assetClass, fundPage, nav: null, navDate: null });
-  };
-  let group = '';
-  for (const anchor of html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi)) {
-    const classes = /\bclass="([^"]*)"/i.exec(anchor[1])?.[1] ?? '';
-    const href = /\bhref="([^"]*)"/i.exec(anchor[1])?.[1] ?? '';
-    if (/\bnav-link\b/.test(classes)) group = categoryLabel(htmlText(anchor[2]));
-    else if (/\bsub-link\b/.test(classes)) add(href, anchor[2], group || 'ETF');
+  for (const match of String(html ?? '').matchAll(/<a\b[^>]*>([\s\S]*?)<\/a>/gi)) {
+    const tag = match[0].slice(0, match[0].indexOf('>') + 1);
+    if (!/phv-btn/i.test(tag)) continue;
+    const href = tagAttribute(tag, 'href');
+    const title = tagAttribute(tag, 'title');
+    const ticker = sanitizeTicker(stripHtml(match[1]));
+    if (!href || !title || !/^[A-Z]{2,6}$/.test(ticker)) continue;
+    if (!/^\/[a-z0-9-]+\/?$/i.test(href)) continue; // skip #anchors and external links
+    const fundPage = `${SPROTT_SITE}${href.replace(/\/+$/, '')}/`;
+    if (funds.has(ticker)) continue;
+    funds.set(ticker, { ticker, name: cleanText(title), fundPage, assetClass: '', isin: '', nav: null, navDate: null });
   }
-  if (!funds.size) for (const anchor of html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi)) add(/\bhref="([^"]*)"/i.exec(anchor[1])?.[1] ?? '', anchor[2], 'ETF');
   return [...funds.values()].sort((a, b) => a.ticker.localeCompare(b.ticker));
 }
 
-export type PerfValues = { mo1: number | null; mo3: number | null; ytd: number | null; yr1: number | null; yr3: number | null; yr5: number | null; yr10: number | null; sinceInception: number | null };
-export type PerfBlock = PerfValues & { asOfDate: string };
-export type FundPage = {
-  ticker: string; asOfDate: string; nav: number | null; navChange: number | null; navChangePercent: number | null;
-  marketPrice: number | null; premiumDiscount: number | null; netExpense: number | null; grossExpense: number | null;
-  exchange: string; benchmark: string; isin: string; cusip: string; inceptionDate: string | null;
-  netAssets: number | null; netAssetsDate: string | null; sharesOutstanding: number | null; holdingsCount: number | null;
-  monthEnd: PerfBlock | null; quarterEnd: PerfBlock | null;
-  holdings: { asOfDate: string | null; rows: JsonRecord[] } | null;
-  distributions: { present: boolean; rows: Array<{ epoch: number; amount: number }> };
+const CATEGORY_NAMES: Record<string, string> = {
+  'critical-materials': 'Critical Materials',
+  'sprott-precious-metals-etfs': 'Precious Metals',
 };
 
-/** "<h3 class=color-gold>Label</h3><h4>value</h4>" cells (header, key facts, fund details). First label wins. */
-function labelValues(html: string): Map<string, string[]> {
-  const out = new Map<string, string[]>();
-  for (const block of html.matchAll(/<h3 class="color-gold">([\s\S]*?)<\/h3>([\s\S]*?)(?=<h3\b|<\/section>)/gi)) {
-    const label = htmlText(block[1].replace(/<sup\b[\s\S]*?<\/sup>/gi, '').replace(/<small\b[\s\S]*?<\/small>/gi, ''));
-    if (!label || out.has(label)) continue;
-    out.set(label, [...block[2].matchAll(/<h4[^>]*>([\s\S]*?)<\/h4>/gi)].map((cell) => htmlText(cell[1])).filter(Boolean));
+/** The site's own breadcrumb (JSON-LD) is the only published fund grouping. */
+export function parseCategory(html: unknown): string | null {
+  for (const item of jsonLdGraphs(html)) {
+    if (item['@type'] !== 'BreadcrumbList' || !Array.isArray(item.itemListElement)) continue;
+    for (const element of item.itemListElement) {
+      const slug = String(element?.item ?? '').replace(/\/+$/, '').split('/').pop() ?? '';
+      if (CATEGORY_NAMES[slug]) return CATEGORY_NAMES[slug];
+    }
   }
-  return out;
-}
-function tableRows(tableHtml: string): string[][] {
-  return [...tableHtml.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)]
-    .map((row) => [...row[1].matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)].map((cell) => htmlText(cell[1])))
-    .filter((cells) => cells.length);
+  return null;
 }
 
-const PERF_COLUMNS: Record<string, Exclude<keyof PerfValues, 'sinceInception'>> = { '1MO': 'mo1', '3MO': 'mo3', YTD: 'ytd', '1YR': 'yr1', '3YR': 'yr3', '5YR': 'yr5', '10YR': 'yr10' };
-export function parsePerformanceTable(sectionHtml: string): PerfBlock | null {
-  const asOf = /As of\s*(\d{1,2}\/\d{1,2}\/\d{4})/i.exec(htmlText(/<p\b[^>]*>[^<]*As of[\s\S]*?<\/p>/i.exec(sectionHtml)?.[0] ?? ''));
-  const table = /<table\b[\s\S]*?<\/table>/i.exec(sectionHtml)?.[0];
-  const asOfDate = asOf ? isoDate(asOf[1]) : null;
-  if (!table || !asOfDate) return null;
-  const rows = tableRows(table);
-  const header = rows[0]?.map((cell) => cell.toUpperCase().replace(/[^A-Z0-9]/g, '')) ?? [];
-  const nav = rows.find((row, index) => index > 0 && /\(Net Asset Value\)/i.test(row[0] ?? ''));
-  if (!nav || header.length !== nav.length) return null;
-  const values: PerfValues = { mo1: null, mo3: null, ytd: null, yr1: null, yr3: null, yr5: null, yr10: null, sinceInception: null };
-  header.forEach((name, index) => {
-    if (index === 0) return;
-    if (name.startsWith('SI')) values.sinceInception = numberOrNull(nav[index]);
-    else if (PERF_COLUMNS[name]) values[PERF_COLUMNS[name]] = numberOrNull(nav[index]);
-  });
-  return { asOfDate, ...values };
-}
-
-export const HOLDINGS_HEADERS = ['Name', 'Ticker', 'Identifier', 'Weight', 'Market Value', 'Shares Held', 'Asset Category', 'SEDOL'];
-const SPROTT_HOLDINGS_COLUMNS = ['Security', 'Market Value', 'Symbol', 'SEDOL', 'Quantity', 'Weight'];
-/** Symbols are kept exactly as published (including exchange suffixes such as "AYA CN"); placeholders become empty. */
-export function holdingSymbol(raw: unknown): string {
-  const symbol = String(raw ?? '').replace(/\s+/g, ' ').trim().toUpperCase();
-  return HOLDING_TICKER_PLACEHOLDERS.has(symbol) || symbol.startsWith('$') ? '' : symbol;
-}
-export function parseHoldingsTable(sectionHtml: string): { asOfDate: string | null; rows: JsonRecord[] } | null {
-  const table = /<table\b[\s\S]*?<\/table>/i.exec(sectionHtml)?.[0];
-  if (!table) return null;
-  const asOfDate = isoDate(/As of\s*(\d{1,2}\/\d{1,2}\/\d{4})/i.exec(htmlText(/<p class="update-date">[\s\S]*?<\/p>/i.exec(sectionHtml)?.[0] ?? ''))?.[1]);
-  const rows = tableRows(table);
-  if (rows[0]?.join('|') !== SPROTT_HOLDINGS_COLUMNS.join('|')) throw new Error(`Unexpected holdings columns: ${rows[0]?.join('|') ?? 'none'}`);
-  const out: JsonRecord[] = [];
-  for (const cells of rows.slice(1)) {
-    if (cells.length === 1 && /total, excluding cash/i.test(cells[0])) continue;
-    if (cells.length !== 6 || !cells[0]) throw new Error(`Unexpected holdings row: ${cells.join('|')}`);
-    const [name, marketValue, symbolRaw, sedolRaw, quantity, weight] = cells;
-    const symbol = holdingSymbol(symbolRaw), sedol = cleanText(sedolRaw);
-    // The cash row repeats its dollar amount in the Quantity column: that is not a share count.
-    const cash = /^cash\b/i.test(name) && !symbol && !sedol;
-    const value = numberOrNull(marketValue), shares = numberOrNull(quantity), pct = numberOrNull(weight);
-    if (value === null || pct === null) throw new Error(`Holdings row without value or weight: ${name}`);
-    out.push({
-      Name: name, Ticker: symbol || '-', Identifier: sedol || '-', Weight: String(pct), 'Market Value': String(value),
-      'Shares Held': cash || shares === null ? '-' : String(shares), 'Asset Category': cash ? 'Cash Equivalent' : '-', SEDOL: sedol,
-    });
+export function parseFundName(html: unknown): string | null {
+  for (const item of jsonLdGraphs(html)) {
+    if (item['@type'] !== 'InvestmentFund') continue;
+    const name = cleanText(item.name);
+    if (name) return name;
   }
-  return { asOfDate, rows: out };
+  return null;
 }
-export function sortHoldings(rows: JsonRecord[]): JsonRecord[] {
-  return rows.slice().sort((a, b) => (numberOrNull(b.Weight) ?? -Infinity) - (numberOrNull(a.Weight) ?? -Infinity) || String(a.Name).localeCompare(String(b.Name)) || outputContentKey(a).localeCompare(outputContentKey(b)));
-}
-export function isCashHolding(row: JsonRecord): boolean { return row['Asset Category'] === 'Cash Equivalent'; }
 
-export function parseDistributionsTable(tableHtml: string): Array<{ epoch: number; amount: number }> {
-  const byDate = new Map<number, number>();
-  for (const cells of tableRows(tableHtml).slice(1)) {
-    if (cells.length !== 7) continue;
-    const date = isoDate(cells[0]), amount = numberOrNull(cells[6]);
-    if (!date || amount === null || amount <= 0) continue; // "-" rows: no distribution was paid
-    byDate.set(Date.parse(`${date}T00:00:00Z`) / 1000, amount);
+async function loadCatalog(config: UpdaterConfig): Promise<CatalogFund[]> {
+  const sitemap = await fetchText(SITEMAP_URL, '[ catalog  ] sitemap', yahooHeaders(), config);
+  const pages = parseSitemapFundPages(sitemap);
+  if (!pages.length) throw new Error('Official sitemap lists no Sprott fund pages; keeping published index');
+  let nav: CatalogFund[] = [];
+  for (const page of pages.slice(0, 3)) {
+    // One healthy fund page carries the complete fund list.
+    try {
+      nav = parseCatalogNav(await fetchText(page, `[ catalog  ] ${page.replace(SPROTT_SITE, '')}`, yahooHeaders(), config));
+    } catch (error) {
+      outputNote(`[ catalog  ] ${page}: ${errorMessage(error)}`);
+    }
+    if (nav.length >= pages.length) break;
   }
-  return [...byDate].map(([epoch, amount]) => ({ epoch, amount })).sort((a, b) => a.epoch - b.epoch);
-}
-
-/** "CUSIP: 85210B 102" -> "85210B102" (the site sometimes prints a space); anything malformed becomes empty. */
-export function securityId(raw: string, label: string, shape: RegExp): string {
-  const value = new RegExp(`${label}:\\s*([A-Z0-9 ]+)`, 'i').exec(raw)?.[1]?.replace(/\s+/g, '').toUpperCase() ?? '';
-  return shape.test(value) ? value : '';
-}
-
-export function parseFundPage(html: string, expectedTicker?: string): FundPage {
-  const labels = labelValues(html);
-  const first = (label: string): string => labels.get(label)?.[0] ?? '';
-  const ticker = sanitizeTicker(first('Ticker'));
-  const asOfDate = longDateToIso(htmlText(/id="asOfDate"[^>]*>([\s\S]*?)<\/h2>/i.exec(html)?.[1] ?? '').replace(/^As of\s*/i, ''));
-  const nav = numberOrNull(first('NAV'));
-  if (!ticker || !asOfDate || nav === null) throw new Error('Unexpected Sprott fund page layout (ticker, as-of date or NAV missing)');
-  if (expectedTicker && ticker !== expectedTicker) throw new Error(`Fund page ticker mismatch: expected ${expectedTicker}, page shows ${ticker}`);
-  const fees = new Map<string, string>();
-  for (const table of html.matchAll(/<table\b[\s\S]*?<\/table>/gi)) {
-    const rows = tableRows(table[0]);
-    if (rows.some((row) => row[0] === 'Management Fee')) for (const row of rows) if (row.length === 2) fees.set(row[0], row[1]);
+  if (!nav.length) {
+    outputNote('[ catalog  ] fund navigation unavailable — using sitemap slugs and published identities');
+    nav = pages.map((page) => ({ ticker: tickerFromSlug(page), name: '', fundPage: page, assetClass: '', isin: '', nav: null, navDate: null }));
   }
-  const section = (heading: RegExp): string => heading.exec(html)?.[1] ?? '';
-  const holdingsHtml = /class="holdings-table"([\s\S]*?)(?=<h2\b|<\/section>)/i.exec(html)?.[1] ?? '';
-  const distributionsHtml = /<table\b[^>]*id="DistributionsData"[\s\S]*?<\/table>/i.exec(html)?.[0] ?? '';
-  const change = labels.get('NAV Daily Change') ?? [];
-  const countText = first('Number of Holdings');
+  const known = new Set(pages.map((page) => page.replace(/\/+$/, '')));
+  const funds = nav.filter((fund) => known.has(fund.fundPage.replace(/\/+$/, '')) && /^[A-Z]{2,6}$/.test(fund.ticker));
+  if (!funds.length) throw new Error('Fund navigation list empty; keeping published index');
+  if (new Set(funds.map((fund) => fund.ticker)).size !== funds.length) throw new Error('Duplicate catalog ticker');
+  return funds.sort((a, b) => a.ticker.localeCompare(b.ticker));
+}
+
+// ---------------------------------------------------------------------------
+// Fund page sections
+// ---------------------------------------------------------------------------
+
+/** `<h3 class="color-gold">Label</h3> ... <h4>Value</h4>` pairs (pricing + key facts). */
+export function parseLabelValues(html: unknown): Record<string, string> {
+  const values: Record<string, string> = {};
+  const pattern = /<h3[^>]*class="[^"]*color-gold[^"]*"[^>]*>([\s\S]*?)<\/h3>([\s\S]*?)(?=<h3[^>]*class="[^"]*color-gold|<\/section>|$)/gi;
+  for (const match of String(html ?? '').matchAll(pattern)) {
+    const label = stripHtml(match[1]).replace(/\s+\d+$/, '').trim();
+    const value = /<h4[^>]*>([\s\S]*?)<\/h4>/i.exec(match[2]);
+    if (!label || !value) continue;
+    const text = stripHtml(value[1]);
+    if (text && values[label] === undefined) values[label] = text;
+  }
+  return values;
+}
+
+/** "Fees & Expenses" table: Management Fee / Other Expenses / Total Annual ... */
+export function parseFeesTable(html: unknown): Record<string, number | null> {
+  const fees: Record<string, number | null> = {};
+  const table = tablesIn(html).find((candidate) => /Management Fee/i.test(candidate) && /Total Annual Fund Operating Expenses/i.test(candidate));
+  if (!table) return fees;
+  for (const row of rowsIn(table)) {
+    const cells = cellsIn(row);
+    if (cells.length < 2) continue;
+    fees[cells[0].replace(/\s+/g, ' ').trim()] = parsePercentText(cells[1]);
+  }
+  return fees;
+}
+
+export const HOLDINGS_HEADERS = ['Name', 'Ticker', 'Identifier', 'Weight', 'Market Value', 'Shares Held', 'SEDOL'];
+
+/** Quote-aware CSV for the page's embedded data-URI holdings download. */
+export function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  for (const line of String(text ?? '').replace(/\r\n?/g, '\n').split('\n')) {
+    if (line.trim() === '') continue;
+    const cells: string[] = [];
+    let current = '';
+    let quoted = false;
+    for (let index = 0; index < line.length; index++) {
+      const character = line[index];
+      if (quoted) {
+        if (character === '"') {
+          if (line[index + 1] === '"') { current += '"'; index++; } else quoted = false;
+        } else current += character;
+      } else if (character === '"') quoted = true;
+      else if (character === ',') { cells.push(current); current = ''; }
+      else current += character;
+    }
+    cells.push(current);
+    rows.push(cells.map((cell) => cell.trim()));
+  }
+  return rows;
+}
+
+function holdingsRowFromCsv(headers: string[], cells: string[]): JsonRecord {
+  const value = (...names: string[]): string => {
+    for (const name of names) {
+      const index = headers.findIndex((header) => header.toLowerCase() === name.toLowerCase());
+      if (index >= 0 && cells[index] !== undefined && cells[index] !== '') return cells[index];
+    }
+    return '';
+  };
   return {
-    ticker, asOfDate, nav, navChange: numberOrNull(change[0]), navChangePercent: numberOrNull(change[1]),
-    marketPrice: numberOrNull(first('Market Price')), premiumDiscount: numberOrNull(first('Premium/Discount')),
-    netExpense: numberOrNull(first('Net Total Expense Ratio')), grossExpense: numberOrNull(fees.get('Total Annual Fund Operating Expenses') ?? ''),
-    exchange: cleanText(first('Listing Exchange')), benchmark: cleanText(first('Benchmark Index')),
-    isin: securityId(first('ISIN'), 'ISIN', /^[A-Z]{2}[A-Z0-9]{9}\d$/),
-    cusip: securityId(first('CUSIP'), 'CUSIP', /^[A-Z0-9]{9}$/),
-    inceptionDate: longDateToIso(first('Inception Date')),
-    netAssets: numberOrNull(first('Total Net Assets')), sharesOutstanding: numberOrNull(first('Shares Outstanding')),
-    netAssetsDate: longDateToIso(htmlText(/ETF Fund Details<\/h2>\s*<p class="update-date">([\s\S]*?)<\/p>/i.exec(html)?.[1] ?? '')),
-    holdingsCount: /^\d+$/.test(countText) ? Number(countText) : null,
-    monthEnd: parsePerformanceTable(section(/<h3[^>]*>\s*Month-End Performance\s*<\/h3>([\s\S]*?)(?=<h3\b)/i)),
-    quarterEnd: parsePerformanceTable(section(/<h3[^>]*>\s*Quarter-End Performance\s*<\/h3>([\s\S]*?)(?=<h3\b|$)/i)),
-    holdings: holdingsHtml ? parseHoldingsTable(holdingsHtml) : null,
-    distributions: { present: Boolean(distributionsHtml), rows: distributionsHtml ? parseDistributionsTable(distributionsHtml) : [] },
+    Name: cleanText(value('Security', 'Name')),
+    Ticker: cleanText(value('Symbol', 'Ticker')),
+    Identifier: cleanText(value('SEDOL', 'CUSIP', 'ISIN')),
+    Weight: numberText(value('Weight')),
+    'Market Value': numberText(value('Market Value')),
+    'Shares Held': numberText(value('Quantity', 'Shares Held')),
+    SEDOL: cleanText(value('SEDOL')),
   };
 }
 
-/** Official holdings must match the page's own "Number of Holdings" (cash excluded); never publish a truncated table. */
-export function officialHoldings(page: FundPage): JsonRecord | null {
-  const table = page.holdings;
-  if (!table?.rows.length) return null;
-  const securities = table.rows.filter((row) => !isCashHolding(row)).length;
-  if (page.holdingsCount !== null && securities !== page.holdingsCount) throw new Error(`Holdings table has ${securities} securities, page states ${page.holdingsCount}`);
-  return { rows: sortHoldings(table.rows), headers: HOLDINGS_HEADERS, asOfDate: table.asOfDate, source: 'sprottetfs.com fund page holdings table', status: 'available' };
+function holdingsRowFromCells(cells: string[]): JsonRecord {
+  const [security, marketValue, symbol, sedol, quantity, weight] = cells;
+  return {
+    Name: cleanText(security),
+    Ticker: cleanText(symbol),
+    Identifier: cleanText(sedol),
+    Weight: numberText(weight),
+    'Market Value': numberText(marketValue),
+    'Shares Held': numberText(quantity),
+    SEDOL: cleanText(sedol),
+  };
 }
 
-/** Sprott's returns are average annual figures; a since-inception figure for a fund under one year is cumulative, so it is not shown as annualized. */
-export function officialReturns(block: PerfBlock | null, inceptionDate: string | null): JsonRecord | null {
-  if (!block) return null;
-  const young = inceptionDate !== null && Date.parse(block.asOfDate) - Date.parse(inceptionDate) < 365 * 86_400_000;
-  return { ...block, asOfDate: formatEdgarDate(block.asOfDate), sinceInception: young ? null : block.sinceInception };
+export function parseHoldingsSection(html: unknown): { rows: JsonRecord[]; asOfDate: string | null; source: string; headers: string[] } {
+  const source = String(html ?? '');
+  // Several sections carry an `update-date` paragraph; only the holdings one matters here.
+  const holdingsStart = source.search(/<div\b[^>]*class="[^"]*holdings-table[^"]*"/i);
+  const scope = holdingsStart >= 0 ? source.slice(holdingsStart) : source;
+  const asOf = /<p[^>]*class="[^"]*update-date[^"]*"[^>]*>([\s\S]*?)<\/p>/i.exec(scope);
+  const asOfText = asOf ? stripHtml(asOf[1]).replace(/^As of\s*/i, '') : '';
+  const asOfDate = asOfText ? isoDate(asOfText) ?? parseLongDate(asOfText) : null;
+  const dataUri = /<a\b[^>]*href="data:application\/csv;charset=utf-8,([^"]*)"/i.exec(source);
+  if (dataUri) {
+    let decoded = dataUri[1];
+    try { decoded = decodeURIComponent(decoded); } catch { /* keep the raw payload */ }
+    const csv = parseCsv(decoded);
+    if (csv.length > 1) {
+      const [headers, ...body] = csv;
+      const rows = body.filter((cells) => cells.some((cell) => cell !== '')).map((cells) => holdingsRowFromCsv(headers, cells));
+      if (rows.length) return { rows, asOfDate, source: 'sprottetfs.com "Download All Holdings" CSV', headers: HOLDINGS_HEADERS };
+    }
+  }
+  const table = tablesIn(source).find((candidate) => /<th[^>]*>\s*Security\s*<\/th>/i.test(candidate));
+  if (!table) throw new Error('Holdings table not found on the fund page');
+  const body = rowsIn(table).slice(1).map(cellsIn).filter((cells) => cells.length >= 6 && cells[0]);
+  if (!body.length) throw new Error('Holdings table has no data rows');
+  return { rows: body.map(holdingsRowFromCells), asOfDate, source: 'sprottetfs.com fund page holdings table', headers: HOLDINGS_HEADERS };
 }
 
-/** Distribution history: the official table is authoritative; later payments (not yet on the page) come from published data or Yahoo. */
-export function mergeOfficialDividends(
-  official: Array<{ epoch: number; amount: number }>,
-  later: Array<{ epoch: number; amount: number }>,
-): Array<{ epoch: number; amount: number }> {
-  const last = official.length ? official[official.length - 1].epoch : -Infinity;
-  const byDate = new Map(official.map((d) => [epochToIsoDate(d.epoch), d]));
-  for (const d of later) if (d.epoch > last && !byDate.has(epochToIsoDate(d.epoch))) byDate.set(epochToIsoDate(d.epoch), d);
-  return [...byDate.values()].sort((a, b) => a.epoch - b.epoch);
+export function parseDistributionsSection(html: unknown): { headers: string[]; payments: Array<{ epoch: number; amount: number }> } {
+  const table = tablesIn(html).find((candidate) => /id="DistributionsData"/i.test(candidate));
+  if (!table) return { headers: ['Ex-Date', 'Amount'], payments: [] };
+  const rendered = rowsIn(table).map(cellsIn);
+  const headers = rendered[0] ?? [];
+  const exIndex = headers.findIndex((header) => /^ex-?\s*date$/i.test(header));
+  const totalIndex = headers.findIndex((header) => /total distributions/i.test(header));
+  const payments: Array<{ epoch: number; amount: number }> = [];
+  for (const cells of rendered.slice(1)) {
+    if (!cells.length) continue;
+    const date = isoDate(cells[exIndex >= 0 ? exIndex : 0]);
+    const amount = parseMoneyText(cells[totalIndex >= 0 ? totalIndex : cells.length - 1]);
+    const epoch = date ? Date.parse(`${date}T00:00:00Z`) / 1000 : Number.NaN;
+    if (!date || amount === null || !Number.isFinite(epoch)) continue;
+    payments.push({ epoch, amount });
+  }
+  payments.sort((a, b) => a.epoch - b.epoch);
+  return { headers: ['Ex-Date', 'Amount'], payments };
 }
 
+type ReturnValues = {
+  ytd: number | null; yr1: number | null; yr3: number | null; yr5: number | null;
+  yr10: number | null; sinceInception: number | null; mo1: number | null; qtd: number | null;
+};
+const EMPTY_RETURNS: ReturnValues = { ytd: null, yr1: null, yr3: null, yr5: null, yr10: null, sinceInception: null, mo1: null, qtd: null };
 
-// SEC parsers above are copied from JPMorgan. Resolver validates fund identity:
+const PERFORMANCE_COLUMNS: Array<[RegExp, keyof ReturnValues]> = [
+  [/^1\s*MO/i, 'mo1'],
+  [/^3\s*MO/i, 'qtd'],
+  [/^YTD/i, 'ytd'],
+  [/^1\s*YR/i, 'yr1'],
+  [/^3\s*YR/i, 'yr3'],
+  [/^5\s*YR/i, 'yr5'],
+  [/^10\s*YR/i, 'yr10'],
+  [/^S\.?\s*I\.?/i, 'sinceInception'],
+];
+
+export function parseReturnTable(table: string): ReturnValues {
+  const values: ReturnValues = { ...EMPTY_RETURNS };
+  const rendered = rowsIn(table).map(cellsIn);
+  const header = rendered[0] ?? [];
+  const slots = header.map((cell) => PERFORMANCE_COLUMNS.find(([pattern]) => pattern.test(cell))?.[1] ?? null);
+  // The fund's own Net Asset Value row; benchmark/market-price rows are published elsewhere.
+  const navRow = rendered.slice(1).find((cells) => cells.some((cell) => /\(net asset value\)/i.test(cell)));
+  if (!navRow) return values;
+  for (let index = 0; index < slots.length; index++) {
+    const slot = slots[index];
+    if (!slot) continue;
+    const raw = String(navRow[index] ?? '').trim();
+    values[slot] = /^(--?|n\/?a|)$/i.test(raw) ? null : numberOrNull(raw);
+  }
+  return values;
+}
+
+/** Month-end and quarter-end "Average Annual Total Returns (%)" blocks. */
+export function parseSprottPerformance(html: unknown): { month: JsonRecord | null; quarter: JsonRecord | null } {
+  const source = String(html ?? '');
+  const block = (heading: string, nextHeading: string | null): JsonRecord | null => {
+    const start = source.indexOf(heading);
+    if (start < 0) return null;
+    const end = nextHeading ? source.indexOf(nextHeading, start) : -1;
+    const slice = source.slice(start, end < 0 ? start + 30_000 : end);
+    const table = tablesIn(slice).find((candidate) => /1\s*MO/i.test(candidate) && /S\.?\s*I\.?/i.test(candidate));
+    if (!table) return null;
+    const date = /As of\s*(\d{1,2}\/\d{1,2}\/\d{4})/i.exec(stripHtml(slice));
+    const iso = date ? isoDate(date[1]) : null;
+    if (!iso) return null;
+    return { asOfDate: formatEdgarDate(iso), ...parseReturnTable(table) };
+  };
+  return { month: block('Month-End Performance', 'Quarter-End Performance'), quarter: block('Quarter-End Performance', null) };
+}
+
+export function parseFundPage(html: unknown, ticker: string): JsonRecord {
+  const source = String(html ?? '');
+  const labels = parseLabelValues(source);
+  const fees = parseFeesTable(source);
+  const asOf = /id="asOfDate"[^>]*>([\s\S]*?)<\/h2>/i.exec(source);
+  const gross = fees['Total Annual Fund Operating Expenses'] ?? null;
+  const net = parsePercentText(labels['Net Total Expense Ratio']) ?? gross;
+  return {
+    ticker: cleanText(labels.Ticker) || ticker,
+    name: parseFundName(source),
+    category: parseCategory(source),
+    asOfDate: asOf ? parseLongDate(stripHtml(asOf[1])) : null,
+    nav: parseMoneyText(labels.NAV),
+    navDisplay: labels.NAV ?? null,
+    marketPrice: parseMoneyText(labels['Market Price']),
+    premiumDiscount: parsePercentText(labels['Premium/Discount']),
+    aumValue: parseMoneyText(labels['Total Net Asset Value']),
+    aumDisplay: labels['Total Net Asset Value'] ?? null,
+    navDailyChange: parseMoneyText(labels['NAV Daily Change']),
+    expenseRatio: { gross, net, value: net ?? gross },
+    identifiers: {
+      isin: (labels.ISIN ?? '').replace(/^ISIN\s*:?\s*/i, '') || null,
+      cusip: (labels.CUSIP ?? '').replace(/^CUSIP\s*:?\s*/i, '') || null,
+      indexTicker: labels['Benchmark Index'] ?? null,
+    },
+    exchange: labels['Listing Exchange'] ?? null,
+    inception: parseLongDate(labels['Inception Date'] ?? ''),
+    indexRebalanceFrequency: labels['Index Rebalance Frequency'] ?? null,
+    holdings: parseHoldingsSection(source),
+    distributions: parseDistributionsSection(source),
+    performance: parseSprottPerformance(source),
+  };
+}
+
+function sortHoldings(rows: JsonRecord[]): JsonRecord[] {
+  return rows.slice().sort((a, b) => (numberOrNull(b.Weight) ?? -Infinity) - (numberOrNull(a.Weight) ?? -Infinity) || String(a.Name).localeCompare(String(b.Name)));
+}
+// SEC parsers above are shared with the sibling updaters. Resolver validates fund identity:
 // the latest filing for a trust is NOT necessarily this ETF's filing.
 let fundTickerPromise:Promise<Map<string,SecSeriesRef>>|null=null;
 let companyTickerPromise:Promise<Map<string,string>>|null=null;
 const submissionsCache=new Map<string,Promise<JsonRecord>>();
 async function loadFundTickerMap(config:UpdaterConfig):Promise<Map<string,SecSeriesRef>> {
   return fundTickerPromise??=fetchJson(SEC_FUND_TICKERS_URL,'[ edgar    ] ticker table',secHeaders(config),config).then(parseFundTickerMap).catch(e=>{
-    console.warn(`[ edgar    ] ticker table unavailable: ${errorMessage(e)} - retaining published data when needed`);return new Map();
+    console.warn(`[ edgar    ] ticker table unavailable: ${errorMessage(e)} — retaining published data when needed`);return new Map();
   });
 }
 async function loadCompanyTickerMap(config:UpdaterConfig):Promise<Map<string,string>> {
@@ -1488,7 +1645,8 @@ async function resolveNportFiling(fund:CatalogFund,config:UpdaterConfig):Promise
     try {cik=pickEftsCik(await fetchJson(eftsSearchUrl(fund.name),'[ edgar    ] discovery',secHeaders(config),config),fund.name)??undefined;}
     catch(e){outputNote(`[ edgar    ] ${fund.ticker}: ${errorMessage(e)}`);}
   }
-  // Every Sprott ETF is a series of SPROTT FUNDS TRUST; the series name inside each filing must still match.
+  // SPROTT FUNDS TRUST files every Sprott ETF's N-PORT; the XML series below
+  // still has to match this fund before any holdings row is published.
   cik??=SPROTT_TRUST_CIK;
   if (!candidates.length && cik) {
     try {
@@ -1502,8 +1660,8 @@ async function resolveNportFiling(fund:CatalogFund,config:UpdaterConfig):Promise
       const parsed=parseNport(xml);
       if (!nportMatches(fund,parsed,ref) || !parsed.holdings.length) continue;
       const names=await loadCompanyTickerMap(config);
-      const rows=parsed.holdings.map(row=>({...row,Ticker:names.get(normalizeHoldingName(row.Name))||names.get(normalizeHoldingNameCore(row.Name))||'-'}));
-      return {rows:sortHoldings(rows),headers:['Name','Ticker','Identifier','Weight','Market Value','Shares Held','Asset Category'],asOfDate:parsed.repPdDate,source:accession.url,status:'available'};
+      const rows=parsed.holdings.map(row=>({...row,Ticker:names.get(normalizeHoldingName(row.Name))||names.get(normalizeHoldingNameCore(row.Name))||''}));
+      return {rows:sortHoldings(rows),headers:HOLDINGS_HEADERS,asOfDate:parsed.repPdDate,source:accession.url,status:'available'};
     } catch(e){outputNote(`[ edgar    ] ${fund.ticker}: ${errorMessage(e)}`);}
   }
   return null;
@@ -1520,7 +1678,18 @@ export function mergeHistory(previous:JsonRecord[], fresh:ChartDay[]):JsonRecord
     const epoch=Date.parse(String(row.Date));
     if (Number.isFinite(epoch)) byDate.set(new Date(epoch).toISOString().slice(0,10),row);
   }
-  for (const row of historyRows(fresh)) byDate.set(new Date(Date.parse(row.Date)).toISOString().slice(0,10),row);
+  for (const row of historyRows(fresh)) {
+    const key=new Date(Date.parse(row.Date)).toISOString().slice(0,10), published=byDate.get(key);
+    // Yahoo recomputes adjusted closes on every request. A value that sits on
+    // a .xx5 rounding boundary flips the published cent back and forth between
+    // otherwise identical requests, and the feed would churn on every run.
+    // A published row therefore keeps its cent while the fresh value moves by
+    // less than two cents; a genuine restatement or dividend adjustment is
+    // larger and replaces the row normally.
+    const freshAdj=numberOrNull(row['Adj Close']), publishedAdj=published?numberOrNull(published['Adj Close']):null;
+    if (freshAdj!==null && publishedAdj!==null && Math.abs(freshAdj-publishedAdj)<0.02) row['Adj Close']=published!['Adj Close'];
+    byDate.set(key,row);
+  }
   return [...byDate].sort(([a],[b])=>a.localeCompare(b)).map(([,row])=>row);
 }
 function chartDaysFromRows(rows:JsonRecord[]):ChartDay[] {
@@ -1546,118 +1715,127 @@ export function buildMetrics(month:JsonRecord|null,derived:PriceReturns,secYield
   return {ytd,tr1y,cagr3y,cagr5y,cagr10y,tr3y:annualizedToTotal(cagr3y,3),tr5y:annualizedToTotal(cagr5y,5),tr10y:annualizedToTotal(cagr10y,10),
     siAnn:month?.sinceInception??derived.siAnn,secYield,secYieldText:percent(secYield),dividendYield:divYield,dividendYieldText:percent(divYield)};
 }
+function mergeSprottDividends(old: JsonRecord, page: JsonRecord | null, chart: ParsedChart | null): Array<{ epoch: number; amount: number }> {
+  const byDate = new Map(previousDividends(old).map((dividend) => [epochToIsoDate(dividend.epoch), dividend]));
+  for (const dividend of chart?.dividends ?? []) byDate.set(epochToIsoDate(dividend.epoch), dividend);
+  // The official distribution table wins over the market-data feed for the same ex-date.
+  for (const dividend of (page?.distributions?.payments ?? []) as Array<{ epoch: number; amount: number }>) {
+    if (Number.isFinite(dividend.epoch) && Number.isFinite(dividend.amount)) byDate.set(epochToIsoDate(dividend.epoch), dividend);
+  }
+  return [...byDate.values()].sort((a, b) => a.epoch - b.epoch);
+}
 
-function displayDateToIso(display: unknown): string | null {
-  const match = /^([A-Z][a-z]{2}) (\d{2}) (\d{4})$/.exec(String(display ?? '').trim());
-  const month = match ? MONTHS.indexOf(match[1]) : -1;
-  return match && month >= 0 ? `${match[3]}-${String(month + 1).padStart(2, '0')}-${match[2]}` : isoDate(display);
-}
-function browserHeaders(): Record<string, string> {
-  return { 'User-Agent': YAHOO_BROWSER_UA, Accept: 'text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8' };
-}
-async function processFund(fund:CatalogFund,config:UpdaterConfig,previousIndex:JsonRecord):Promise<JsonRecord|null> {
-  const ticker=fund.ticker, dir=new URL(`funds/${ticker}/`,API_ROOT);
-  const old=await readJson(new URL('meta.json',dir))??{};
-  let page:FundPage|null=null, holdings:JsonRecord|null=null;
+async function processFund(fund: CatalogFund, config: UpdaterConfig, previousIndex: JsonRecord): Promise<JsonRecord | null> {
+  const ticker = fund.ticker, dir = new URL(`funds/${ticker}/`, API_ROOT);
+  const old = await readJson(new URL('meta.json', dir)) ?? {};
+  let page: JsonRecord | null = null;
   if (!config.skipSprott) {
-    page=await optional(`${ticker} fund page`,async()=>{
-      const html=await fetchText(fund.fundPage,`[ product  ] ${ticker}`,browserHeaders(),config);
-      const parsed=parseFundPage(html,ticker);
-      await storeRaw(ticker,'page',{fundPage:fund.fundPage,html},config);
+    page = await optional(`${ticker} fund page`, async () => {
+      const raw = await fetchText(fund.fundPage, `[ product  ] ${ticker}`, yahooHeaders(), config);
+      const parsed = parseFundPage(raw, ticker);
+      if (parsed.ticker !== ticker) throw new Error(`page reports ticker ${parsed.ticker}`);
+      await storeRaw(ticker, 'fund-page', { ...parsed, holdings: { ...parsed.holdings, rows: [] } }, config);
       return parsed;
     });
-    // Evaluate known, fresh headline filters before holdings/history downloads.
-    const aum=page?.netAssets??old.aum?.value??previousIndex.aumValue??null;
-    const ter=page?.grossExpense??old.expenseRatio?.value??previousIndex.terValue??null;
-    if (!inRange(aum,config.aumRange)||!inRange(ter,config.terRange)) return null;
-    const fresh=page;
-    if (fresh) holdings=await optional(`${ticker} official holdings`,async()=>officialHoldings(fresh));
   }
-  if (!holdings && config.edgarFallback) holdings=await optional(`${ticker} SEC holdings`,()=>resolveNportFiling(fund,config));
+  // Evaluate known, fresh headline filters before holdings/history downloads.
+  const aum = page?.aumValue ?? old.aum?.value ?? previousIndex.aumValue ?? null;
+  const ter = page?.expenseRatio?.value ?? old.expenseRatio?.value ?? previousIndex.terValue ?? null;
+  if (!inRange(aum, config.aumRange) || !inRange(ter, config.terRange)) return null;
+  const secYield = old.yields?.secYield ?? null; // Sprott publishes no 30-day SEC yield on its fund pages.
+  if (!inRange(secYield, config.secYieldRange)) return null;
+
+  let holdings: JsonRecord | null = null;
+  const pageRows: JsonRecord[] = page?.holdings?.rows ?? [];
+  if (pageRows.length) {
+    holdings = { rows: sortHoldings(pageRows), headers: HOLDINGS_HEADERS, asOfDate: page?.holdings?.asOfDate ?? null, source: page?.holdings?.source ?? 'sprottetfs.com fund page', status: 'available' };
+  }
+  if (!holdings && config.edgarFallback) holdings = await optional(`${ticker} SEC holdings`, () => resolveNportFiling(fund, config));
   if (!holdings) {
-    const rows=await readPreviousSheet(ticker,'holdings'), headers=await readPreviousSheetHeaders(ticker,'holdings');
-    if (old.holdings?.totalRows && rows.length!==old.holdings.totalRows) throw new Error(`${ticker}: previous holdings incomplete; refusing overwrite`);
-    holdings={...old.holdings,rows,headers:headers.length?headers:HOLDINGS_HEADERS,asOfDate:old.holdings?.asOfDate??null,
-      source:old.holdings?.source??'unavailable from official/SEC sources',
-      status:old.holdings?.status??(rows.length?'available':'unavailable')};
+    const rows = await readPreviousSheet(ticker, 'holdings'), headers = await readPreviousSheetHeaders(ticker, 'holdings');
+    if (old.holdings?.totalRows && rows.length !== old.holdings.totalRows) throw new Error(`${ticker}: previous holdings incomplete; refusing overwrite`);
+    holdings = { rows, headers: headers.length ? headers : HOLDINGS_HEADERS, asOfDate: old.holdings?.asOfDate ?? null,
+      source: old.holdings?.source ?? 'unavailable from official/SEC sources',
+      status: old.holdings?.status ?? (rows.length ? 'available' : 'unavailable') };
   }
-  const chart=config.skipYahoo?null:await optional(`${ticker} Yahoo`,async()=>{
-    const raw=await fetchJson(chartUrl(ticker,config),`[ chart    ] ${ticker}`,yahooHeaders(),config);
-    await storeRaw(ticker,'yahoo',raw,config);return parseChart(raw);
+  const chart = config.skipYahoo ? null : await optional(`${ticker} Yahoo`, async () => {
+    const raw = await fetchJson(chartUrl(ticker, config), `[ chart    ] ${ticker}`, yahooHeaders(), config);
+    await storeRaw(ticker, 'yahoo', raw, config);
+    return parseChart(raw);
   });
-  const oldHistory=await readPreviousSheet(ticker,'history');
-  if (old.history?.totalRows && oldHistory.length!==old.history.totalRows) throw new Error(`${ticker}: previous history incomplete; refusing overwrite`);
-  const history=chart?.days.length?mergeHistory(oldHistory,chart.days):oldHistory;
-  const days=chartDaysFromRows(history);
-  const dividends=page?.distributions.present
-    ?mergeOfficialDividends(page.distributions.rows,[...previousDividends(old),...(chart?.dividends??[])])
-    :mergeDividends(old,chart);
-  const latest=dividends.at(-1)??null;
-  const frequency=inferDistributionFrequency(dividends);
-  const nav=page?.nav??fund.nav??old.nav?.value??null;
-  const navDate=page?.asOfDate??fund.navDate??null;
-  // The official market price is the page's 4 p.m. ET bid/ask midpoint on the NAV date; Yahoo is the fallback.
-  const price=page?.marketPrice??chart?.regularMarketPrice??old.marketPrice?.value??null;
-  const priceDate=page?.marketPrice!=null?page.asOfDate:(chart?.regularMarketTime?epochToIsoDate(chart.regularMarketTime):null);
+  const oldHistory = await readPreviousSheet(ticker, 'history');
+  if (old.history?.totalRows && oldHistory.length !== old.history.totalRows) throw new Error(`${ticker}: previous history incomplete; refusing overwrite`);
+  const history = chart?.days.length ? mergeHistory(oldHistory, chart.days) : oldHistory;
+  const days = chartDaysFromRows(history);
+  const dividends = mergeSprottDividends(old, page, chart), latest = dividends.at(-1) ?? null;
+  const frequency = dividends.length
+    ? inferDistributionFrequency(dividends)
+    : old.distributions?.frequency && old.distributions.frequency !== '—'
+      ? { frequency: String(old.distributions.frequency), paymentsPerYear: numberOrNull(old.distributions.paymentsPerYear) }
+      : { frequency: '—', paymentsPerYear: null };
+  const nav = page?.nav ?? old.nav?.value ?? fund.nav ?? null;
+  const navDate = page?.asOfDate ?? null;
+  const price = page?.marketPrice ?? chart?.regularMarketPrice ?? old.marketPrice?.value ?? null;
+  const priceDate = page?.asOfDate ?? (chart?.regularMarketTime ? epochToIsoDate(chart.regularMarketTime) : null);
   // Do not compute a premium from prices belonging to different days.
-  const premium=page?.premiumDiscount??(nav!==null&&nav>0&&price!==null&&navDate&&navDate===priceDate?round((price/nav-1)*100,2):old.premiumDiscount?.value??null);
-  const aum=page?.netAssets??old.aum?.value??previousIndex.aumValue??null, ter=page?.grossExpense??old.expenseRatio?.value??previousIndex.terValue??null;
-  const divYield=indicatedYield(latest?.amount??null,frequency.paymentsPerYear,price)??old.yields?.dividendYield??null;
-  const inception=page?.inceptionDate??old.inception?.fundInceptionDate??(chart?.firstTradeDate?epochToIsoDate(chart.firstTradeDate):null);
-  let month:JsonRecord|null=officialReturns(page?.monthEnd??null,inception), quarter:JsonRecord|null=officialReturns(page?.quarterEnd??null,inception);
-  const freshOfficialReturns=Boolean(month);
-  month??=old.returns?.monthEnd??null; quarter??=old.returns?.quarterEnd??null;
-  const monthIso=displayDateToIso(month?.asOfDate);
-  const anchor=monthIso?new Date(`${monthIso}T00:00:00Z`):days.length?new Date(`${days.at(-1)!.date}T00:00:00Z`):null;
-  const usable=anchor?days.filter(d=>Date.parse(d.date)<=anchor.getTime()):[];
-  const derived=usable.length?priceReturns(usable,anchor!):{...EMPTY_PRICE_RETURNS};
+  const premium = page?.premiumDiscount ?? (nav !== null && nav > 0 && price !== null && navDate && priceDate && navDate === priceDate
+    ? round((price / nav - 1) * 100, 2)
+    : old.premiumDiscount?.value ?? null);
+  const divYield = indicatedYield(latest?.amount ?? null, frequency.paymentsPerYear, price) ?? old.yields?.dividendYield ?? null;
+  let month: JsonRecord | null = page?.performance?.month ?? old.returns?.monthEnd ?? null;
+  const quarter: JsonRecord | null = page?.performance?.quarter ?? old.returns?.quarterEnd ?? null;
+  const anchor = month?.asOfDate ? new Date(Date.parse(month.asOfDate)) : days.length ? new Date(`${days.at(-1)!.date}T00:00:00Z`) : null;
+  const usable = anchor ? days.filter((day) => Date.parse(day.date) <= anchor.getTime()) : [];
+  const derived = usable.length ? priceReturns(usable, anchor!) : { ...EMPTY_PRICE_RETURNS };
   // A range-limited Yahoo download is not a since-inception return.
-  if (!chart?.firstTradeDate || !days.length || Date.parse(days[0].date)/1000-chart.firstTradeDate>7*86400) derived.siAnn=null;
-  const hasOfficialReturns=freshOfficialReturns || Boolean(month && !old.returns?.derivedFrom?.startsWith('Yahoo adjusted'));
-  const metrics=buildMetrics(month,derived,null,divYield);
-  if (!month && usable.length) {
-    month={asOfDate:formatEdgarDate(derived.asOfDate),mo1:derived.mo1,mo3:null,ytd:derived.ytd,yr1:derived.yr1,yr3:derived.cagr3y,yr5:derived.cagr5y,yr10:derived.cagr10y,sinceInception:derived.siAnn};
-  }
-  const filtered=fundFilterReasons({ticker,aumValue:aum,terValue:ter,metrics},config);
+  if (!chart?.firstTradeDate || !days.length || Date.parse(days[0].date) / 1000 - chart.firstTradeDate > 7 * 86400) derived.siAnn = null;
+  const hasOfficialReturns = Boolean(page?.performance?.month) || Boolean(month && !String(old.returns?.derivedFrom ?? '').startsWith('Yahoo adjusted'));
+  const metrics = buildMetrics(month, derived, secYield, divYield);
+  if (month) month = { ...month, ytd: month.ytd ?? derived.ytd, mo1: month.mo1 ?? derived.mo1, qtd: month.qtd ?? derived.qtd };
+  else if (usable.length) month = { asOfDate: formatEdgarDate(derived.asOfDate!), mo1: derived.mo1, qtd: derived.qtd, ytd: derived.ytd, yr1: derived.yr1, yr3: derived.cagr3y, yr5: derived.cagr5y, yr10: derived.cagr10y, sinceInception: derived.siAnn };
+  const filtered = fundFilterReasons({ ticker, aumValue: aum, terValue: ter, metrics }, config);
   if (filtered.length) return null;
-  const previousMetrics=previousIndex.metrics??{};
+  const previousMetrics = previousIndex.metrics ?? {};
   // No fresh source must not null fields from the last successful publication.
-  for (const k of Object.keys(metrics)) if (metrics[k]===null && previousMetrics[k]!==undefined) metrics[k]=previousMetrics[k];
+  for (const key of Object.keys(metrics)) if (metrics[key] === null && previousMetrics[key] !== undefined) metrics[key] = previousMetrics[key];
   if (!page && !chart && !Object.keys(old).length) throw new Error(`${ticker}: no usable per-fund source`);
-  const category=fund.assetClass||old.category||'ETF';
-  const exchange=page?.exchange||chart?.exchangeName||old.inception?.exchange||previousIndex.exchange||'';
-  const holdingsManifest=await writePages(dir,ticker,'holdings',holdings.headers,holdings.rows,config.holdingsPageSize);
-  const oldHistoryHeaders=await readPreviousSheetHeaders(ticker,'history');
-  const historyManifest=await writePages(dir,ticker,'history',chart?.days.length?['Date','Close','Adj Close','Volume']:oldHistoryHeaders.length?oldHistoryHeaders:['Date','Close','Adj Close','Volume'],history,config.historyPageSize);
-  const historySource=chart?.days.length?'Yahoo Finance daily market-price closes / adjusted closes (not official NAV)':old.history?.source??'unavailable';
-  const returnsBasis=hasOfficialReturns?'official Sprott NAV performance where published; missing metrics derived from Yahoo adjusted closes at the same reporting date':'Yahoo adjusted market-price returns, not official NAV';
-  const meta={
-    ticker,name:fund.name,category,categoryPath:category,
-    source:{fundPage:fund.fundPage,catalog:CATALOG_PAGE,holdingsSource:holdings.source,historySource,yahooChart:`${YAHOO_CHART_URL}/${ticker}`,
-      provider:'Sprott ETFs official fund pages; SEC EDGAR N-PORT-P holdings fallback; Yahoo Finance market-history/dividend fallback'},
-    providerIds:fund,legalStructure:old.legalStructure??null,
-    identifiers:{cusip:page?.cusip||old.identifiers?.cusip||null,isin:page?.isin||old.identifiers?.isin||null,indexTicker:page?.benchmark||old.identifiers?.indexTicker||null},
-    inception:{fundInceptionDate:inception,shareClassInceptionDate:old.inception?.shareClassInceptionDate??null,exchange},
-    expenseRatio:{display:percent(ter),value:ter,gross:ter,net:page?.netExpense??old.expenseRatio?.net??null},
-    nav:{display:money(nav),value:nav,asOfDate:navDate?formatEdgarDate(navDate):old.nav?.asOfDate??'—'},
-    marketPrice:{display:money(price),value:price,asOfDate:priceDate?formatEdgarDate(priceDate):old.marketPrice?.asOfDate??'—'},
-    premiumDiscount:{display:percent(premium),value:premium},
-    aum:{display:aum===null?'—':formatAumDisplay(aum),value:aum,asOfDate:page?.netAssetsDate?formatEdgarDate(page.netAssetsDate):old.aum?.asOfDate??'—',source:page?.netAssets!=null?'sprottetfs.com fund page (ETF Fund Details, Total Net Assets)':old.aum?.source??'unavailable'},
-    yields:{dividendYield:metrics.dividendYield,dividendYieldText:metrics.dividendYieldText,dividendYieldKind:'indicated (latest distribution x payments per year / market price)',
-      secYield:null,secYieldText:percent(null),secYieldKind:'not published by sprottetfs.com'},
-    returns:{monthEnd:month,quarterEnd:quarter,derivedFrom:returnsBasis},
-    distributions:{frequency:frequency.frequency,paymentsPerYear:frequency.paymentsPerYear,headers:['Ex-Date','Amount'],rows:distributionRows(dividends)},
-    holdings:{...holdingsManifest,asOfDate:holdings.asOfDate,asOf:holdings.asOfDate?formatEdgarDate(holdings.asOfDate):'—',source:holdings.source,status:holdings.status},
-    history:{...historyManifest,asOf:days.length?formatEdgarDate(days.at(-1)!.date):old.history?.asOf??'—',source:historySource},
+  const name = cleanText(page?.name) || fund.name || cleanText(old.name) || ticker;
+  const category = cleanText(page?.category) || cleanText(old.category) || 'ETF';
+  const exchange = cleanText(page?.exchange) || cleanText(old.inception?.exchange) || chart?.exchangeName || '';
+  const holdingsManifest = await writePages(dir, ticker, 'holdings', holdings.headers, holdings.rows, config.holdingsPageSize);
+  const oldHistoryHeaders = await readPreviousSheetHeaders(ticker, 'history');
+  const historyManifest = await writePages(dir, ticker, 'history', chart?.days.length ? ['Date', 'Close', 'Adj Close', 'Volume'] : oldHistoryHeaders.length ? oldHistoryHeaders : ['Date', 'Close', 'Adj Close', 'Volume'], history, config.historyPageSize);
+  const historySource = chart?.days.length ? 'Yahoo Finance daily market-price closes / adjusted closes (not official NAV)' : old.history?.source ?? 'unavailable';
+  const returnsBasis = hasOfficialReturns
+    ? 'official sprottetfs.com month-end/quarter-end average annual total returns (NAV); missing metrics derived from Yahoo adjusted closes at the same reporting date'
+    : 'Yahoo adjusted market-price returns, not official NAV';
+  const meta = {
+    ticker, name, category, categoryPath: cleanText(old.categoryPath) || category,
+    source: { fundPage: fund.fundPage, catalog: CATALOG_PAGE, holdingsDownload: fund.fundPage, holdingsSource: holdings.source, historySource, yahooChart: `${YAHOO_CHART_URL}/${ticker}`, provider: 'sprottetfs.com official fund pages; SEC EDGAR N-PORT-P holdings fallback; Yahoo Finance market-history/dividend fallback' },
+    providerIds: { fundPage: fund.fundPage },
+    legalStructure: old.legalStructure ?? null,
+    identifiers: { cusip: page?.identifiers?.cusip ?? old.identifiers?.cusip ?? null, isin: page?.identifiers?.isin ?? old.identifiers?.isin ?? fund.isin ?? null, indexTicker: page?.identifiers?.indexTicker ?? old.identifiers?.indexTicker ?? null },
+    inception: { fundInceptionDate: page?.inception ?? old.inception?.fundInceptionDate ?? null, shareClassInceptionDate: old.inception?.shareClassInceptionDate ?? null, exchange },
+    expenseRatio: { display: percent(ter), value: ter, gross: page?.expenseRatio?.gross ?? old.expenseRatio?.gross ?? null, net: page?.expenseRatio?.net ?? old.expenseRatio?.net ?? null },
+    nav: { display: money(nav), value: nav, asOfDate: navDate ? formatEdgarDate(navDate) : old.nav?.asOfDate ?? '—' },
+    marketPrice: { display: money(price), value: price, asOfDate: priceDate ? formatEdgarDate(priceDate) : old.marketPrice?.asOfDate ?? '—' },
+    premiumDiscount: { display: percent(premium), value: premium },
+    aum: { display: aum === null ? '—' : page?.aumDisplay ?? formatAumDisplay(aum), value: aum, asOfDate: navDate ? formatEdgarDate(navDate) : old.aum?.asOfDate ?? '—', source: page?.aumDisplay ? 'sprottetfs.com fund page (Total Net Asset Value)' : old.aum?.source ?? 'unavailable' },
+    yields: { dividendYield: metrics.dividendYield, dividendYieldText: metrics.dividendYieldText, dividendYieldKind: 'indicated (latest distribution x payments per year / market price)',
+      secYield: metrics.secYield, secYieldText: metrics.secYieldText, secYieldKind: old.yields?.secYieldKind ?? 'not published', unsubsidizedSecYield: old.yields?.unsubsidizedSecYield ?? null },
+    returns: { monthEnd: month, quarterEnd: quarter, derivedFrom: returnsBasis },
+    distributions: { frequency: frequency.frequency, paymentsPerYear: frequency.paymentsPerYear, headers: ['Ex-Date', 'Amount'], rows: distributionRows(dividends) },
+    holdings: { ...holdingsManifest, asOfDate: holdings.asOfDate, asOf: holdings.asOfDate ? formatEdgarDate(holdings.asOfDate) : '—', source: holdings.source, status: holdings.status },
+    history: { ...historyManifest, asOf: days.length ? formatEdgarDate(days.at(-1)!.date) : old.history?.asOf ?? '—', source: historySource },
   };
-  await writeIfChanged(new URL('meta.json',dir),meta);
-  return {ticker,name:fund.name,category,fundPage:fund.fundPage,dataFile:`./funds/${ticker}/meta.json`,
-    cusip:meta.identifiers.cusip,isin:meta.identifiers.isin,ter:meta.expenseRatio.display,terValue:ter,nav:meta.nav.display,navValue:nav,aum:meta.aum.display,aumValue:aum,
-    asOfDate:meta.nav.asOfDate,inceptionDate:inception?formatEdgarDate(inception):'—',exchange,closePrice:meta.marketPrice.display,closePriceValue:price,premiumDiscount:meta.premiumDiscount.display,premiumDiscountValue:premium,
-    distributions:{frequency:frequency.frequency,exDate:latest?formatUsDate(latest.epoch):'—',dividend:latest?String(round(latest.amount,6)):'—'},returns:meta.returns,metrics,holdings:holdings.rows.length,history:history.length};
+  await writeIfChanged(new URL('meta.json', dir), meta);
+  return { ticker, name, category, fundPage: fund.fundPage, dataFile: `./funds/${ticker}/meta.json`,
+    cusip: meta.identifiers.cusip, isin: meta.identifiers.isin, ter: meta.expenseRatio.display, terValue: ter, nav: meta.nav.display, navValue: nav, aum: meta.aum.display, aumValue: aum,
+    asOfDate: meta.nav.asOfDate, inceptionDate: meta.inception.fundInceptionDate ? formatEdgarDate(meta.inception.fundInceptionDate) : '—',
+    exchange, closePrice: meta.marketPrice.display, closePriceValue: price, premiumDiscount: meta.premiumDiscount.display, premiumDiscountValue: premium,
+    distributions: { frequency: frequency.frequency, exDate: latest ? formatUsDate(latest.epoch) : '—', dividend: latest ? String(round(latest.amount, 6)) : '—' },
+    returns: meta.returns, metrics, holdings: holdings.rows.length, history: history.length };
 }
-
-
 export function batchSelection(funds:CatalogFund[],config:UpdaterConfig,cursor:string|null):CatalogFund[] {
   const selected=funds.filter(f=>!config.tickers.length||config.tickers.includes(f.ticker));
   if (!config.maxFetches) return selected;
@@ -1668,7 +1846,7 @@ export function batchSelection(funds:CatalogFund[],config:UpdaterConfig,cursor:s
 // File defaults and explicit overrides. Allowlisted scalar values only: the
 // same resolver is used by Actions without interpolating user input into bash.
 export const CONTROL_NAMES = [
-  'MAX_FETCHES','REQUEST_SLEEP','CONCURRENCY','AUM','TER','DIVIDEND_YIELD','TICKERS',
+  'MAX_FETCHES','REQUEST_SLEEP','CONCURRENCY','AUM','TER','DIVIDEND_YIELD','SEC_YIELD','TICKERS',
   'HOLDINGS_PAGE_SIZE','HISTORY_PAGE_SIZE','MAX_RETRIES','HISTORY_RANGE','STORE_RAW_DOWNLOADS',
   'SEC_UA','SKIP_YAHOO','SKIP_SPROTT','EDGAR_FALLBACK','VERBOSE',
   ...['PERFORMANCE','TOTAL_RETURN'].flatMap(prefix=>['YTD','1Y','3Y','5Y','10Y'].map(period=>`${prefix}_${period}`)),
@@ -1704,39 +1882,36 @@ export function resolveControls(file:unknown={},advanced:unknown={},inputs:unkno
   readConfig(result); // validate all min:max filters before a request or write
   return result;
 }
-export async function runtimeControls(env:Record<string,string|undefined>):Promise<Record<string,string>> {
+async function runtimeControls(env:Record<string,string|undefined>):Promise<Record<string,string>> {
   let file:unknown={};
   try {file=JSON.parse(await readFile(new URL('./update-data.config.json',import.meta.url),'utf8'));}
   catch(e) {if((e as NodeJS.ErrnoException).code!=='ENOENT')throw e;}
   return resolveControls(file,{}, {},env);
 }
 
-
 export async function main(env:Record<string,string|undefined>=process.env):Promise<void> {
   const controls=await runtimeControls(env);
   if(controls.VERBOSE!==undefined)process.env.VERBOSE=controls.VERBOSE;
-  const config=readConfig(controls); requestSleepMs=config.requestSleep*1000;
-  requestGates=new Array(Math.max(1,config.concurrency)).fill(0);
+  const config=readConfig(controls); requestSleepMs=config.requestSleep*1000;nextRequestAt=0;
   outputPrintConfig('Sprott',config);
   const previous=await readJson(INDEX_FILE), oldFunds=new Map<string,JsonRecord>((previous?.funds??[]).map((f:JsonRecord)=>[f.ticker,f]));
   let catalog:CatalogFund[]|null=null;
-  if (!config.skipSprott) catalog=await optional('catalog',async()=>{
-    const funds=parseCatalog(await fetchText(CATALOG_PAGE,'[ catalog  ] sprottetfs.com',browserHeaders(),config));
-    if (!funds.length) throw new Error('Official catalog empty; keeping published index');
-    return funds;
-  });
+  if (!config.skipSprott) catalog=await optional('catalog',()=>loadCatalog(config));
   if (!catalog) {
-    console.warn('[ catalog  ] official source unavailable/skipped - using published provider identities');
+    console.warn('[ catalog  ] official source unavailable/skipped — using published provider identities');
     catalog=[];
     for (const [ticker,row] of oldFunds) {
       const meta=await readJson(new URL(`funds/${ticker}/meta.json`,API_ROOT));
-      if (meta?.providerIds) catalog.push(meta.providerIds as CatalogFund);
-      else catalog.push({ticker,name:row.name,assetClass:row.category??'ETF',fundPage:row.fundPage,nav:row.navValue??null,navDate:displayDateToIso(row.asOfDate)});
+      catalog.push({ticker,name:cleanText(meta?.name)||cleanText(row.name)||ticker,
+        fundPage:cleanText(meta?.source?.fundPage)||cleanText(row.fundPage)||`${SPROTT_SITE}/`,
+        assetClass:cleanText(meta?.category)||cleanText(row.category)||'ETF',
+        isin:cleanText(meta?.identifiers?.isin)||cleanText(row.isin),nav:numberOrNull(row.navValue),
+        navDate:isoDate(meta?.nav?.asOfDate)||isoDate(row.asOfDate)});
     }
   }
   catalog.sort((a,b)=>a.ticker.localeCompare(b.ticker));
   if (!catalog.length) throw new Error('No official or previously published catalog; refusing empty success');
-  console.log(`[ catalog  ] ${catalog.length} Sprott ETFs (official site menu / published fallback)`);
+  console.log(`[ catalog  ] ${catalog.length} Sprott ETFs (sprottetfs.com fund navigation / published fallback)`);
   const state=await readJson(STATE_FILE), queue=batchSelection(catalog,config,state?.cursor??null);
   outputPrintFilter(queue.length,catalog.length,outputHasOutputFilters(config));
   const reporter=outputCreateReporter(API_ROOT,queue.length), result=new Map(oldFunds);
@@ -1769,9 +1944,9 @@ export async function main(env:Record<string,string|undefined>=process.env):Prom
 }
 if(import.meta.main){
   if(process.argv.some(a=>a==='--help'||a==='-h')){
-    console.log('Sprott ETF updater - bun scripts/update-data.ts\nCanonical environment controls (SPROTT_ aliases accepted):');
+    console.log('Sprott ETF updater — bun scripts/update-data.ts\nCanonical environment controls (SPROTT_ aliases accepted):');
     outputPrintConfig('Sprott effective configuration',readConfig(await runtimeControls(process.env)));
     console.log('Defaults: scripts/update-data.config.json; explicit environment overrides the file. Actions: file < advanced JSON < individual inputs.');
-    console.log('Ranges: min:max (inclusive, AND). AUM: amounts with K/M/B/T or nano/micro/small/mid/large.\nMAX_FETCHES=0: full pass/reset cursor; positive: resumable batch.\nTICKERS: comma/space/semicolon-separated allowlist; others keep published data.\nREQUEST_SLEEP: seconds between request starts per pacing lane. CONCURRENCY: fund workers (one lane each).\nHISTORY_RANGE: max or Ny; merges with prior history. SKIP_YAHOO, SKIP_SPROTT: skip provider.\nHOLDINGS_PAGE_SIZE, HISTORY_PAGE_SIZE: rows per JSON page. MAX_RETRIES: retries after the first request.\nSTORE_RAW_DOWNLOADS: source snapshots under api/sprott/raw. EDGAR_FALLBACK: SEC N-PORT holdings fallback.\nSEC_UA: real identifying contact for SEC requests.\nVERBOSE=1: per-request fallback diagnostics.');
+    console.log('Ranges: min:max (inclusive, AND). AUM: amounts with K/M/B/T or nano/micro/small/mid/large.\nMAX_FETCHES=0: full pass/reset cursor; positive: resumable batch.\nTICKERS: comma/space/semicolon-separated allowlist; others keep published data.\nREQUEST_SLEEP: seconds per conservative request gate. CONCURRENCY: fund workers.\nHISTORY_RANGE: max or Ny; merges with prior history. SKIP_*: skip provider.\nSTORE_RAW_DOWNLOADS: source JSON snapshots. SEC_UA: real identifying contact.\nVERBOSE=1: per-request fallback diagnostics.');
   }else await main().catch(e=>{console.error(`[ done     ] ${errorMessage(e)}`);process.exitCode=1;});
 }

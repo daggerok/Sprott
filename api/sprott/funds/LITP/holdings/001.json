@@ -1,0 +1,368 @@
+{
+ "ticker": "LITP",
+ "page": 1,
+ "pageSize": 250,
+ "totalRows": 39,
+ "headers": [
+  "Name",
+  "Ticker",
+  "Identifier",
+  "Weight",
+  "Market Value",
+  "Shares Held",
+  "SEDOL"
+ ],
+ "rows": [
+  {
+   "Name": "Sociedad Quimica y Minera de Chile SA",
+   "Ticker": "SQM",
+   "Identifier": "2771122",
+   "Weight": "10.35",
+   "Market Value": "3460360.41",
+   "Shares Held": "53343",
+   "SEDOL": "2771122"
+  },
+  {
+   "Name": "Albemarle Corp.",
+   "Ticker": "ALB",
+   "Identifier": "2046853",
+   "Weight": "9.88",
+   "Market Value": "3303615.18",
+   "Shares Held": "31231",
+   "SEDOL": "2046853"
+  },
+  {
+   "Name": "Ganfeng Lithium Group Co. Ltd.",
+   "Ticker": "1772 HK",
+   "Identifier": "BZ9NS11",
+   "Weight": "9.49",
+   "Market Value": "3172237.81",
+   "Shares Held": "807100",
+   "SEDOL": "BZ9NS11"
+  },
+  {
+   "Name": "PLS Group Ltd.",
+   "Ticker": "PLS AU",
+   "Identifier": "B2368L5",
+   "Weight": "8.73",
+   "Market Value": "2919188.16",
+   "Shares Held": "1089016",
+   "SEDOL": "B2368L5"
+  },
+  {
+   "Name": "Liontown Ltd.",
+   "Ticker": "LTR AU",
+   "Identifier": "B1J89V5",
+   "Weight": "7.99",
+   "Market Value": "2670864.88",
+   "Shares Held": "4135504",
+   "SEDOL": "B1J89V5"
+  },
+  {
+   "Name": "Lithium Americas Corp.",
+   "Ticker": "LAC",
+   "Identifier": "BQ2LQL5",
+   "Weight": "5.23",
+   "Market Value": "1747684.97",
+   "Shares Held": "664519",
+   "SEDOL": "BQ2LQL5"
+  },
+  {
+   "Name": "Lithium Argentina AG",
+   "Ticker": "LAR",
+   "Identifier": "BS2CSN8",
+   "Weight": "4.57",
+   "Market Value": "1527245.5",
+   "Shares Held": "277681",
+   "SEDOL": "BS2CSN8"
+  },
+  {
+   "Name": "IGO Ltd.",
+   "Ticker": "IGO AU",
+   "Identifier": "6439567",
+   "Weight": "4.45",
+   "Market Value": "1488298.18",
+   "Shares Held": "329713",
+   "SEDOL": "6439567"
+  },
+  {
+   "Name": "Tianqi Lithium Corp.",
+   "Ticker": "9696 HK",
+   "Identifier": "BMZ3RS4",
+   "Weight": "4.27",
+   "Market Value": "1427694.9",
+   "Shares Held": "390600",
+   "SEDOL": "BMZ3RS4"
+  },
+  {
+   "Name": "Elevra Lithium Ltd.",
+   "Ticker": "ELV AU",
+   "Identifier": "BVBM1M0",
+   "Weight": "4.02",
+   "Market Value": "1345180.17",
+   "Shares Held": "342840",
+   "SEDOL": "BVBM1M0"
+  },
+  {
+   "Name": "Core Lithium Ltd.",
+   "Ticker": "CXO AU",
+   "Identifier": "B4XFS83",
+   "Weight": "3.64",
+   "Market Value": "1216891.12",
+   "Shares Held": "5475972",
+   "SEDOL": "B4XFS83"
+  },
+  {
+   "Name": "Sigma Lithium Corp.",
+   "Ticker": "SGML",
+   "Identifier": "BNM4ZD8",
+   "Weight": "3.44",
+   "Market Value": "1149526",
+   "Shares Held": "122290",
+   "SEDOL": "BNM4ZD8"
+  },
+  {
+   "Name": "PMET Resources Inc.",
+   "Ticker": "PMET CN",
+   "Identifier": "BRJJYV5",
+   "Weight": "3.13",
+   "Market Value": "1044878.59",
+   "Shares Held": "348248",
+   "SEDOL": "BRJJYV5"
+  },
+  {
+   "Name": "Vulcan Energy Resources Ltd.",
+   "Ticker": "VUL AU",
+   "Identifier": "BKYBH63",
+   "Weight": "2.94",
+   "Market Value": "981627.73",
+   "Shares Held": "762013",
+   "SEDOL": "BKYBH63"
+  },
+  {
+   "Name": "European Lithium Ltd.",
+   "Ticker": "EUR AU",
+   "Identifier": "BDGJNV3",
+   "Weight": "2.62",
+   "Market Value": "875730.77",
+   "Shares Held": "3233445",
+   "SEDOL": "BDGJNV3"
+  },
+  {
+   "Name": "Standard Lithium Ltd.",
+   "Ticker": "SLI",
+   "Identifier": "BF0QWN9",
+   "Weight": "2.4",
+   "Market Value": "802337.88",
+   "Shares Held": "438436",
+   "SEDOL": "BF0QWN9"
+  },
+  {
+   "Name": "Q2 Metals Corp.",
+   "Ticker": "QTWO CN",
+   "Identifier": "BPXZ1L4",
+   "Weight": "1.97",
+   "Market Value": "659791.62",
+   "Shares Held": "399567",
+   "SEDOL": "BPXZ1L4"
+  },
+  {
+   "Name": "Wildcat Resources Ltd.",
+   "Ticker": "WC8 AU",
+   "Identifier": "BMXRJN7",
+   "Weight": "1.31",
+   "Market Value": "437976.12",
+   "Shares Held": "2252433",
+   "SEDOL": "BMXRJN7"
+  },
+  {
+   "Name": "Galan Lithium Ltd.",
+   "Ticker": "GLN AU",
+   "Identifier": "BG5PWD8",
+   "Weight": "1.25",
+   "Market Value": "417346.26",
+   "Shares Held": "1970408",
+   "SEDOL": "BG5PWD8"
+  },
+  {
+   "Name": "ioneer Ltd.",
+   "Ticker": "INR AU",
+   "Identifier": "BGYBHZ4",
+   "Weight": "1.19",
+   "Market Value": "397165.4",
+   "Shares Held": "4973167",
+   "SEDOL": "BGYBHZ4"
+  },
+  {
+   "Name": "Surge Battery Metals Inc.",
+   "Ticker": "NILI CN",
+   "Identifier": "BNGDW52",
+   "Weight": "0.92",
+   "Market Value": "305935.65",
+   "Shares Held": "588368",
+   "SEDOL": "BNGDW52"
+  },
+  {
+   "Name": "Li-FT Power Ltd.",
+   "Ticker": "LIFT CN",
+   "Identifier": "BP7MPW0",
+   "Weight": "0.71",
+   "Market Value": "236365.3",
+   "Shares Held": "162504",
+   "SEDOL": "BP7MPW0"
+  },
+  {
+   "Name": "Global Lithium Resources Ltd.",
+   "Ticker": "GL1 AU",
+   "Identifier": "BNKDXV1",
+   "Weight": "0.53",
+   "Market Value": "177932.81",
+   "Shares Held": "257509",
+   "SEDOL": "BNKDXV1"
+  },
+  {
+   "Name": "LibertyStream Infrastructure Partners Inc.",
+   "Ticker": "LIB CN",
+   "Identifier": "BVLGVK0",
+   "Weight": "0.46",
+   "Market Value": "153654.98",
+   "Shares Held": "232632",
+   "SEDOL": "BVLGVK0"
+  },
+  {
+   "Name": "Frontier Lithium Inc.",
+   "Ticker": "FL CN",
+   "Identifier": "BDGT4W1",
+   "Weight": "0.38",
+   "Market Value": "125847.7",
+   "Shares Held": "416512",
+   "SEDOL": "BDGT4W1"
+  },
+  {
+   "Name": "Kodal Minerals PLC",
+   "Ticker": "KOD LN",
+   "Identifier": "BH3X7Y7",
+   "Weight": "0.38",
+   "Market Value": "127490.71",
+   "Shares Held": "34651286",
+   "SEDOL": "BH3X7Y7"
+  },
+  {
+   "Name": "Delta Lithium Ltd.",
+   "Ticker": "DLI AU",
+   "Identifier": "BN6L1H1",
+   "Weight": "0.37",
+   "Market Value": "125197.99",
+   "Shares Held": "1001577",
+   "SEDOL": "BN6L1H1"
+  },
+  {
+   "Name": "Anson Resources Ltd.",
+   "Ticker": "ASN AU",
+   "Identifier": "BD8PFL3",
+   "Weight": "0.36",
+   "Market Value": "119748.73",
+   "Shares Held": "3919022",
+   "SEDOL": "BD8PFL3"
+  },
+  {
+   "Name": "Savannah Resources PLC",
+   "Ticker": "SAV LN",
+   "Identifier": "B647W79",
+   "Weight": "0.35",
+   "Market Value": "115635.16",
+   "Shares Held": "1615102",
+   "SEDOL": "B647W79"
+  },
+  {
+   "Name": "American Lithium Corp.",
+   "Ticker": "LI CN",
+   "Identifier": "BF4XHL9",
+   "Weight": "0.33",
+   "Market Value": "109440.61",
+   "Shares Held": "389376",
+   "SEDOL": "BF4XHL9"
+  },
+  {
+   "Name": "Lake Resources NL",
+   "Ticker": "LKE AU",
+   "Identifier": "6397267",
+   "Weight": "0.33",
+   "Market Value": "111586.06",
+   "Shares Held": "3919093",
+   "SEDOL": "6397267"
+  },
+  {
+   "Name": "Power Metals Corp.",
+   "Ticker": "PWM CN",
+   "Identifier": "BDS7GH2",
+   "Weight": "0.33",
+   "Market Value": "109484.96",
+   "Shares Held": "358192",
+   "SEDOL": "BDS7GH2"
+  },
+  {
+   "Name": "Lithium Ionic Corp.",
+   "Ticker": "LTH CN",
+   "Identifier": "BMD8PV0",
+   "Weight": "0.32",
+   "Market Value": "106964.36",
+   "Shares Held": "298483",
+   "SEDOL": "BMD8PV0"
+  },
+  {
+   "Name": "European Metals Holdings Ltd.",
+   "Ticker": "EMH LN",
+   "Identifier": "BSC9SJ5",
+   "Weight": "0.31",
+   "Market Value": "102948.15",
+   "Shares Held": "705878",
+   "SEDOL": "BSC9SJ5"
+  },
+  {
+   "Name": "Atlas Lithium Corp.",
+   "Ticker": "ATLX",
+   "Identifier": "BMD4B09",
+   "Weight": "0.3",
+   "Market Value": "101684.52",
+   "Shares Held": "40351",
+   "SEDOL": "BMD4B09"
+  },
+  {
+   "Name": "Argosy Minerals Ltd.",
+   "Ticker": "AGY AU",
+   "Identifier": "6122113",
+   "Weight": "0.26",
+   "Market Value": "87343.5",
+   "Shares Held": "4192459",
+   "SEDOL": "6122113"
+  },
+  {
+   "Name": "E3 Lithium Ltd.",
+   "Ticker": "ETL CN",
+   "Identifier": "BMC1587",
+   "Weight": "0.25",
+   "Market Value": "82346.34",
+   "Shares Held": "167416",
+   "SEDOL": "BMC1587"
+  },
+  {
+   "Name": "Cash Equivalent",
+   "Ticker": "",
+   "Identifier": "",
+   "Weight": "0.23",
+   "Market Value": "85706.16",
+   "Shares Held": "85706.16",
+   "SEDOL": ""
+  },
+  {
+   "Name": "Kairos Gold Inc.",
+   "Ticker": "KIRO CN",
+   "Identifier": "BQ3QKM8",
+   "Weight": "0.01",
+   "Market Value": "2547.03",
+   "Shares Held": "4531",
+   "SEDOL": "BQ3QKM8"
+  }
+ ]
+}

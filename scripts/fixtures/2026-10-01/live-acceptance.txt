@@ -1,0 +1,66 @@
+live acceptance — 2026-10-01T23:20:58Z
+run: 36940158567 commit: 19c5957b0532783343e2078c54de16e70f61b2e8 runner: GitHub Actions 1000008660 bun: 1.4.2
+
+== isolated acceptance: TICKERS="URNM URNJ SETM" VERBOSE=1 bun scripts/update-data.ts ==
+exit codes: run1=0 run2=0
+byte-stable: yes
+config: [ config ] Sprott updater: MAX_FETCHES=0 REQUEST_SLEEP=1 CONCURRENCY=2 AUM=: DIVIDEND_YIELD=: EDGAR_FALLBACK=true HISTORY_PAGE_SIZE=1000 HISTORY_RANGE=max HOLDINGS_PAGE_SIZE=250 MAX_RETRIES=2 PERFORMANCE_10Y=: PERFORMANCE_1Y=: PERFORMANCE_3Y=: PERFORMANCE_5Y=: PERFORMANCE_YTD=: SEC_UA=daggerok Sprott ETF feed (https://github.com/daggerok/sprott) SEC_YIELD=: SKIP_SPROTT=false SKIP_YAHOO=false STORE_RAW_DOWNLOADS=false TER=: TICKERS=URNM,URNJ,SETM TOTAL_RETURN_10Y=: TOTAL_RETURN_1Y=: TOTAL_RETURN_3Y=: TOTAL_RETURN_5Y=: TOTAL_RETURN_YTD=: VERBOSE=true 
+files: 11 json files
+hashes (run 1 == run 2):
+a48806bf8bfec7d414ad5ed4e82b3be19317d6fc876345b8b0cac577a2af536a  api/sprott/funds/SETM/history/001.json
+0ea5661f6ff351dc0830d435f094f750e4843005b0d133c4e2727ae0709ff6b9  api/sprott/funds/SETM/holdings/001.json
+6f20942971dc8dbc6323180d7f6c1d1a7e75ec4ba5f4c49ad8021a7a2f456f6f  api/sprott/funds/SETM/meta.json
+b9802de2804e630556f63aadd0e8b37d4fcdf22e1fe12f5a5ebddf5ea63334a1  api/sprott/funds/URNJ/history/001.json
+2ab283959fb81baeb18fa1b5c7ac0e972756cad7767d69a33a12606c28aa9e7b  api/sprott/funds/URNJ/holdings/001.json
+25cccd374cb420486ea3feb7b624d715164e8eab549036e779c47d9ebbea2514  api/sprott/funds/URNJ/meta.json
+204b7a73502cb2e61671c85a2e32ea50cdd7b9f1bd351f01e46f19a5c04ecfda  api/sprott/funds/URNM/history/001.json
+c1e614d296c668dc0c5cf23d1ea34dae342ead0d93d7d1343e9b3721ddb88fea  api/sprott/funds/URNM/history/002.json
+efca85f0b702c887897ba04fe377021c78efc16fdb4e2d3f3ba97abf7dc10c5a  api/sprott/funds/URNM/holdings/001.json
+4702aff994af71c3e7cc4ea7d0c059cb5b0101faa7384d8e4b71fa33beddb8f4  api/sprott/funds/URNM/meta.json
+9436de0daed4543067a5e854b96678887913703c1d1c59952dd492e6f0753351  api/sprott/index.json
+-- fund reporter lines --
+[  1/3   ] SETM  updated   history=919 holdings=158 divs=3 netAssets=$526.07 Million div=1.54
+[  2/3   ] URNJ  updated   history=919 holdings=42 divs=3 netAssets=$310.25 Million div=8.23
+[  3/3   ] URNM  updated   history=1715 holdings=27 divs=5 netAssets=$1.84 Billion div=3.66
+
+== full generation: bun scripts/update-data.ts (all 13 funds) ==
+published seed reproduced byte-for-byte on the first pass: yes
+exit codes: pass1=0 pass2=0 pass3=0
+byte-stable pass1->pass2: yes   pass2->pass3: yes
+config: [ config ] Sprott updater: MAX_FETCHES=0 REQUEST_SLEEP=1 CONCURRENCY=2 AUM=: DIVIDEND_YIELD=: EDGAR_FALLBACK=true HISTORY_PAGE_SIZE=1000 HISTORY_RANGE=max HOLDINGS_PAGE_SIZE=250 MAX_RETRIES=2 PERFORMANCE_10Y=: PERFORMANCE_1Y=: PERFORMANCE_3Y=: PERFORMANCE_5Y=: PERFORMANCE_YTD=: SEC_UA=daggerok Sprott ETF feed (https://github.com/daggerok/sprott) SEC_YIELD=: SKIP_SPROTT=false SKIP_YAHOO=false STORE_RAW_DOWNLOADS=false TER=: TICKERS=all TOTAL_RETURN_10Y=: TOTAL_RETURN_1Y=: TOTAL_RETURN_3Y=: TOTAL_RETURN_5Y=: TOTAL_RETURN_YTD=: VERBOSE=false 
+[ catalog  ] 13 Sprott ETFs (sprottetfs.com fund navigation / published fallback)
+[ filter   ] 13 of 13 funds pass filters
+[ done     ] 13 funds processed, 0 skipped, 0 failures
+[ done     ] counts: 13 funds / 736 holdings rows / 14111 history rows
+published counts: {'funds': 13, 'holdings': 736, 'history': 14111}
+  COPJ holdings=70 history=919 ter=0.75 aum=162910000 divs=Annually
+  COPP holdings=81 history=646 ter=0.65 aum=279390000 divs=Annually
+  GBUG holdings=45 history=406 ter=0.9 aum=176740000 divs=Unknown
+  LITP holdings=39 history=919 ter=0.65 aum=33430000 divs=Annually
+  METL holdings=46 history=267 ter=0.99 aum=80700000 divs=Unknown
+  NIKL holdings=27 history=886 ter=0.75 aum=53330000 divs=Annually
+  REXC holdings=42 history=118 ter=0.65 aum=81910000 divs=—
+  SETM holdings=158 history=919 ter=0.65 aum=526070000 divs=Annually
+  SGDJ holdings=32 history=2894 ter=0.5 aum=336530000 divs=Annually
+  SGDM holdings=49 history=3073 ter=0.46 aum=654240000 divs=Annually
+  SLVR holdings=78 history=430 ter=0.65 aum=695630000 divs=Unknown
+  URNJ holdings=42 history=919 ter=0.8 aum=310250000 divs=Annually
+  URNM holdings=27 history=1715 ter=0.75 aum=1840000000 divs=Annually
+-- fund reporter lines (full) --
+[  1/13  ] COPP  unchanged history=646 holdings=81 divs=2 netAssets=$279.39 Million div=1.97
+[  2/13  ] COPJ  unchanged history=919 holdings=70 divs=3 netAssets=$162.91 Million div=10.34
+[  3/13  ] GBUG  unchanged history=406 holdings=45 divs=1 netAssets=$176.74 Million
+[  4/13  ] LITP  unchanged history=919 holdings=39 divs=3 netAssets=$33.43 Million div=9.67
+[  5/13  ] METL  unchanged history=267 holdings=46 divs=1 netAssets=$80.70 Million
+[  6/13  ] NIKL  unchanged history=886 holdings=27 divs=3 netAssets=$53.33 Million div=2.97
+[  7/13  ] REXC  unchanged history=118 holdings=42 divs=0 netAssets=$81.91 Million
+[  8/13  ] SETM  unchanged history=919 holdings=158 divs=3 netAssets=$526.07 Million div=1.54
+[  9/13  ] SGDJ  unchanged history=2894 holdings=32 divs=11 netAssets=$336.53 Million div=7.95
+[ 10/13  ] SGDM  unchanged history=3073 holdings=49 divs=12 netAssets=$654.24 Million div=0.99
+[ 11/13  ] SLVR  unchanged history=430 holdings=78 divs=1 netAssets=$695.63 Million
+[ 12/13  ] URNJ  unchanged history=919 holdings=42 divs=3 netAssets=$310.25 Million div=8.23
+[ 13/13  ] URNM  unchanged history=1715 holdings=27 divs=5 netAssets=$1.84 Billion div=3.66
+-- provider warnings / fallbacks (full) --
+[ catalog  ] 13 Sprott ETFs (sprottetfs.com fund navigation / published fallback)
+-- yahoo raw payload freshness probe (SGDJ, two consecutive fetches) --
+9e6faa34609064090471bd43bda6db769ebd4c6a6897deeb1aa8d7c1a5441b01  /tmp/sgdj-chart-probe.json

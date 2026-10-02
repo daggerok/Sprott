@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Sprott ETF holdings to Watchlist from the static api/sprott JSON feed, generated from the official Sprott ETFs fund pages (catalog, holdings, key facts, NAV performance and distributions), with Yahoo market-price history and dividends, with SEC EDGAR N-PORT-P and Yahoo Finance as fallbacks." />
+  <meta name="description" content="Sprott ETF holdings to Watchlist from the static api/sprott JSON feed, generated from the sprottetfs.com official sitemap and fund pages (holdings sheets, NAV key facts, month-end/quarter-end performance and distributions), with SEC EDGAR N-PORT-P as a holdings fallback and Yahoo Finance for daily prices/history/dividend fallbacks." />
   <title>Sprott ETFs</title>
   <link rel="icon" type="image/x-icon" href="./favicon.ico">
 
@@ -187,7 +187,7 @@
         <span id="app-summary" role="region" aria-label="ETF catalog information" hidden>
           Search Sprott ETFs, select ETFs via the “Use” checkbox, then use the Watchlist tab. Data comes from
           <a href="./api/sprott/index.json" target="_blank" rel="noopener noreferrer" class="font-semibold text-blue-600 dark:text-blue-400 hover:underline">api/sprott/index.json</a> generated from
-          <a href="https://sprottetfs.com/" target="_blank" rel="noopener noreferrer" class="font-semibold text-blue-600 dark:text-blue-400 hover:underline">sprottetfs.com ETF fund data</a> + SEC EDGAR N-PORT-P (SPROTT FUNDS TRUST, CIK 0001728683 - holdings fallback only) + Yahoo Finance (history/dividend fallback)
+          <a href="https://sprottetfs.com/" target="_blank" rel="noopener noreferrer" class="font-semibold text-blue-600 dark:text-blue-400 hover:underline">sprottetfs.com fund pages and sitemap</a> + SEC EDGAR N-PORT-P (SPROTT FUNDS TRUST, CIK 0001728683 — holdings fallback only) + Yahoo Finance daily prices (dividend/history fallbacks)
         </span>
         <button id="theme-toggle" class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition text-base leading-none" title="Toggle Theme">🌙</button>
       </div>
@@ -217,7 +217,7 @@
           >✕</button>
         </div>
 
-        <!-- ETF catalogue tabs: All ETFs + JPMorgan categories. -->
+        <!-- ETF catalogue tabs: All ETFs + Sprott categories. -->
         <div id="tabs-bar" class="hidden flex flex-wrap items-center justify-center gap-1.5 overflow-x-auto py-1 w-full max-w-full flex-1 themed-scroll"></div>
 
         <!-- Actions intentionally match Amplify / iShares naming and placement -->
@@ -227,7 +227,7 @@
           <div
             id="dropzone"
             class="flex items-center gap-2 border border-dashed border-slate-300 dark:border-slate-600 hover:border-blue-500 bg-slate-50 dark:bg-slate-900/60 transition-all rounded-lg px-3.5 py-2 cursor-pointer text-sm text-slate-600 dark:text-slate-300"
-            title="Upload SEC Form N-PORT-P primary_doc.xml (Sprott ETF holdings from EDGAR, used by the feed only when sprottetfs.com publishes no daily holdings for a fund). Parsed in your browser; uploads live for this session only."
+            title="Upload SEC Form N-PORT-P primary_doc.xml (Sprott ETF holdings from EDGAR (SPROTT FUNDS TRUST, CIK 0001728683), used by the feed only when sprottetfs.com publishes no holdings for a fund). Parsed in your browser; uploads live for this session only."
           >
             <input type="file" id="file-input" accept=".xml" class="hidden" />
             <svg class="w-4 h-4 text-blue-500 dark:text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

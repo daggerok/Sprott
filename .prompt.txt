@@ -38,3 +38,35 @@ GitHub Personal Access Token: <PASTE_YOUR_TOKEN_HERE>
 обновляй .worklog.txt, делай commit и push.
 
 ================================================================================================
+
+================================================================================================
+=== 3rd PROMPT (session 2026-10-01) — config file, all workflows, 25-input cap workaround ===
+
+update .prompt.txt and .worklog.txt files
+
+1) we should now check most closest sibling how does file update-data.config.json was used and do the same
+   and also we must implement all workflows and to workaround of 25 max parameters for github actions
+   similarly how we done already in sibling
+2) do full implementation accordingly and then create a PR
+
+Session note: this session is pinned to branch arena/01a0f9aa-sprott (Arena tracks work by that branch),
+so the plan's feat/sprott-etfs branch name is replaced by arena/01a0f9aa-sprott; the PR is opened from it.
+
+================================================================================================
+=== 4th PROMPT (session 2026-10-01 continued) — results verification and PR ===
+
+what the results?
+lets make sure we have completed as requested
+
+Continuation: read .worklog.txt fully, reconcile CURRENT STATE against Git, remote and PR, report
+what is completed / remaining / discrepant, then continue from the first unfinished step.
+
+Verified outcome of this session:
+- Exact closest-sibling `scripts/update-data.config.json` parity + ALL workflows (update-data.yml with the
+  25-input `advanced` JSON workaround, checks.yml, pages.yml) + dependabot: done.
+- Live acceptance run 36940158567: scoped isolated double run byte-stable; the full pass reproduced the
+  committed api/sprott seed byte-for-byte and stayed byte-stable across passes; 13 funds processed,
+  0 skipped, 0 failures; 736 holdings rows / 14,111 history rows.
+- Published feed api/sprott (46 files) + scripts/fixtures/2026-10-01/live-acceptance.txt evidence.
+- README, scripts/ui.test.ts (39 tests total) and the removal of the temporary acceptance workflow: done.
+- Remaining: open the PR from arena/01a0f9aa-sprott into main (merge is NOT authorized).

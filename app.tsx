@@ -1,3 +1,5 @@
+/// <reference types="bun" />
+
 /**
  * @file Sprott Watchlist Application
  * Client-side static feed viewer for api/sprott/** with multi-ETF Watchlist
@@ -9,8 +11,6 @@
  * style — plain `byId()` instead of DOM casts, no `as` casts, no non-null
  * `!`, no interfaces or enums.
  */
-
-/// <reference types="bun" />
 
 // =========================================================================
 // 1. Types, constants & column tooltips
@@ -137,10 +137,10 @@ const COLUMN_TOOLTIPS: Record<string, string> = {
   '#': 'Row index in current table view.',
   Use: 'Use / Multi-ETF Selection — Check this box to include this ETF\'s underlying holdings in the combined Watchlist tab.',
   Ticker: 'Ticker Symbol — Unique stock market identifier. For holdings: the exchange ticker resolved from public SEC / exchange data at data-build time. "—" when the position has no exchange ticker (bond, private debt) — then the Identifier is the key.',
-  'Fund Name': 'Fund Name — Official legal name of the Sprott exchange-traded fund (ETF), as published in the sprottetfs.com ETF fund explorer.',
-  Category: 'Category — sprottetfs.com groups its ETFs by asset class ("Active Equities", "Fixed Income", "Alternatives"); the tab shows the asset class, the asset class plus exposure is kept in meta.json.',
+  'Fund Name': 'Fund Name — Official legal name of the Sprott exchange-traded fund (ETF), as published on the official sprottetfs.com fund page.',
+  Category: 'Category — sprottetfs.com groups its ETFs by asset class ("Critical Materials", "Precious Metals"); the tab shows the asset class, the source asset class is kept in meta.json.',
   Name: 'Security Name — Full registered legal name of the company or underlying financial asset.',
-  Identifier: 'CUSIP / SEDOL — Security identifier as published in the sprottetfs.com portfolio holdings (CUSIP for US securities, SEDOL for foreign ones; or taken from the N-PORT filing when that fallback supplied the sheet). Positions without an exchange ticker (bonds, cash, futures) are identified in the Watchlist by this.',
+  Identifier: 'CUSIP / SEDOL — Security identifier as published in the sprottetfs.com holdings sheet (SEDOL when published, or the CUSIP/ISIN taken from the N-PORT filing when that fallback supplied the sheet). Positions without an exchange ticker (bonds, cash, futures) are identified in the Watchlist by this.',
   SEDOL: 'SEDOL — Stock Exchange Daily Official List identifier.',
   TER: 'Gross Expense Ratio — Total annual fund operating expenses as a % of assets.',
   NAV: 'NAV (Net Asset Value) — Per-share dollar value of the fund.',
@@ -152,13 +152,13 @@ const COLUMN_TOOLTIPS: Record<string, string> = {
   ETFs: 'Selected ETFs holding this security.',
   Type: 'Category — the sprottetfs.com asset class (see the Category column). Same source as the category tabs.',
   Expense: 'Gross Expense Ratio — Total annual fund operating expenses as a % of assets.',
-  'Dividend Yield': 'Dividend Yield — the 12-month rolling dividend yield published by sprottetfs.com (key information) when present; otherwise indicated (latest distribution per share x payments per year / market price) from the published dividend schedule.',
-  'SEC Yield': 'SEC Yield (30-Day) — The 30-day SEC yield as published by sprottetfs.com (fund page figure, when present); "—" when Sprott publishes none for the fund.',
+  'Dividend Yield': 'Dividend Yield — the 12-month rolling dividend yield published by sprottetfs.com when present; otherwise indicated (latest distribution per share x payments per year / market price) from the published dividend schedule.',
+  'SEC Yield': 'SEC Yield (30-Day) — The 30-day SEC yield as published on the sprottetfs.com fund page; "—" because Sprott publishes none for its funds.',
   'YTD Return': 'YTD Return — Official Sprott NAV total return since the start of the year (month-end series); for funds without a published figure, derived from the Yahoo adjusted market-price history.',
   'TR 1Y': 'TR 1Y (1-Year Total Return) — Official Sprott NAV total return over the past year, including reinvested distributions (month-end series); derived from the Yahoo adjusted market-price history only when Sprott publishes none.',
-  'TR 3Y': 'TR 3Y (3-Year Total Return) — Cumulative NAV total return over 3 years as published by sprottetfs.com (cumulative returns block); otherwise derived exactly from the 3Y CAGR: (1 + CAGR 3Y)^3 - 1.',
-  'TR 5Y': 'TR 5Y (5-Year Total Return) — Cumulative NAV total return over 5 years as published by sprottetfs.com (cumulative returns block); otherwise derived exactly from the 5Y CAGR: (1 + CAGR 5Y)^5 - 1.',
-  'TR 10Y': 'TR 10Y (10-Year Total Return) — Cumulative NAV total return over 10 years as published by sprottetfs.com (cumulative returns block); otherwise derived exactly from the 10Y CAGR: (1 + CAGR 10Y)^10 - 1.',
+  'TR 3Y': 'TR 3Y (3-Year Total Return) — Cumulative NAV total return over 3 years as published on the sprottetfs.com fund page (cumulative returns block); otherwise derived exactly from the 3Y CAGR: (1 + CAGR 3Y)^3 - 1.',
+  'TR 5Y': 'TR 5Y (5-Year Total Return) — Cumulative NAV total return over 5 years as published on the sprottetfs.com fund page (cumulative returns block); otherwise derived exactly from the 5Y CAGR: (1 + CAGR 5Y)^5 - 1.',
+  'TR 10Y': 'TR 10Y (10-Year Total Return) — Cumulative NAV total return over 10 years as published on the sprottetfs.com fund page (cumulative returns block); otherwise derived exactly from the 10Y CAGR: (1 + CAGR 10Y)^10 - 1.',
   'CAGR 3Y': 'CAGR 3Y (3-Year Compound Annual Growth Rate) — Official Sprott annualized NAV total return over 3 years (month-end series).',
   'CAGR 5Y': 'CAGR 5Y (5-Year Compound Annual Growth Rate) — Official Sprott annualized NAV total return over 5 years (month-end series).',
   'CAGR 10Y': 'CAGR 10Y (10-Year Compound Annual Growth Rate) — Official Sprott annualized NAV total return over 10 years (month-end series).',
@@ -176,7 +176,7 @@ const COLUMN_TOOLTIPS: Record<string, string> = {
   Holdings: 'Rows in the fund\'s latest daily holdings file.',
   History: 'Rows in the fund\'s NAV history file.',
   'As Of': 'NAV / AUM as-of date.',
-  Frequency: 'Frequency — sortable payment cadence from the sprottetfs.com dividend frequency (Monthly, Quarterly, Annually), inferred from the published dividend schedule when no code exists: 01 - Monthly, 04 - Quarterly, 06 - Semi-annually, 12 - Annually; 00 denotes unavailable/unknown and 99 denotes irregular.',
+  Frequency: 'Frequency — sortable payment cadence inferred from the published distribution schedule: 01 - Monthly, 04 - Quarterly, 06 - Semi-annually, 12 - Annually; 00 denotes unavailable/unknown and 99 denotes irregular.',
   'Ex-Date': 'Ex-dividend date of the latest distribution.',
   Dividend: 'Latest dividend per share.',
   Coupon: 'Bond annual coupon rate (%).',
@@ -186,8 +186,8 @@ const COLUMN_TOOLTIPS: Record<string, string> = {
   Metric: 'Metric — Overview metric name.',
   Value: 'Overview metric value.',
   Date: 'NAV history date.',
-  'Market Price': 'Closing market price on that date, as published by sprottetfs.com.',
-  'Premium/Discount': 'Premium / Discount — closing market price versus NAV on that date (%), as published by sprottetfs.com.',
+  'Market Price': 'Closing market price on that date, as published by Yahoo Finance.',
+  'Premium/Discount': 'Premium / Discount — closing market price versus NAV on that date (%), derived from sprottetfs.com NAV and Yahoo Finance closing price.',
   'Shares Outstanding': 'Fund shares outstanding on that date.',
   'Total Net Assets': 'Fund total net assets on that date (USD).',
 };
@@ -327,7 +327,7 @@ function formatPercent(value: unknown): string {
 function formatDividendFrequency(value: unknown): string {
   const raw = String(value ?? '').trim();
   const normalized = raw.toLowerCase().replace(/[‐‑‒–—]/g, '-').replace(/\s+/g, ' ');
-  if (!normalized || normalized === '-') return '00 - None';
+  if (!normalized || /^[\s-]+$/.test(normalized) || /^00\s*-\s*-+$/.test(normalized)) return '00 - None';
   if (normalized === 'monthly') return '01 - Monthly';
   if (normalized === 'quarterly') return '04 - Quarterly';
   if (normalized === 'semi-annual' || normalized === 'semi-annually' || normalized === 'semiannual') return '06 - Semi-annually';
@@ -451,7 +451,7 @@ function normalizeFundRow(fund: IndexFund): FundRow {
     cagr10y: metrics.cagr10y ?? monthEnd.yr10 ?? null,
     dividendYield: metrics.dividendYield ?? null,
     dividendFrequency: formatDividendFrequency(fund.distributions && fund.distributions.frequency ? fund.distributions.frequency : '—'),
-    secYield: metrics.secYield ?? null, // am.jpmorgan.com publishes it for nearly every fund.
+    secYield: metrics.secYield ?? null, // sprottetfs.com publishes no 30-day SEC yield for its funds.
     returnAsOf: monthEnd.asOfDate ?? null,
     searchIndex: '',
   };
@@ -1425,9 +1425,9 @@ function renderSheetTable(fund: FundRow, sheet: 'holdings' | 'history'): void {
 
   if (!catalogCount) {
     el.tableHead.innerHTML = `<tr>${indexHeader()}<th class="py-3.5 px-4">${escapeHtml(fund.ticker)}</th></tr>`;
-    el.tableBody.innerHTML = `<tr><td colspan="2" class="py-12 text-center text-slate-400 dark:text-slate-500">${escapeHtml(fund.ticker)} publishes no ${sheet === 'holdings' ? 'holdings workbook' : 'NAV history workbook'} (catalog-only fund, e.g. a commodity trust).</td></tr>`;
+    el.tableBody.innerHTML = `<tr><td colspan="2" class="py-12 text-center text-slate-400 dark:text-slate-500">${escapeHtml(fund.ticker)} has no downloaded static ${sheet === 'holdings' ? 'holdings workbook' : 'NAV history workbook'} yet (catalog-only until the next feed refresh).</td></tr>`;
     el.tickerCount.textContent = fund.ticker;
-    renderSubtitle(`${fund.ticker} has no current static ${sheet} sheet; the feed records the provider coverage limitation in meta.json.`);
+    renderSubtitle(`${fund.ticker} has no current static ${sheet} sheet; run the updater to populate this catalog-only entry.`);
     return;
   }
 
@@ -1567,7 +1567,7 @@ function renderOverviewTable(fund: FundRow): void {
   }
 
   el.tickerCount.textContent = fund.ticker;
-  renderSubtitle(`${fund.ticker} overview · ${rows.length} metrics. Returns are derived from adjusted market-price closes, not official NAV returns.`);
+  renderSubtitle(`${fund.ticker} overview · ${rows.length} metrics. Returns use the official sprottetfs.com month-end/quarter-end NAV total returns; missing metrics are derived from Yahoo adjusted market-price closes, not published standardized NAV returns.`);
 }
 
 function renderDistributionsTable(fund: FundRow): void {
@@ -1603,7 +1603,7 @@ function renderDistributionsTable(fund: FundRow): void {
   }
 
   el.tickerCount.textContent = fund.ticker;
-  renderSubtitle(`${fund.ticker} distributions · dividend schedule supplied by Yahoo Finance (ex-date, amount; the last twelve payments); frequency from the official Sprott dividend frequency, inferred from the cadence otherwise.`);
+  renderSubtitle(`${fund.ticker} distributions · dividend schedule from the sprottetfs.com fund page and Yahoo Finance (ex-date, amount; the last twelve payments); frequency inferred from the payment cadence.`);
 }
 
 // =========================================================================
@@ -1637,7 +1637,12 @@ function renderSubtitleDetails(text?: string): void {
   const countsText = state.counts
     ? `${state.counts.funds} ETFs · ${(state.counts.holdings || 0).toLocaleString('en-US')} holdings rows · ${(state.counts.history || 0).toLocaleString('en-US')} history rows`
     : '';
-  const base = text ? String(text) : 'Search Sprott ETFs, select ETFs via the “Use” checkbox, then use the Watchlist tab.';
+  const baseText = text ? String(text) : 'Search Sprott ETFs, select ETFs via the “Use” checkbox, then use the Watchlist tab.';
+  const viewLabel = state.activeTab === 'All' ? 'All ETFs' : state.activeTab === 'watchlist' ? 'Watchlist' : state.activeTab.startsWith('detail:') ? state.activeTab.slice(7) : categoryLabel(state.activeTab);
+  const contextText = text ? baseText : `${baseText} ${viewLabel}: ${el.tickerCount.textContent || ''}.`;
+  const hasLocalHoldings = [...state.selected].some(ticker => Boolean(fundMetaCache.get(ticker)?.uploaded));
+  const base = hasLocalHoldings ? `${contextText} Local N-PORT XML holdings are included for this session.` : contextText;
+  const dataLabel = hasLocalHoldings ? 'Static catalog data:' : 'Data:';
   // Selected ETF count and clickable ticker badges (active fund highlighted);
   // re-rendered by every selection writer so the count never lags.
   const selectedCount = state.selected.size;
@@ -1656,7 +1661,7 @@ function renderSubtitleDetails(text?: string): void {
   }
   el.subtitle.innerHTML = `
     <span class="block sm:inline">${escapeHtml(base)}${selectionItem}</span>
-    <span class="block sm:inline">·${generated ? ` updated ${escapeHtml(generated)}` : ''}${countsText ? ` · ${escapeHtml(countsText)}.` : '.'} Data: <a href="./api/sprott/index.json" target="_blank" rel="noopener noreferrer" class="font-semibold text-blue-600 dark:text-blue-400 hover:underline">api/sprott/index.json</a> generated from <a href="https://sprottetfs.com/" target="_blank" rel="noopener noreferrer" class="font-semibold text-blue-600 dark:text-blue-400 hover:underline">sprottetfs.com ETF fund data</a> + SEC EDGAR N-PORT-P (SPROTT FUNDS TRUST, CIK 0001728683 - holdings fallback only) + Yahoo Finance (history/dividend fallback)</span>
+    <span class="block sm:inline">·${generated ? ` updated ${escapeHtml(generated)}` : ''}${countsText ? ` · ${escapeHtml(countsText)}.` : '.'} ${dataLabel} <a href="./api/sprott/index.json" target="_blank" rel="noopener noreferrer" class="font-semibold text-blue-600 dark:text-blue-400 hover:underline">api/sprott/index.json</a> generated from <a href="https://sprottetfs.com/" target="_blank" rel="noopener noreferrer" class="font-semibold text-blue-600 dark:text-blue-400 hover:underline">sprottetfs.com fund pages and sitemap</a> + SEC EDGAR N-PORT-P (SPROTT FUNDS TRUST, CIK 0001728683 — holdings fallback only) + Yahoo Finance daily prices (dividend/history fallbacks)</span>
   `;
   el.subtitle.querySelectorAll('a[data-activate-fund]').forEach((link: any) => {
     link.addEventListener('click', () => activateFund(link.dataset.activateFund || ''));
