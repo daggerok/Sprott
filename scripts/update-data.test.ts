@@ -7,7 +7,7 @@ import {
   formatUsDate, indicatedYield, inferDistributionFrequency, isoDate, mergeHistory, normalizeNumberText, numberOrNull,
   parseCatalogNav, parseFeesTable, parseFundPage, parseHoldingsSection, parseLongDate, parseMoneyText,
   parseNport, parsePercentText, parseSitemapFundPages, parseSprottPerformance, parseReturnTable,
-  parseDistributionsSection, resolveControls, readConfig, stripHtml, tickerFromSlug, totalToAnnualized,
+  parseDistributionsSection, resolveControls, readConfig, runtimeControls, stripHtml, tickerFromSlug, totalToAnnualized,
 } from './update-data';
 import type { CatalogFund } from './update-data';
 
@@ -318,11 +318,35 @@ describe('repository configuration / Actions override precedence', () => {
 
   test('unknown keys, multiline injection and invalid values are rejected', () => {
     for (const value of [
-      { UNKNOWN: 1 }, { SEC_UA: 'x\nEVIL=yes' }, { CONCURRENCY: 0 }, { MAX_RETRIES: -1 },
-      { HISTORY_RANGE: 'oops' }, { VERBOSE: 'maybe' }, { TICKERS: ['URNM'] }, null, [],
+      { UNKNOWN: 1 }, { SEC_UA: 'x\nEVIL=yes' }, { SEC_UA: 'x\rfoo' }, { CONCURRENCY: 0 }, { MAX_RETRIES: 0 }, { MAX_RETRIES: -1 },
+      { MAX_FETCHES: 1.5 }, { REQUEST_SLEEP: '-1' }, { HISTORY_RANGE: 'oops' }, { VERBOSE: 'maybe' }, { AUM: '1:2:3' },
+      { TICKERS: ['URNM'] }, { TICKERS: { a: 1 } }, null, [],
     ]) {
       expect(() => resolveControls(value)).toThrow();
     }
+    expect(() => resolveControls({}, { SEC_UA: 'x\0bad' })).toThrow();
+    expect(() => resolveControls({}, {}, {}, { SPROTT_SEC_UA: 'a\nb' })).toThrow();
+  });
+
+  test('a protected SEC_UA passed as env wins over every other layer', () => {
+    const file = JSON.parse(readFileSync(new URL('./update-data.config.json', import.meta.url), 'utf8')) as Record<string, string>;
+    expect(resolveControls(file, { SEC_UA: 'adv' }, { SEC_UA: 'in' }, { SEC_UA: 'protected' }).SEC_UA).toBe('protected');
+    expect(resolveControls(file, { SEC_UA: 'adv' }, { SEC_UA: 'in' }, {}).SEC_UA).toBe('in');
+  });
+
+  test('MAX_RETRIES needs an integer of at least 1 and MAX_FETCHES 0 stays valid', () => {
+    expect(readConfig(resolveControls({ MAX_RETRIES: 1 })).maxRetries).toBe(1);
+    expect(readConfig(resolveControls({ MAX_FETCHES: 0 })).maxFetches).toBe(0);
+  });
+
+  test('HISTORY_RANGE and filters flow through readConfig, and runtimeControls applies env overrides', async () => {
+    const config = readConfig(resolveControls({ HISTORY_RANGE: '5y', AUM: '100M:', TER: ':0.7', TICKERS: 'urnm, setm;URNJ' }));
+    expect(config.historyRange).toBe('5y');
+    expect(config.tickers).toEqual(['URNM', 'SETM', 'URNJ']);
+    expect(config.terRange?.max).toBe(0.7);
+    expect(config.aumRange?.min).toBe(100_000_000);
+    expect((await runtimeControls({ CONCURRENCY: '7' })).CONCURRENCY).toBe('7');
+    expect((await runtimeControls({ SPROTT_TICKERS: 'URNM' })).TICKERS).toBe('URNM');
   });
 
   test('an empty dispatch inherits the config file and every canonical control is present', () => {

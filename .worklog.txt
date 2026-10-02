@@ -117,7 +117,8 @@ CURRENT STATE
   merge commit on top of `main` (`b043c26`) instead of a duplicate implementation. Every add/add conflict was
   resolved by taking `origin/main`'s version, the four superseded fixtures and the dated `evidence/`
   acceptance file were deleted, and the only retained contribution is the ported
-  `scripts/config-docs.test.ts`. Delta vs `main`: 1 file, 96 insertions. Nothing was force-pushed, rebased
+  `scripts/config-docs.test.ts`. Code delta vs `main`: 1 file, 96 lines; total tree delta 2 files,
+  195 insertions / 7 deletions (the second file is this journal). Nothing was force-pushed, rebased
   or merged by this session. See the newest journal entry for the full record.
 - Next action: the owner reviews the reduced PR #1 (delta = `scripts/config-docs.test.ts` only) and decides:
   merge it, commit that single test file straight to `main`, or close PR #1 and drop the branch. Afterwards,
@@ -1072,3 +1073,38 @@ owner. Work only on `feat/sprott-etfs`; never touch `main`, never touch the fini
   4d46312 still carried the OLD 158-line `scripts/config-docs.test.ts` (which imports `runtimeControls` and
   therefore cannot even load against main's updater). It was caught by `git status` before pushing and fixed
   in 5fdc8a6; the pushed tree is green. Lesson: stage the ported file before committing the merge.
+
+### 2026-10-02 — Unify all 4 branches (oldest -> newest) into `arena/01a0fa39-sprott` (PR #6)
+- Chronological order of the 4 remote branches:
+  1. `origin/arena/01a0f9aa-sprott` (`544a9f8`, 2026-10-02 01:01:02 UTC — PR #2, merged into `main` at `55dab57`
+     and followed by dependabot PRs #3 `13ce1ac` and #4 `b043c26`): canonical app, 46-file `api/sprott` feed,
+     28-key config, live-fixture tests, `scripts/ui.test.ts`, `checks.yml`, `pages.yml`, `update-data.yml`,
+     `.gitattributes`, `README.md`, and live acceptance evidence (`scripts/fixtures/2026-10-01/live-acceptance.txt`).
+  2. `origin/chore/standardize-config` (`6bdc3bc`, 2026-10-02 01:23:54 UTC — PR #5): standardized resolver
+     semantics (`Set(CONTROL_NAMES)`, `MAX_RETRIES >= 1`, exported `runtimeControls` and `USAGE`), regenerated
+     `.github/workflows/update-data.yml` (`timeout-minutes: 30`, `persist-credentials: false`, `bun test`,
+     `PROTECTED_SEC_UA: ${{ vars.SEC_UA }}`, runtime-only credential helper push), and `README.md` / unit-test
+     additions for `PROTECTED_SEC_UA`, `MAX_RETRIES >= 1`, `HISTORY_RANGE` and filter parsing.
+  3. `origin/feat/sprott-etfs` (`9ab6c0c`, 2026-10-02 01:37:30 UTC — PR #1, squash-merged to `main` `c66d807` at
+     01:37:22 UTC): `scripts/config-docs.test.ts` (README controls-table parity, `advanced` JSON example, README
+     shared structure and sorted tables, linked live-acceptance evidence check, cwd-independent `--help` check,
+     non-credential `SEC_UA` contact check) and `.worklog.txt` records.
+  4. `origin/arena/01a0fa39-sprott` (PR #6, session-fixed working branch): merges all four branches and `origin/main`
+     (`c66d807`) with `--no-ff` so every commit across all 4 branches is an ancestor of `HEAD` (`git merge-base
+     --is-ancestor` passes for `origin/arena/01a0f9aa-sprott`, `origin/chore/standardize-config`,
+     `origin/feat/sprott-etfs`, and `origin/main`).
+- Conflict resolution (applying newer on top of older while preserving all verified artifacts):
+  * Preserved `arena/01a0f9aa-sprott` / `main`'s 46-file `api/sprott` feed, `scripts/fixtures/2026-10-01/` live
+    fixtures and acceptance evidence, `scripts/ui.test.ts`, `.worklog.txt`, `.prompt.txt`, and `SEC_UA` default
+    pinned by `feat/sprott-etfs` (`c66d807`).
+  * Integrated `chore/standardize-config`'s `resolveControls` / `readConfig` enhancements (`MAX_RETRIES >= 1`,
+    exported `runtimeControls` and `USAGE`), `.github/workflows/update-data.yml` hardening (`timeout-minutes: 30`,
+    `persist-credentials: false`, `bun test`, `PROTECTED_SEC_UA: ${{ vars.SEC_UA }}`, runtime-only credential
+    helper push), `README.md` precedence documentation (`vars.SEC_UA`, `SPROTT_<NAME>`, `MAX_RETRIES >= 1`), and
+    additional unit tests in `scripts/update-data.test.ts` and `scripts/config-docs.test.ts`.
+- Verification:
+  * `bun install --frozen-lockfile`: clean.
+  * `bun test`: 52 pass / 0 fail across 3 files (`scripts/update-data.test.ts` 37, `scripts/ui.test.ts` 5,
+    `scripts/config-docs.test.ts` 10).
+  * `bun build --target=bun scripts/update-data.ts --outfile=/dev/null` & `bun build --target=browser app.tsx --outfile=/dev/null`: clean.
+  * `git diff --check`: clean.

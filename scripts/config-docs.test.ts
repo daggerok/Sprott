@@ -3,7 +3,7 @@ import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 
-import { CONTROL_NAMES, resolveControls } from './update-data';
+import { CONTROL_NAMES, USAGE, resolveControls } from './update-data';
 
 // Documentation parity for the checked-in configuration. The control keys, the
 // override precedence and the workflow invariants themselves are pinned in
@@ -78,13 +78,17 @@ describe('README shared structure', () => {
 });
 
 describe('updater CLI documentation', () => {
-  test('--help prints every control from the checked-in config, independent of the cwd', async () => {
+  test('--help prints USAGE and every control from the checked-in config, independent of the cwd', async () => {
     const child = Bun.spawn([process.execPath, new URL('./update-data.ts', import.meta.url).pathname, '--help'], {
       cwd: tmpdir(), stdout: 'pipe', stderr: 'pipe',
     });
     const help = await new Response(child.stdout).text();
     await child.exited;
-    for (const name of CONTROL_NAMES) expect(help).toContain(name);
+    for (const name of CONTROL_NAMES) {
+      const tenor = name.match(/^(PERFORMANCE|TOTAL_RETURN)_(YTD|1Y|3Y|5Y|10Y)$/);
+      expect(USAGE).toContain(tenor ? `${tenor[1]}_YTD|1Y|3Y|5Y|10Y` : name);
+      expect(help).toContain(name);
+    }
     expect(help).toContain(`SEC_UA=${file.SEC_UA}`);
   });
 
@@ -92,5 +96,32 @@ describe('updater CLI documentation', () => {
     expect(file.SEC_UA).toMatch(/^daggerok Sprott ETF feed \(https:\/\/github\.com\/daggerok\/sprott\)$/);
     expect(file.SEC_UA).not.toMatch(/@/);
     expect(readme).toContain('Do not put credentials here');
+  });
+});
+
+describe('workflow dispatch partition and deployment guards', () => {
+  const updateWorkflow = read('.github/workflows/update-data.yml');
+  const checksWorkflow = read('.github/workflows/checks.yml');
+  const pagesWorkflow = read('.github/workflows/pages.yml');
+  const inputsBlock = updateWorkflow.slice(updateWorkflow.indexOf('    inputs:'), updateWorkflow.indexOf('\npermissions:'));
+  const inputNames = [...inputsBlock.matchAll(/^      ([a-z0-9_]+):$/gm)].map((m) => m[1]);
+
+  test('named dispatch inputs plus the four advanced-only controls partition CONTROL_NAMES', () => {
+    const individual = new Set(inputNames.filter((name) => name !== 'advanced').map((name) => name.toUpperCase()));
+    for (const name of individual) expect(CONTROL_NAMES).toContain(name);
+    const rest = CONTROL_NAMES.filter((name) => !individual.has(name));
+    expect([...rest].sort()).toEqual(['SEC_UA', 'SKIP_SPROTT', 'STORE_RAW_DOWNLOADS', 'VERBOSE']);
+  });
+
+  test('workflows avoid raw input interpolation, pass PROTECTED_SEC_UA, stage only api/sprott and guard Pages to main', () => {
+    expect(updateWorkflow).toContain('DISPATCH_INPUTS: ${{ toJSON(inputs) }}');
+    expect(updateWorkflow).toContain('PROTECTED_SEC_UA: ${{ vars.SEC_UA }}');
+    expect(updateWorkflow).toContain('resolveControls(file, advanced, individual, protectedVars)');
+    expect(updateWorkflow).not.toMatch(/\$\{\{\s*(github\.event\.)?inputs\./);
+    expect([...updateWorkflow.matchAll(/git add (\S+)/g)].map((m) => m[1])).toEqual(['api/sprott']);
+    expect(updateWorkflow).toContain('persist-credentials: false');
+    expect(checksWorkflow).toContain('persist-credentials: false');
+    expect(pagesWorkflow).toContain('persist-credentials: false');
+    expect(pagesWorkflow).toContain("if: github.ref == 'refs/heads/main'");
   });
 });
