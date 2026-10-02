@@ -107,6 +107,9 @@ CURRENT STATE
   -whitespace`, so captured HTML fixtures never trip whitespace checks on refresh) was harvested from it; its
   optional "holdings row count must equal the page's Number of Holdings" validation is recorded as a possible
   follow-up.
+- PR #1 resolved 2026-10-02: closed with the supersession comment
+  (https://github.com/daggerok/Sprott/pull/1#issuecomment-5943603163); the `feat/sprott-etfs` branch was kept
+  at 9f43831 for reference and nothing was force-pushed or deleted.
 - Next action: the owner reviews and merges PR #2, then enables GitHub Pages (GitHub Actions source) so
   <https://daggerok.github.io/Sprott/> deploys from `main`. Any follow-up data refresh runs through the
   Update Sprott ETF data workflow.
