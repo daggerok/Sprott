@@ -12,7 +12,7 @@
   "MAX_RETRIES": "2",
   "HISTORY_RANGE": "max",
   "STORE_RAW_DOWNLOADS": "false",
-  "SEC_UA": "daggerok ETF feed daggerok@gmail.com",
+  "SEC_UA": "daggerok Sprott ETF feed (https://github.com/daggerok/sprott)",
   "SKIP_YAHOO": "false",
   "SKIP_SPROTT": "false",
   "EDGAR_FALLBACK": "true",
