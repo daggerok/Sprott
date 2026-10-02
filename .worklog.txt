@@ -1073,3 +1073,40 @@ owner. Work only on `feat/sprott-etfs`; never touch `main`, never touch the fini
   4d46312 still carried the OLD 158-line `scripts/config-docs.test.ts` (which imports `runtimeControls` and
   therefore cannot even load against main's updater). It was caught by `git status` before pushing and fixed
   in 5fdc8a6; the pushed tree is green. Lesson: stage the ported file before committing the merge.
+
+### 2026-10-02 — PR #1 MERGED by the owner; consolidation into a single PR and the full inventory
+
+- PR #1 was squash-merged by the owner (`daggerok`) at 2026-10-02T01:37:22Z into `main` as `c66d807`
+  ("test(docs): README/config parity checks on top of the merged implementation (#1)"), 2 files,
+  +195/-7 — exactly the delta reported in the PR description. GitHub then auto-deleted the head branch
+  (`head_ref_deleted` at 01:37:24Z); a later push recreated `feat/sprott-etfs`, which is why the remote
+  branch exists again.
+- Post-merge state on `main` (`c66d807`), VERIFIED: `Offline checks` succeeded (run 36951816702) and
+  `Deploy Sprott Pages` / `pages-build-deployment` succeeded (run 36951815764) — `gh api .../pages`
+  reports `status: built`, `html_url: https://daggerok.github.io/Sprott/`. The app is therefore live,
+  which the README had described as pending.
+- One follow-up commit (9ab6c0c) had been pushed after the merge: it only makes the CURRENT STATE delta
+  statement precise ("Code delta vs `main`: 1 file, 96 lines; total tree delta 2 files, 195 insertions /
+  7 deletions"). Because `main` advanced by a squash commit that is not an ancestor of this branch, the
+  resulting PR (#7) first diffed against the old merge base `b043c26` and reported CONFLICTING; it was
+  reconciled with `git merge --no-ff origin/main` (commit fb228b9, `.worklog.txt` resolved by taking this
+  branch's version, which is `main`'s content plus the wording fix). No force-push was used. PR #7 is now
+  OPEN, MERGEABLE, 1 file / +2/-1, with the inherited `offline` check green (run 36953584752).
+- Everything outstanding from this session is consolidated in ONE branch and ONE PR:
+  `feat/sprott-etfs` @ fb228b9 -> PR #7 (https://github.com/daggerok/Sprott/pull/7). Nothing is scattered.
+- Inventory for the owner (closing/removing is the owner's decision, not performed here):
+  * MERGED, nothing to do: PR #2 (`arena/01a0f9aa-sprott`), PR #3/#4 (dependabot), PR #1 (`feat/sprott-etfs`).
+  * OPEN and current: PR #7 (`feat/sprott-etfs`, this session — 1-line journal wording fix, optional).
+  * OPEN, parallel session (`arena/01a0fa39-sprott`, PR #6): +2 tests in `scripts/config-docs.test.ts`
+    (24 named dispatch inputs + 4 `advanced`-only controls partition `CONTROL_NAMES`; `checks.yml`/`pages.yml`
+    guard assertions) plus a `.worklog.txt` entry. Its edits are in different regions of both files, so it
+    merges cleanly with PR #7 in either order. Not consolidated here on purpose: folding another session's
+    tests into this PR would inflate this PR's delta and blur attribution.
+  * OPEN, owner-authored (`chore/standardize-config`, PR #5): a larger divergent restructure (ARK-style
+    resolver, 3-file `scripts/` layout, fixture/worklog/prompt removal, standard README), currently
+    CONFLICTING with `main`. Separate workstream; deliberately not touched.
+  * Removable branches (already merged, kept only as backup): `arena/01a0f9aa-sprott` (merged via 55dab57),
+    `feat/sprott-etfs` (merged via c66d807; keep only while PR #7 is open), and any leftover dependabot
+    branches.
+- Blockers: none. No secrets, tokens or auth headers were stored anywhere; no force-push, rebase of the
+  merged history, or merge was performed by this session.
