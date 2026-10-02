@@ -94,9 +94,14 @@ CURRENT STATE
   scripts/fixtures/2026-10-01/live-acceptance.txt (hashes, effective config, per-fund counts, Yahoo probe).
 - Published feed: api/sprott/index.json + funds/<T>/{meta.json,holdings/001.json,history/NNN.json} — 13 funds,
   46 files; SGDM 4 history pages, SGDJ 3, URNM 2, the rest 1. No update-state.json remains (full pass).
-- Next action: commit this worklog, fetch/rebase, push, then open the PR from `arena/01a0f9aa-sprott` into
-  `main` (gh pr create) and report the update control mapping, the `advanced` workaround and the acceptance
-  results. Do NOT merge.
+- Pull request: **https://github.com/daggerok/Sprott/pull/2** (OPEN, base `main`, head `arena/01a0f9aa-sprott`,
+  25 commits, mergeable) — opened 2026-10-01. CI check `offline` (checks.yml: frozen install, `bun test`
+  39 tests, bun + browser bundles, `git diff --check`) passed on the PR. Merging is NOT authorized and left
+  to the owner. The repository description/topics/homepage already match the sibling convention; this
+  session's token cannot PATCH repo metadata (403), so nothing was changed there.
+- Next action: the owner reviews and merges PR #2, then enables GitHub Pages (GitHub Actions source) so
+  <https://daggerok.github.io/Sprott/> deploys from `main`. Any follow-up data refresh runs through the
+  Update Sprott ETF data workflow.
 - Blockers: none. Caveat: the sandbox egress policy blocks all provider domains, so the live acceptance ran on
   GitHub Actions; its run ids and hashes are recorded in this journal and in the evidence file.
 
@@ -942,3 +947,9 @@ REPORT BACK WHEN DONE:
   from the preserved working tree; the pushed history up to 3a8631d is unchanged.
 - Offline gates re-run after the fix: `bun test` 39/0, `bun build --target=bun scripts/update-data.ts`,
   `bun build --target=browser app.tsx`, `git diff --check` all clean.
+
+- PR opened: `gh pr create --base main --head arena/01a0f9aa-sprott` -> PR #2 (25 commits, MERGEABLE),
+  verified with `gh pr checks 2` (job "offline" passed on run 36945364045). Repo metadata was already set
+  (description/topics/homepage); the PATCH attempt returned 403 for this token, so it was left untouched.
+- Final pushed SHA: e7bc4a4 (plus this worklog commit); `origin/arena/01a0f9aa-sprott` tree = 69 files,
+  46 of them under api/sprott, no probe/ and no temporary acceptance workflow.
