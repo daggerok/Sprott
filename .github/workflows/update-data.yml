@@ -4,9 +4,6 @@ on:
   schedule:
     - cron: '0 0 * * 0'
   workflow_dispatch:
-    # GitHub permits 25 dispatch inputs. SKIP_SPROTT, STORE_RAW_DOWNLOADS,
-    # SEC_UA and VERBOSE stay config-file/CLI-only and are reachable through
-    # the `advanced` JSON input below.
     inputs:
       max_fetches:
         description: "Batch size; positive resumes cursor, 0 refreshes the selected universe and resets cursor; blank inherits scripts/update-data.config.json"
@@ -129,7 +126,7 @@ on:
         default: ""
         type: string
       advanced:
-        description: 'JSON overrides for any canonical env control (e.g. VERBOSE, SEC_UA, SKIP_SPROTT); individual nonblank inputs win'
+        description: 'JSON object of supported control overrides not exposed above (keys are UPPER_CASE control names, values are scalars); nonblank individual inputs win'
         required: false
         default: '{}'
         type: string
