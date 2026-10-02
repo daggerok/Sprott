@@ -1,6 +1,6 @@
 {
- "generatedAt": "2026-10-01T23:10:53.380Z",
- "catalogReadAt": "2026-10-01T23:10:53.380Z",
+ "generatedAt": "2026-10-02T03:23:44.058Z",
+ "catalogReadAt": "2026-10-02T03:23:44.058Z",
  "source": {
   "provider": "Sprott ETFs",
   "site": "https://sprottetfs.com",
@@ -850,17 +850,17 @@
    "isin": "US85208P3038",
    "ter": "0.75%",
    "terValue": 0.75,
-   "nav": "$47.63",
-   "navValue": 47.63,
-   "aum": "$1.84 Billion",
-   "aumValue": 1840000000,
-   "asOfDate": "Sep 30 2026",
+   "nav": "$47.11",
+   "navValue": 47.11,
+   "aum": "$1.82 Billion",
+   "aumValue": 1820000000,
+   "asOfDate": "Oct 01 2026",
    "inceptionDate": "Dec 03 2019",
    "exchange": "NYSE Arca",
-   "closePrice": "$47.50",
-   "closePriceValue": 47.5,
-   "premiumDiscount": "-0.27%",
-   "premiumDiscountValue": -0.27,
+   "closePrice": "$47.20",
+   "closePriceValue": 47.2,
+   "premiumDiscount": "0.19%",
+   "premiumDiscountValue": 0.19,
    "distributions": {
     "frequency": "Annually",
     "exDate": "12/18/2025",
@@ -903,8 +903,8 @@
     "siAnn": 25.01,
     "secYield": null,
     "secYieldText": "—",
-    "dividendYield": 3.66,
-    "dividendYieldText": "3.66%"
+    "dividendYield": 3.69,
+    "dividendYieldText": "3.69%"
    },
    "holdings": 27,
    "history": 1715
