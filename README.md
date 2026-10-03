@@ -53,6 +53,8 @@ The published snapshot contains **13 funds, 736 holdings rows and 14,111 daily-h
 
 Sprott publishes no 30-day SEC yield, so `secYield` renders a dash placeholder and `secYieldKind` records `not published`; the catalog column stays honest for every fund. The history series is **market price, not official NAV**: `historySource` states Yahoo daily market-price closes/adjusted closes, and the derived figures are **not published standardized NAV returns**. Returns that a fund page publishes officially are used as published; only missing metrics are derived. The holdings CSV is the primary source and the page's holdings table is the fallback, so a fund page that drops the download still updates.
 
+Retention applies only when a source failed: if neither the official performance table nor Yahoo answered for a fund, the previous returns are kept as one unit together with their `returnsBasis` and `performanceAsOf`. An honest null (for example a 3-year figure the provider stopped publishing, or an unknown distribution frequency) stays null and is never filled from an older publication. Month-end dates are parsed as UTC, so a run gives the same output in any timezone. CUSIPs are stored without spaces. Every request has a 45 second timeout covering headers and body and is retried per `MAX_RETRIES`. A rerun with identical upstream data writes nothing (`generatedAt` and `catalogReadAt` move only with content), new catalog tickers are printed as `NEW FUNDS: ...` (also in the workflow summary), and the run stops taking new funds after 25 minutes but still writes the index.
+
 Each fund carries a derived `metrics` object that powers the catalog columns shared with the sibling sites:
 
 - `ytd` / `tr1y` - official or coverage-checked derived YTD and 1-year returns -> *YTD Return*, *TR 1Y*
@@ -74,7 +76,7 @@ Defaults below are exactly the values in `scripts/update-data.config.json`; blan
 
 | Environment variable | Default | Meaning |
 | --- | --: | --- |
-| `MAX_FETCHES` | `0` | Batch evaluation size: positive resumes the scoped cursor in `api/sprott/update-state.json`; `0` is a full selected pass and resets the cursor. |
+| `MAX_FETCHES` | `0` | Batch evaluation size: positive resumes the scoped cursor in `api/sprott/update-state.json`; the cursor is scoped to the selected funds (it resumes at the next selected ticker and wraps); `0` is a full unfiltered pass and resets the cursor, a `TICKERS` run never deletes it. |
 | `REQUEST_SLEEP` | `1` | Minimum seconds between outgoing request starts on each worker lane, including retries. Every worker paces itself, so the overall rate is about `CONCURRENCY / REQUEST_SLEEP` requests per second. |
 | `CONCURRENCY` | `2` | Parallel fund workers (worker pool), each with its own request lane. With `REQUEST_SLEEP=0` requests are not paced. |
 | `TICKERS` | all | Space/comma/semicolon allowlist, e.g. `URNM URNJ SETM`; empty means all funds. |
@@ -84,7 +86,7 @@ Defaults below are exactly the values in `scripts/update-data.config.json`; blan
 | `SEC_YIELD` | `:` | 30-day SEC-yield range in %, min:max; Sprott publishes none, so an active range filters everything out. |
 | `HOLDINGS_PAGE_SIZE` | `250` | Holdings rows per JSON page |
 | `HISTORY_PAGE_SIZE` | `1000` | Daily history rows per JSON page |
-| `MAX_RETRIES` | `2` | Retries after the initial request, integer >= 1 (transient HTTP/network failures only) |
+| `MAX_RETRIES` | `2` | Retries after the initial request, integer >= 1, an empty value is an error (transient HTTP/network failures only) |
 | `HISTORY_RANGE` | `max` | Yahoo daily history range: `max` or `Ny` (e.g. `5y`); merges with previously published history |
 | `STORE_RAW_DOWNLOADS` | `false` | Keep raw provider payload snapshots beside the feed (config/`advanced` only) |
 | `SEC_UA` | `daggerok ETF feed daggerok@gmail.com` | SEC EDGAR contact User-Agent, redacted in logs; the Actions variable `SEC_UA` overrides it when nonblank. Do not put credentials here. |
