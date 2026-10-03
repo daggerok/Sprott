@@ -2,7 +2,7 @@
  "ticker": "LITP",
  "page": 1,
  "pageSize": 1000,
- "totalRows": 919,
+ "totalRows": 920,
  "headers": [
   "Date",
   "Close",
@@ -5520,9 +5520,15 @@
   },
   {
    "Date": "Oct 01 2026",
-   "Close": "8.8999",
+   "Close": "8.9",
    "Adj Close": "8.9",
-   "Volume": "53869"
+   "Volume": "53900"
+  },
+  {
+   "Date": "Oct 02 2026",
+   "Close": "8.958",
+   "Adj Close": "8.96",
+   "Volume": "19000"
   }
  ]
 }

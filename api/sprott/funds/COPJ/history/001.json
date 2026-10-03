@@ -2,7 +2,7 @@
  "ticker": "COPJ",
  "page": 1,
  "pageSize": 1000,
- "totalRows": 919,
+ "totalRows": 920,
  "headers": [
   "Date",
   "Close",
@@ -5522,7 +5522,13 @@
    "Date": "Oct 01 2026",
    "Close": "43.07",
    "Adj Close": "43.07",
-   "Volume": "63464"
+   "Volume": "63500"
+  },
+  {
+   "Date": "Oct 02 2026",
+   "Close": "43.970001",
+   "Adj Close": "43.97",
+   "Volume": "41800"
   }
  ]
 }

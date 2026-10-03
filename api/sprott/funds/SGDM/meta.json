@@ -17,7 +17,7 @@
  },
  "legalStructure": null,
  "identifiers": {
-  "cusip": "85210B 102",
+  "cusip": "85210B102",
   "isin": "US85210B1026",
   "indexTicker": "SOLGMCFT"
  },
@@ -33,23 +33,23 @@
   "net": 0.46
  },
  "nav": {
-  "display": "$74.01",
-  "value": 74.01,
-  "asOfDate": "Sep 30 2026"
+  "display": "$73.74",
+  "value": 73.74,
+  "asOfDate": "Oct 02 2026"
  },
  "marketPrice": {
-  "display": "$73.97",
-  "value": 73.97,
-  "asOfDate": "Sep 30 2026"
+  "display": "$73.76",
+  "value": 73.76,
+  "asOfDate": "Oct 02 2026"
  },
  "premiumDiscount": {
-  "display": "-0.05%",
-  "value": -0.05
+  "display": "0.03%",
+  "value": 0.03
  },
  "aum": {
-  "display": "$654.24 Million",
-  "value": 654240000,
-  "asOfDate": "Sep 30 2026",
+  "display": "$651.89 Million",
+  "value": 651890000,
+  "asOfDate": "Oct 02 2026",
   "source": "sprottetfs.com fund page (Total Net Asset Value)"
  },
  "yields": {
@@ -150,8 +150,8 @@
   ],
   "pageSize": 250,
   "totalRows": 49,
-  "asOfDate": "2026-09-30",
-  "asOf": "Sep 30 2026",
+  "asOfDate": "2026-10-02",
+  "asOf": "Oct 02 2026",
   "source": "sprottetfs.com \"Download All Holdings\" CSV",
   "status": "available"
  },
@@ -163,8 +163,8 @@
    "history/004.json"
   ],
   "pageSize": 1000,
-  "totalRows": 3073,
-  "asOf": "Oct 01 2026",
+  "totalRows": 3074,
+  "asOf": "Oct 02 2026",
   "source": "Yahoo Finance daily market-price closes / adjusted closes (not official NAV)"
  }
 }
