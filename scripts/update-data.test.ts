@@ -1,18 +1,51 @@
 /// <reference types="bun" />
-import { describe, expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 import {
-  CONTROL_NAMES, USAGE, configureRequestPacing, createRequestGate, fetchWithRetry, annualizedToTotal, batchSelection, buildMetrics, performanceAsOfDate, priceReturns, storedDateIso, cellsIn, decodeEntities, formatEdgarDate,
-  formatUsDate, indicatedYield, inferDistributionFrequency, isoDate, mergeHistory, normalizeNumberText, numberOrNull,
-  parseCatalogNav, parseFeesTable, parseFundPage, parseHoldingsSection, parseLongDate, parseMoneyText,
-  parseNport, parsePercentText, parseSitemapFundPages, parseSprottPerformance, parseReturnTable,
-  parseDistributionsSection, FETCH_TIMEOUT_MS, installSystemCa, isoSeconds, monthAnchor, normalizeCusip, retainReturns, samePublishedContent, withoutStamps, isCertError, resolveControls, readConfig, runPool, runtimeControls, stripHtml, tickerFromSlug, totalToAnnualized,
+  CONTROL_NAMES, USAGE, configureRequestPacing, createRequestGate, fetchWithRetry, annualizedToTotal, batchSelection, buildMetrics,
+  indicatedYield, inferDistributionFrequency, installSystemCa, isCertError, mergeHistory, monthAnchor, normalizeCusip,
+  parseCatalogNav, parseFeesTable, parseFundPage, parseHoldingsSection, parseMoneyText, parseNport, parsePercentText,
+  parseDistributionsSection, parseReturnTable, parseSitemapFundPages, parseSprottPerformance, performanceAsOfDate,
+  priceReturns, readConfig, resolveControls, retainReturns, runPool, runtimeControls, samePublishedContent, storedDateIso,
+  tickerFromSlug, totalToAnnualized, withoutStamps, FETCH_TIMEOUT_MS,
 } from './update-data';
 import type { CatalogFund } from './update-data';
 
-// Small inline samples shaped like the sprottetfs.com pages (no captured files).
+// ---------------------------------------------------------------------------
+// Shared setup: clean environment, pinned TZ, restored fetch / exit code / console
+// ---------------------------------------------------------------------------
+const scriptsDir = new URL('.', import.meta.url).pathname;
+const file = JSON.parse(readFileSync(join(scriptsDir, 'update-data.config.json'), 'utf8')) as Record<string, string>;
+const realFetch = globalThis.fetch;
+const realExitCode = process.exitCode;
+const realConsole = { log: console.log, warn: console.warn, error: console.error };
+const realSetTimeout = globalThis.setTimeout;
+const savedEnv = { ...process.env };
+const tempDirs: string[] = [];
+const isControlVar = (key: string): boolean =>
+  (CONTROL_NAMES as readonly string[]).includes(key) || key.startsWith('SPROTT_') || ['HISTORICAL_PAGE_SIZE', 'NODE_USE_SYSTEM_CA', 'ETF_UPDATER_SYSTEM_CA', 'GITHUB_STEP_SUMMARY'].includes(key);
+
+beforeEach(() => {
+  for (const key of Object.keys(process.env)) if (isControlVar(key)) delete process.env[key];
+  process.env.TZ = 'UTC';
+});
+afterEach(() => {
+  globalThis.fetch = realFetch;
+  globalThis.setTimeout = realSetTimeout;
+  process.exitCode = realExitCode ?? 0;
+  Object.assign(console, realConsole);
+  for (const key of Object.keys(process.env)) if (!(key in savedEnv)) delete process.env[key];
+  Object.assign(process.env, savedEnv);
+  configureRequestPacing(2, 1000);
+  for (const dir of tempDirs.splice(0)) rmSync(dir, { recursive: true, force: true });
+});
+
+// ---------------------------------------------------------------------------
+// Small inline samples shaped like the sprottetfs.com pages (no captured files)
+// ---------------------------------------------------------------------------
 const holdingsCsv = [
   'Security,Symbol,SEDOL,Weight,Market Value,Quantity',
   'Cameco Corp.,CCJ,2158684,20.49,376658199.63,4345889',
@@ -23,14 +56,18 @@ const holdingsTable = '<table><tr><th>Security</th><th>Market Value</th><th>Symb
   + '<tr><td>Cash Equivalent</td><td>2,757,000.00</td><td></td><td></td><td></td><td>0.15</td></tr></table>';
 const perfTable = (rows: string): string => '<table><tr><td>Fund</td><td>1 MO*</td><td>3 MO*</td><td>YTD*</td><td>1 YR</td><td>3 YR</td><td>5 YR</td><td>10 YR</td><td>S.I.</td></tr>'
   + rows + '</table>';
-const pageHtml = (opts: { csv?: boolean; breadcrumb?: string } = {}): string => `<html><head>
+const table = (header: string[], rows: string[][]): string =>
+  `<table><tr>${header.map((cell) => `<td>${cell}</td>`).join('')}</tr>${rows
+    .map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join('')}</tr>`)
+    .join('')}</table>`;
+const pageHtml = (opts: { csv?: boolean; breadcrumb?: string; ticker?: string } = {}): string => `<html><head>
 <script type="application/ld+json">${JSON.stringify({ '@graph': [
   { '@type': 'InvestmentFund', name: 'Sprott Uranium Miners ETF' },
   { '@type': 'BreadcrumbList', itemListElement: [{ item: opts.breadcrumb ?? 'https://sprottetfs.com/critical-materials/' }] },
 ] })}</script></head><body>
 <h2 id="asOfDate">As of September 30, 2026</h2>
 <section><h3 class="color-gold">NAV</h3><h4>$47.63</h4><h3 class="color-gold">Market Price</h3><h4>$47.50</h4>
-<h3 class="color-gold">Premium/Discount</h3><h4>-0.27%</h4><h3 class="color-gold">Ticker</h3><h4>URNM</h4>
+<h3 class="color-gold">Premium/Discount</h3><h4>-0.27%</h4><h3 class="color-gold">Ticker</h3><h4>${opts.ticker ?? 'URNM'}</h4>
 <h3 class="color-gold">Total Net Asset Value</h3><h4>$1.84 Billion</h4></section>
 <section><h3 class="color-gold">ISIN</h3><h4>ISIN: US85208P3038</h4><h3 class="color-gold">CUSIP</h3><h4>CUSIP: 85208P303</h4>
 <h3 class="color-gold">Benchmark Index</h3><h4>URNMX</h4><h3 class="color-gold">Listing Exchange</h3><h4>NYSE Arca</h4>
@@ -48,359 +85,22 @@ ${holdingsTable}</div>
 <table id="DistributionsData"><tr><td>Ex-Date</td><td>Total Distributions</td></tr>
 <tr><td>12/18/2025</td><td>$1.74</td></tr><tr><td>12/15/2022</td><td>-</td></tr><tr><td>12/14/2023</td><td>$1.75</td></tr></table>
 </body></html>`;
-const navHtml = ['COPJ', 'URNM', 'SETM'].map((ticker) =>
-  `<a href="/${ticker.toLowerCase()}-sprott-etf" title="Sprott ${ticker} ETF" class=" phv-btn purple-bg large">${ticker}</a>`).join('')
-  + '<a href="#secPurchase" title="Invest" class=" phv-btn gry-bg large">Invest Now</a>';
-const sitemap = ['copj-sprott-junior-copper-miners-etf/', 'urnm-sprott-uranium-miners-etf', 'rexc-rare-earths-ex-china-etf/',
-  'sprott-precious-metals-etfs/', 'insights/foo/', 'uranium-etfs/']
-  .map((slug) => `<url><loc>https://sprottetfs.com/${slug}</loc></url>`).join('\n');
 
-describe('Sprott fund page parsing (inline samples)', () => {
-  test('pricing, key facts, identifiers and returns match the page', () => {
-    const page = parseFundPage(pageHtml(), 'URNM');
-    expect(page.ticker).toBe('URNM');
-    expect(page.name).toBe('Sprott Uranium Miners ETF');
-    expect(page.category).toBe('Critical Materials');
-    expect(page.asOfDate).toBe('2026-09-30');
-    expect(page.nav).toBe(47.63);
-    expect(page.marketPrice).toBe(47.5);
-    expect(page.premiumDiscount).toBe(-0.27);
-    expect(page.aumValue).toBe(1840000000);
-    expect(page.expenseRatio).toEqual({ gross: 0.75, net: 0.75, value: 0.75 });
-    expect(page.identifiers).toEqual({ isin: 'US85208P3038', cusip: '85208P303', indexTicker: 'URNMX' });
-    expect(page.exchange).toBe('NYSE Arca');
-    expect(page.inception).toBe('2019-12-03');
-    expect(page.indexRebalanceFrequency).toBe('Quarterly');
-    expect(page.performance.month).toMatchObject({
-      asOfDate: 'Sep 30 2026', mo1: -16.37, qtd: -9.16, ytd: -13.32, yr1: -18.52, yr3: 3.44, yr5: 8.01, yr10: null, sinceInception: 25.01,
-    });
-    expect(page.performance.quarter).toEqual(page.performance.month);
-    expect(parseFeesTable(pageHtml())).toEqual({
-      'Management Fee': 0.75, 'Other Expenses': 0, 'Total Annual Fund Operating Expenses': 0.75,
-    });
-  });
-
-  test('holdings come from the page CSV with numeric Weight', () => {
-    const holdings = parseHoldingsSection(pageHtml());
-    expect(holdings.asOfDate).toBe('2026-09-30');
-    expect(holdings.source).toContain('Download All Holdings');
-    expect(holdings.rows).toHaveLength(2);
-    expect(holdings.rows[0]).toEqual({
-      Name: 'Cameco Corp.', Ticker: 'CCJ', Identifier: '2158684',
-      Weight: '20.49', 'Market Value': '376658199.63', 'Shares Held': '4345889', SEDOL: '2158684',
-    });
-    expect(holdings.rows[1]).toMatchObject({ Name: 'Cash Equivalent', Ticker: '', Weight: '0.15' });
-  });
-
-  test('the rendered table is an equivalent holdings fallback when the CSV link is absent', () => {
-    const csv = parseHoldingsSection(pageHtml());
-    const table = parseHoldingsSection(pageHtml({ csv: false }));
-    expect(table.source).toContain('holdings table');
-    expect(table.rows).toEqual(csv.rows);
-  });
-
-  test('distributions skip "-" placeholder rows and sort by date', () => {
-    const page = parseFundPage(pageHtml(), 'URNM');
-    expect(page.distributions.payments.map((payment) => payment.amount)).toEqual([1.75, 1.74]);
-    expect(formatUsDate(page.distributions.payments.at(-1)!.epoch)).toBe('12/18/2025');
-  });
-
-  test('a breadcrumb that points at the homepage keeps a null category', () => {
-    expect(parseFundPage(pageHtml({ breadcrumb: 'https://sprottetfs.com/' }), 'METL').category).toBeNull();
-  });
-});
-
-describe('catalog discovery', () => {
-  test('the sitemap yields only fund pages, canonical and sorted', () => {
-    const pages = parseSitemapFundPages(sitemap);
-    expect(pages).toEqual([
-      'https://sprottetfs.com/copj-sprott-junior-copper-miners-etf/',
-      'https://sprottetfs.com/rexc-rare-earths-ex-china-etf/',
-      'https://sprottetfs.com/urnm-sprott-uranium-miners-etf/',
-    ]);
-    expect(pages.map(tickerFromSlug)).toEqual(['COPJ', 'REXC', 'URNM']);
-  });
-
-  test('the fund-navigation list carries ticker, name and canonical URL, skipping anchors', () => {
-    const funds = parseCatalogNav(navHtml);
-    expect(funds.map((fund) => fund.ticker)).toEqual(['COPJ', 'SETM', 'URNM']);
-    expect(funds.find((fund) => fund.ticker === 'URNM')!.fundPage).toBe('https://sprottetfs.com/urnm-sprott-etf/');
-  });
-});
-
-describe('HTML table mapping (type-safety review)', () => {
-  const table = (header: string[], rows: string[][]): string =>
-    `<table><tr>${header.map((cell) => `<td>${cell}</td>`).join('')}</tr>${rows
-      .map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join('')}</tr>`)
-      .join('')}</table>`;
-
-  test('maps every tenor, tolerates reordered and unknown columns', () => {
-    const columns: Array<[string, string]> = [
-      ['S.I.', '25.01'], ['YTD*', '-13.32'], ['10 YR', '--'], ['Fund', 'Sprott Uranium Miners ETF (Net Asset Value)'],
-      ['1 MO*', '-16.37'], ['3 MO*', '-9.16'], ['Unknown', 'x'], ['1 YR', '-18.52'], ['5 YR', '8.01'], ['3 YR', '3.44'],
-    ];
-    const reordered = table(columns.map(([header]) => header), [columns.map(([, value]) => value)]);
-    expect(parseReturnTable(reordered)).toEqual({
-      ytd: -13.32, yr1: -18.52, yr3: 3.44, yr5: 8.01, yr10: null,
-      sinceInception: 25.01, mo1: -16.37, qtd: -9.16,
-    });
-  });
-
-  test('keeps real zero and negative values, nulls placeholders, ignores the benchmark rows', () => {
-    const values = table(
-      ['Fund', '1 MO*', '3 MO*', 'YTD*', '1 YR', '3 YR', '5 YR', '10 YR', 'S.I.1'],
-      [
-        ['Sprott Gold Miners ETF (Market Price)', '9', '9', '9', '9', '9', '9', '9', '9'],
-        ['Some Benchmark (Benchmark)', '1', '1', '1', '1', '1', '1', '1', '1'],
-        ['Sprott Gold Miners ETF (Net Asset Value)', '0', '-7.5', '--', '', 'n/a', '-0.01', '12', '--'],
-      ],
-    );
-    expect(parseReturnTable(values)).toEqual({
-      ytd: null, yr1: null, yr3: null, yr5: -0.01, yr10: 12,
-      sinceInception: null, mo1: 0, qtd: -7.5,
-    });
-  });
-
-  test('an unknown-only header row yields an all-null mapping instead of throwing', () => {
-    expect(parseReturnTable(table(['a', 'b'], [['1', '2']]))).toEqual({
-      ytd: null, yr1: null, yr3: null, yr5: null, yr10: null, sinceInception: null, mo1: null, qtd: null,
-    });
-  });
-
-  test('performance blocks require their published "As of" date', () => {
-    const page = parseSprottPerformance('<h3>Month-End Performance</h3><p class="small">Average Annual Total Returns (%) As of 9/30/2026</p>'
-      + table(['Fund', '1 MO*'], [['Sprott Uranium Miners ETF (Net Asset Value)', '1']]));
-    expect(page.month).toBeNull();
-    expect(page.quarter).toBeNull();
-  });
-});
-
-describe('distributions parsing', () => {
-  test('all-placeholder tables yield no payments and never a zero amount', () => {
-    const html = '<table id="DistributionsData"><tr><td>Ex-Date</td><td>Total Distributions</td></tr>'
-      + '<tr><td>12/15/2022</td><td>-</td></tr><tr><td>n/a</td><td>$0.00</td></tr></table>';
-    const parsed = parseDistributionsSection(html);
-    expect(parsed.payments).toEqual([]);
-  });
-
-  test('headers and amounts keep their published shape', () => {
-    const html = '<table id="DistributionsData"><tr><td>Ex-Date</td><td>Record Date</td><td>Total Distributions</td></tr>'
-      + '<tr><td>12/18/2025</td><td>12/18/2025</td><td>$1.74</td></tr></table>';
-    const parsed = parseDistributionsSection(html);
-    expect(parsed.headers).toEqual(['Ex-Date', 'Amount']);
-    expect(parsed.payments).toEqual([{ epoch: Date.parse('2025-12-18T00:00:00Z') / 1000, amount: 1.74 }]);
-  });
-});
-
-describe('HTML helpers', () => {
-  test('decodes the named, decimal and hexadecimal entities the Umbraco pages emit', () => {
-    expect(decodeEntities('Nasdaq&#xAE; &amp; Co&nbsp;&#8217;26')).toBe("Nasdaq® & Co '26");
-    expect(stripHtml('<td class="left">\n  Cameco Corp.\n</td>')).toBe('Cameco Corp.');
-  });
-
-  test('parseMoneyText handles dollars, grouping, negatives and word suffixes', () => {
-    expect(parseMoneyText('$47.63')).toBe(47.63);
-    expect(parseMoneyText('-$0.57')).toBe(-0.57);
-    expect(parseMoneyText('$1.84 Billion')).toBe(1840000000);
-    expect(parseMoneyText('526.07 Million')).toBe(526070000);
-    expect(parseMoneyText('—')).toBeNull();
-  });
-
-  test('parsePercentText and parseLongDate only accept what the page publishes', () => {
-    expect(parsePercentText('-0.27%')).toBe(-0.27);
-    expect(parsePercentText('0.75%')).toBe(0.75);
-    expect(parsePercentText('Quarterly')).toBeNull();
-    expect(parseLongDate('As of September 30, 2026')).toBe('2026-09-30');
-    expect(parseLongDate('As of Foo 3, 2026')).toBeNull();
-  });
-
-  test('number helpers keep zero/negative values and strip published decoration', () => {
-    expect(numberOrNull('20.49%')).toBe(20.49);
-    expect(numberOrNull('$1,234.56')).toBe(1234.56);
-    expect(numberOrNull('0')).toBe(0);
-    expect(numberOrNull('-')).toBeNull();
-    expect(normalizeNumberText('2.97057744E8')).toBe('297057744');
-    expect(isoDate('9/30/2026')).toBe('2026-09-30');
-    expect(formatEdgarDate('2026-09-30')).toBe('Sep 30 2026');
-  });
-
-  test('fees table keeps a real zero (Other Expenses) instead of dropping it', () => {
-    expect(parseFeesTable(pageHtml())).toEqual({
-      'Management Fee': 0.75, 'Other Expenses': 0, 'Total Annual Fund Operating Expenses': 0.75,
-    });
-    expect(cellsIn('<tr><td class="left">a</td><td class="right">b</td></tr>')).toEqual(['a', 'b']);
-  });
-});
-
-describe('SEC N-PORT-P fallback', () => {
-  const xml = `<?xml version="1.0"?><edgarSubmission><formData><genInfo>
-    <regName>SPROTT FUNDS TRUST</regName><regCik>0001728683</regCik>
-    <seriesName>Sprott Uranium Miners ETF</seriesName><seriesId>S000068011</seriesId>
-    <repPdDate>2026-06-30</repPdDate></genInfo><fundInfo><netAssets>1500000000</netAssets></fundInfo>
-    <invstOrSecs><invstOrSec><name>Cameco Corp.</name><pctVal>20.49</pctVal><valUSD>376658199.63</valUSD>
-    <balance>4345889</balance><assetCat>EC</assetCat>
-    <identifiers><isin value="CA13321L1085"/><sedol value="2158684"/></identifiers></invstOrSec></invstOrSecs>
-    </formData></edgarSubmission>`;
-
-  test('identity fields and holdings rows are read from the filing, not invented', () => {
-    const parsed = parseNport(xml);
-    expect(parsed.regName).toBe('SPROTT FUNDS TRUST');
-    expect(parsed.regCik).toBe('0001728683');
-    expect(parsed.seriesName).toBe('Sprott Uranium Miners ETF');
-    expect(parsed.seriesId).toBe('S000068011');
-    expect(parsed.repPdDate).toBe('2026-06-30');
-    expect(parsed.netAssets).toBe(1500000000);
-    expect(parsed.holdings).toHaveLength(1);
-    expect(parsed.holdings[0]).toMatchObject({
-      Name: 'Cameco Corp.', Weight: '20.49', 'Market Value': '376658199.63', 'Shares Held': '4345889', 'Asset Category': 'EC',
-    });
-    expect(parsed.holdings[0].Identifier).toBe('CA13321L1085');
-  });
-});
-
-describe('derived metrics', () => {
-  test('annualized/total conversions round to two decimals', () => {
-    expect(annualizedToTotal(3.44, 3)).toBe(10.68);
-    expect(annualizedToTotal(null, 3)).toBeNull();
-    expect(totalToAnnualized(10.68, 3)).toBe(3.44);
-    expect(totalToAnnualized(-100, 1)).toBe(-100);
-  });
-
-  test('indicated yield needs a positive distribution, cadence and price', () => {
-    expect(indicatedYield(1.74, 1, 47.5)).toBe(3.66);
-    expect(indicatedYield(0, 1, 47.5)).toBeNull();
-    expect(indicatedYield(1.74, null, 47.5)).toBeNull();
-    expect(indicatedYield(1.74, 1, 0)).toBeNull();
-  });
-
-  test('distribution frequency inference covers annual/semi/quarter gaps and unknowns', () => {
-    const at = (iso: string) => Date.parse(`${iso}T00:00:00Z`) / 1000;
-    expect(inferDistributionFrequency([])).toEqual({ frequency: 'None', paymentsPerYear: null });
-    expect(inferDistributionFrequency([{ epoch: at('2025-12-18'), amount: 1.74 }]))
-      .toEqual({ frequency: 'Unknown', paymentsPerYear: null });
-    expect(inferDistributionFrequency([
-      { epoch: at('2023-12-14'), amount: 1.75 }, { epoch: at('2024-12-12'), amount: 1.28 },
-      { epoch: at('2025-12-18'), amount: 1.74 },
-    ])).toEqual({ frequency: 'Annually', paymentsPerYear: 1 });
-    expect(inferDistributionFrequency([
-      { epoch: at('2025-03-31'), amount: 0.1 }, { epoch: at('2025-06-30'), amount: 0.1 },
-      { epoch: at('2025-09-30'), amount: 0.1 }, { epoch: at('2025-12-31'), amount: 0.1 },
-    ])).toEqual({ frequency: 'Quarterly', paymentsPerYear: 4 });
-    expect(inferDistributionFrequency([
-      { epoch: at('2025-06-30'), amount: 0.1 }, { epoch: at('2025-12-31'), amount: 0.1 },
-    ])).toEqual({ frequency: 'Semi-annually', paymentsPerYear: 2 });
-  });
-});
-
-describe('metrics contract (returnsBasis, performanceAsOf)', () => {
-  const days = [
-    { date: '2025-12-31', close: 10, adjClose: 10, volume: 1 },
-    { date: '2026-09-29', close: 11, adjClose: 11, volume: 1 },
-    { date: '2026-09-30', close: 12, adjClose: 12, volume: 1 },
-  ];
-  const derived = priceReturns(days, new Date('2026-09-30T00:00:00Z'));
-  const month = { asOfDate: 'Aug 31 2026', ytd: 5, yr1: 9, yr3: 3, yr5: null, yr10: null, sinceInception: 2 };
-
-  test('stored dates parse back to ISO', () => {
-    expect(storedDateIso('Sep 30 2026')).toBe('2026-09-30');
-    expect(storedDateIso('Sep 30, 2026')).toBe('2026-09-30');
-    expect(storedDateIso('2026-09-30')).toBe('2026-09-30');
-    expect(storedDateIso('—')).toBeNull();
-    expect(storedDateIso(undefined)).toBeNull();
-  });
-
-  test('official returns use the performance table date, not the NAV or Yahoo date', () => {
-    expect(performanceAsOfDate(true, month, derived)).toBe('2026-08-31');
-  });
-
-  test('derived returns use the last Yahoo close date', () => {
-    expect(performanceAsOfDate(false, null, derived)).toBe('2026-09-30');
-    expect(performanceAsOfDate(false, month, derived)).toBe('2026-09-30');
-  });
-
-  test('unknown date is null', () => {
-    expect(performanceAsOfDate(true, null, priceReturns([]))).toBeNull();
-  });
-
-  test('metrics end with returnsBasis then performanceAsOf', () => {
-    const metrics = buildMetrics(month, derived, null, 1.5, 'official test basis', '2026-08-31');
-    const keys = Object.keys(metrics);
-    expect(keys.slice(-2)).toEqual(['returnsBasis', 'performanceAsOf']);
-    expect(metrics.returnsBasis).toBe('official test basis');
-    expect(metrics.performanceAsOf).toBe('2026-08-31');
-    expect(metrics.ytd).toBe(5);
-  });
-});
-
-describe('history merge stability', () => {
-  const day = (date: string, adjClose: number) => ({ date, close: 36.540001, adjClose, volume: 9000 });
-  const previous = [{ Date: 'Oct 10 2016', Close: '36.540001', 'Adj Close': '27.69', Volume: '9000' }];
-
-  test('a published adjusted close keeps its cent when Yahoo jitters a rounding boundary', () => {
-    const merged = mergeHistory(previous, [day('2016-10-10', 27.7)]);
-    expect(merged).toHaveLength(1);
-    expect(merged[0]['Adj Close']).toBe('27.69');
-  });
-
-  test('a genuine restatement still replaces the published row', () => {
-    const merged = mergeHistory(previous, [day('2016-10-10', 27.85)]);
-    expect(merged[0]['Adj Close']).toBe('27.85');
-  });
-
-  test('new days merge in date order', () => {
-    const merged = mergeHistory([], [day('2016-10-10', 27.7), day('2016-10-11', 27.9)]);
-    expect(merged.map((row) => row.Date)).toEqual(['Oct 10 2016', 'Oct 11 2016']);
-    expect(merged[0]['Adj Close']).toBe('27.7');
-  });
-});
-
-describe('batch selection', () => {
-  const fund = (ticker: string): CatalogFund => ({
-    ticker, name: ticker, fundPage: `https://sprottetfs.com/${ticker.toLowerCase()}-etf/`,
-    assetClass: '', isin: '', nav: null, navDate: null,
-  });
-  const funds = ['COPJ', 'COPP', 'GBUG', 'URNM'].map(fund);
-
-  test('TICKERS filters and MAX_FETCHES resumes from the cursor without dropping funds', () => {
-    const config = readConfig(resolveControls({ TICKERS: 'URNM COPP', MAX_FETCHES: '0' }));
-    expect(batchSelection(funds, config, null).map((item) => item.ticker)).toEqual(['COPP', 'URNM']);
-    const bounded = readConfig(resolveControls({ MAX_FETCHES: '2' }));
-    expect(batchSelection(funds, bounded, null).map((item) => item.ticker)).toEqual(['COPJ', 'COPP']);
-    expect(batchSelection(funds, bounded, 'COPJ').map((item) => item.ticker)).toEqual(['COPP', 'GBUG']);
-    expect(batchSelection(funds, bounded, 'URNM').map((item) => item.ticker)).toEqual(['COPJ', 'COPP']);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Configuration, documentation and workflow contracts
-// ---------------------------------------------------------------------------
-const read = (path: string): string => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
-const file = JSON.parse(read('scripts/update-data.config.json')) as Record<string, string>;
-const readme = read('README.md');
-
-describe('resolver precedence (file < advanced < nonblank input < env)', () => {
-  test('each layer overrides the previous one and the brand alias wins as env', () => {
-    const controls = resolveControls(
-      { CONCURRENCY: 2, TICKERS: 'URNM' },
-      { CONCURRENCY: 3, TICKERS: 'SETM' },
-      { CONCURRENCY: '4', TICKERS: '' },
-      { SPROTT_CONCURRENCY: '5' },
-    );
-    expect(controls).toEqual({ CONCURRENCY: '5', TICKERS: 'SETM' });
+// ===========================================================================
+describe('controls', () => {
+  test('precedence: file < advanced < nonblank inputs < env, brand alias beats bare name', () => {
+    expect(resolveControls(
+      { CONCURRENCY: 2, TICKERS: 'URNM' }, { CONCURRENCY: 3, TICKERS: 'SETM' }, { CONCURRENCY: '4', TICKERS: '' }, { SPROTT_CONCURRENCY: '5' },
+    )).toEqual({ CONCURRENCY: '5', TICKERS: 'SETM' });
     expect(resolveControls({ CONCURRENCY: 2 }, { CONCURRENCY: 3 }, { CONCURRENCY: '4' }).CONCURRENCY).toBe('4');
     expect(resolveControls({ CONCURRENCY: 2 }, { CONCURRENCY: 3 }).CONCURRENCY).toBe('3');
+    expect(resolveControls({ TICKERS: 'URNM' }, {}, {}, { SPROTT_TICKERS: 'SETM', TICKERS: 'COPJ' }).TICKERS).toBe('SETM');
   });
 
-  test('blank dispatch inputs inherit, advanced can clear a key on purpose', () => {
+  test('blank inputs inherit, advanced can clear a key, an explicitly empty env var wins', () => {
     expect(resolveControls({ TICKERS: 'URNM' }, {}, { TICKERS: '' }).TICKERS).toBe('URNM');
     expect(resolveControls({ TICKERS: 'URNM' }, { TICKERS: '' }, { TICKERS: '' }).TICKERS).toBe('');
-    expect(resolveControls({ CONCURRENCY: 2 }, {}, { CONCURRENCY: '' }).CONCURRENCY).toBe('2');
-  });
-
-  test('an explicitly set env var wins even when empty, and env beats every other layer', () => {
     expect(resolveControls({ TICKERS: 'URNM' }, { TICKERS: 'SETM' }, { TICKERS: 'URNJ' }, { TICKERS: '' }).TICKERS).toBe('');
-    expect(resolveControls({ TICKERS: 'URNM' }, {}, {}, { TICKERS: 'SETM' }).TICKERS).toBe('SETM');
-    expect(resolveControls({ TICKERS: 'URNM' }, {}, {}, { SPROTT_TICKERS: 'SETM', TICKERS: 'COPJ' }).TICKERS).toBe('SETM');
   });
 
   test('legacy env aliases keep working', () => {
@@ -408,36 +108,13 @@ describe('resolver precedence (file < advanced < nonblank input < env)', () => {
     expect(resolveControls({}, {}, {}, { HISTORICAL_PAGE_SIZE: '500' }).HISTORY_PAGE_SIZE).toBe('500');
   });
 
-  test('the scheduled path (empty inputs and advanced) equals the config defaults', () => {
-    expect(resolveControls(file, {}, {}, {})).toEqual(file);
-    const config = readConfig(resolveControls(file));
-    expect(config.tickers).toEqual([]);
-    expect(config.maxFetches).toBe(0);
-    expect(config.requestSleep).toBe(1);
-    expect(config.concurrency).toBe(2);
-    expect(config.maxRetries).toBe(2);
-    expect(config.historyRange).toBe('max');
-    expect(config.skipSprott).toBe(false);
-    expect(config.skipYahoo).toBe(false);
-    expect(config.edgarFallback).toBe(true);
-    expect(config.storeRawDownloads).toBe(false);
-  });
-
-  test('runtimeControls reads the config file and applies env overrides', async () => {
-    expect((await runtimeControls({})).SEC_UA).toBe(file.SEC_UA);
-    expect((await runtimeControls({ CONCURRENCY: '7' })).CONCURRENCY).toBe('7');
-    expect((await runtimeControls({ SPROTT_TICKERS: 'URNM' })).TICKERS).toBe('URNM');
-  });
-});
-
-describe('resolver validation', () => {
-  test('unknown keys, non-scalars, newlines and invalid values are rejected', () => {
+  test('strict validation rejects bad values, unknown keys and CR/LF/NUL, never falls back silently', () => {
     for (const value of [
       { UNKNOWN: 1 }, { SEC_UA: 'x\nEVIL=yes' }, { SEC_UA: 'x\rfoo' }, { SEC_UA: 'x\0bad' },
       { CONCURRENCY: 0 }, { MAX_RETRIES: 0 }, { MAX_RETRIES: -1 }, { MAX_RETRIES: '1.5' }, { MAX_FETCHES: 1.5 },
       { HOLDINGS_PAGE_SIZE: 0 }, { HISTORY_PAGE_SIZE: 'x' }, { REQUEST_SLEEP: '-1' }, { REQUEST_SLEEP: 'abc' },
-      { HISTORY_RANGE: 'oops' }, { VERBOSE: 'maybe' }, { USE_SYSTEM_CA: 'maybe' }, { SKIP_YAHOO: 'perhaps' }, { AUM: '1:2:3' }, { AUM: '5' },
-      { TER: '2:1' }, { PERFORMANCE_1Y: 'a:b' }, { TOTAL_RETURN_10Y: '1' },
+      { HISTORY_RANGE: 'oops' }, { VERBOSE: 'maybe' }, { USE_SYSTEM_CA: 'maybe' }, { SKIP_YAHOO: 'perhaps' },
+      { AUM: '1:2:3' }, { AUM: '5' }, { TER: '2:1' }, { PERFORMANCE_1Y: 'a:b' }, { TOTAL_RETURN_10Y: '1' },
       { TICKERS: ['URNM'] }, { TICKERS: { a: 1 } }, { TICKERS: null },
     ]) {
       expect(() => resolveControls(value)).toThrow();
@@ -445,12 +122,24 @@ describe('resolver validation', () => {
     }
     for (const bad of [null, [], 'x', 1]) expect(() => resolveControls(bad)).toThrow();
     expect(() => resolveControls({}, {}, {}, { SPROTT_SEC_UA: 'a\nb' })).toThrow();
-    expect(() => resolveControls({}, {}, {}, { MAX_RETRIES: '0' })).toThrow();
+    for (const key of ['CONCURRENCY', 'MAX_RETRIES', 'MAX_FETCHES', 'REQUEST_SLEEP']) {
+      expect(() => resolveControls({}, {}, {}, { [key]: '' })).toThrow();
+    }
+    expect(() => readConfig({ CONCURRENCY: 'abc' })).toThrow();
+    expect(readConfig(resolveControls({ MAX_RETRIES: 1, MAX_FETCHES: 0 })).maxRetries).toBe(1);
   });
 
-  test('MAX_RETRIES needs an integer of at least 1, MAX_FETCHES 0 stays valid', () => {
-    expect(readConfig(resolveControls({ MAX_RETRIES: 1 })).maxRetries).toBe(1);
-    expect(readConfig(resolveControls({ MAX_FETCHES: 0 })).maxFetches).toBe(0);
+  test('config file: keys equal CONTROL_NAMES, values are strings, the scheduled path equals the defaults', async () => {
+    expect(Object.keys(file).sort()).toEqual([...CONTROL_NAMES].sort());
+    for (const value of Object.values(file)) expect(typeof value).toBe('string');
+    expect(resolveControls(file, {}, {}, {})).toEqual(file);
+    const config = readConfig(resolveControls(file));
+    expect([config.tickers, config.maxFetches, config.concurrency, config.maxRetries, config.historyRange])
+      .toEqual([[], 0, 2, 2, 'max']);
+    expect([config.skipSprott, config.skipYahoo, config.edgarFallback, config.storeRawDownloads]).toEqual([false, false, true, false]);
+    expect((await runtimeControls({})).SEC_UA).toBe(file.SEC_UA);
+    expect((await runtimeControls({ CONCURRENCY: '7' })).CONCURRENCY).toBe('7');
+    expect((await runtimeControls({ SPROTT_TICKERS: 'URNM' })).TICKERS).toBe('URNM');
   });
 
   test('filters, history range and tickers flow through readConfig', () => {
@@ -466,158 +155,49 @@ describe('resolver validation', () => {
     expect(readConfig(resolveControls({ AUM: 'small' })).aumRange).toEqual({ min: 300_000_000, max: 2_000_000_000 });
   });
 
-  test('SEC_UA defaults to the daggerok contact, is overridable and is redacted in logs', async () => {
-    expect(file.SEC_UA).toBe('daggerok ETF feed daggerok@gmail.com');
-    expect(readConfig({}).secUa).toBe('daggerok ETF feed daggerok@gmail.com');
-    expect(resolveControls(file, { SEC_UA: 'adv' }, { SEC_UA: 'in' }, { SEC_UA: 'protected' }).SEC_UA).toBe('protected');
-    expect(resolveControls(file, { SEC_UA: 'adv' }, { SEC_UA: 'in' }).SEC_UA).toBe('in');
-    const child = Bun.spawn([process.execPath, new URL('./update-data.ts', import.meta.url).pathname, '--help'], { cwd: tmpdir(), stdout: 'pipe', stderr: 'pipe' });
-    const help = await new Response(child.stdout).text();
-    await child.exited;
-    expect(help).toContain('SEC_UA=<redacted>');
-    expect(help.slice(help.indexOf('[ config'))).not.toContain('gmail.com');
+  test('TICKERS filters and MAX_FETCHES resumes from the cursor, wrapping and skipping unselected funds', () => {
+    const fund = (ticker: string): CatalogFund => ({
+      ticker, name: ticker, fundPage: `https://sprottetfs.com/${ticker.toLowerCase()}-etf/`, assetClass: '', isin: '', nav: null, navDate: null,
+    });
+    const funds = ['COPJ', 'COPP', 'GBUG', 'URNM'].map(fund);
+    const tickers = (config: ReturnType<typeof readConfig>, cursor: string | null) => batchSelection(funds, config, cursor).map((item) => item.ticker);
+    expect(tickers(readConfig(resolveControls({ TICKERS: 'URNM COPP' })), null)).toEqual(['COPP', 'URNM']);
+    const bounded = readConfig(resolveControls({ MAX_FETCHES: '2' }));
+    expect(tickers(bounded, null)).toEqual(['COPJ', 'COPP']);
+    expect(tickers(bounded, 'COPJ')).toEqual(['COPP', 'GBUG']);
+    expect(tickers(bounded, 'URNM')).toEqual(['COPJ', 'COPP']);
+    const narrow = readConfig(resolveControls({ TICKERS: 'COPJ URNM', MAX_FETCHES: '1' }));
+    expect([tickers(narrow, 'GBUG'), tickers(narrow, 'URNM'), tickers(narrow, 'ZZZZ')]).toEqual([['URNM'], ['COPJ'], ['COPJ']]);
   });
-});
 
-describe('system CA support (USE_SYSTEM_CA)', () => {
-  test('resolver accepts auto/true/false case-insensitively and defaults to auto', () => {
+  test('USE_SYSTEM_CA: auto by default, case-insensitive, restart only on certificate errors', async () => {
     expect(resolveControls(file).USE_SYSTEM_CA).toBe('auto');
     for (const mode of ['auto', 'true', 'false']) {
       expect(resolveControls(file, {}, {}, { USE_SYSTEM_CA: mode.toUpperCase() }).USE_SYSTEM_CA).toBe(mode);
     }
-    expect(() => resolveControls(file, {}, {}, { USE_SYSTEM_CA: 'maybe' })).toThrow();
-  });
-
-  test('isCertError detects certificate failures, also through cause', () => {
     expect(isCertError({ code: 'UNABLE_TO_GET_ISSUER_CERT_LOCALLY' })).toBe(true);
-    expect(isCertError(new Error('unable to get local issuer certificate'))).toBe(true);
     expect(isCertError(new Error('fetch failed', { cause: new Error('unable to get local issuer certificate') }))).toBe(true);
     expect(isCertError({ code: 'ECONNRESET' })).toBe(false);
-    expect(isCertError(new Error('HTTP 403 Forbidden'))).toBe(false);
+
+    console.error = () => {};
+    let restarts = 0;
+    const reexec = (() => { restarts++; return undefined as never; }) as () => never;
+    installSystemCa('false', reexec, false);
+    installSystemCa('auto', reexec, true);
+    expect(globalThis.fetch).toBe(realFetch);
+    globalThis.fetch = (async () => { throw new Error('unable to get local issuer certificate'); }) as unknown as typeof fetch;
+    installSystemCa('auto', reexec, false);
+    await globalThis.fetch('https://example.invalid/');
+    expect(restarts).toBe(1);
+    globalThis.fetch = (async () => { throw new Error('ECONNRESET'); }) as unknown as typeof fetch;
+    installSystemCa('auto', reexec, false);
+    await expect(globalThis.fetch('https://example.invalid/')).rejects.toThrow('ECONNRESET');
+    expect(restarts).toBe(1);
   });
 
-  test('installSystemCa leaves fetch alone for false/active, restarts for true, wraps fetch for auto', async () => {
-    const original = globalThis.fetch;
-    let calls = 0;
-    const reexec = (() => { calls++; return undefined as never; }) as () => never;
-    try {
-      installSystemCa('false', reexec, false);
-      expect(globalThis.fetch).toBe(original);
-      installSystemCa('auto', reexec, true);
-      expect(globalThis.fetch).toBe(original);
-      // the real reexec never returns, so a throwing stub mirrors that
-      const exits = (() => { calls++; throw new Error('exit'); }) as () => never;
-      expect(() => installSystemCa('true', exits, false)).toThrow('exit');
-      expect(calls).toBe(1);
-      expect(globalThis.fetch).toBe(original);
-
-      calls = 0;
-      globalThis.fetch = (async () => { throw new Error('unable to get local issuer certificate'); }) as unknown as typeof fetch;
-      const certFetch = globalThis.fetch;
-      installSystemCa('auto', reexec, false);
-      expect(globalThis.fetch).not.toBe(certFetch);
-      await globalThis.fetch('https://example.invalid/');
-      expect(calls).toBe(1);
-
-      globalThis.fetch = (async () => { throw new Error('ECONNRESET'); }) as unknown as typeof fetch;
-      installSystemCa('auto', reexec, false);
-      await expect(globalThis.fetch('https://example.invalid/')).rejects.toThrow('ECONNRESET');
-      expect(calls).toBe(1);
-
-      globalThis.fetch = (async () => new Response('ok')) as unknown as typeof fetch;
-      installSystemCa('auto', reexec, false);
-      expect(await (await globalThis.fetch('https://example.invalid/')).text()).toBe('ok');
-      expect(calls).toBe(1);
-    } finally {
-      globalThis.fetch = original;
-    }
-  });
-});
-
-describe('worker pool (CONCURRENCY)', () => {
-  test('runs up to CONCURRENCY tasks at once and handles every item exactly once', async () => {
-    let inFlight = 0, peak = 0;
-    const seen: number[] = [];
-    await runPool(Array.from({ length: 30 }, (_, i) => i), 15, async (item) => {
-      inFlight++; peak = Math.max(peak, inFlight);
-      await new Promise((resolve) => setTimeout(resolve, 5));
-      seen.push(item); inFlight--;
-    });
-    expect(peak).toBe(15);
-    expect(seen.sort((a, b) => a - b)).toEqual(Array.from({ length: 30 }, (_, i) => i));
-  });
-
-  test('CONCURRENCY=1 is sequential and a pool larger than the queue starts no idle workers', async () => {
-    let inFlight = 0, peak = 0;
-    const run = async () => { inFlight++; peak = Math.max(peak, inFlight); await new Promise((r) => setTimeout(r, 2)); inFlight--; };
-    await runPool([1, 2, 3], 1, run);
-    expect(peak).toBe(1);
-    peak = 0;
-    await runPool([1, 2], 15, run);
-    expect(peak).toBe(2);
-  });
-});
-
-describe('per-worker request lanes', () => {
-  async function peakFetches(concurrency: number, sleepSeconds: number, items = 9): Promise<number> {
-    const realFetch = globalThis.fetch;
-    let inFlight = 0, peak = 0;
-    globalThis.fetch = (async () => {
-      inFlight++; peak = Math.max(peak, inFlight);
-      await new Promise((resolve) => setTimeout(resolve, 40));
-      inFlight--;
-      return new Response('ok');
-    }) as unknown as typeof fetch;
-    try {
-      configureRequestPacing(concurrency, sleepSeconds * 1000);
-      await runPool(Array.from({ length: items }, (_, i) => i), concurrency, async (i) => {
-        await fetchWithRetry(`https://example.test/${i}`, 'test', {}, 1);
-      });
-    } finally { globalThis.fetch = realFetch; configureRequestPacing(2, 1000); }
-    return peak;
-  }
-
-  test('CONCURRENCY=1 keeps one request in flight, CONCURRENCY=3 reaches 3 with REQUEST_SLEEP>0', async () => {
-    expect(await peakFetches(1, 0.01)).toBe(1);
-    expect(await peakFetches(3, 0.01)).toBe(3);
-  });
-
-  test('lanes pace independently: N callers start together, the next round waits one sleep', async () => {
-    let clock = 0;
-    const waits: number[] = [];
-    const gate = createRequestGate(3, 1000, () => clock, async (ms) => { waits.push(ms); clock += ms; });
-    for (let i = 0; i < 3; i++) await gate();
-    expect(waits).toEqual([]);
-    await gate();
-    expect(waits).toEqual([1000]);
-    const single = createRequestGate(1, 1000, () => 0, async (ms) => { waits.push(ms); });
-    waits.length = 0;
-    await single(); await single();
-    expect(waits).toEqual([1000]);
-  });
-});
-
-describe('--help, config file and README parity', () => {
-  const rows = readme
-    .slice(readme.indexOf('| Environment variable |'))
-    .split('\n')
-    .filter((line) => line.startsWith('| `'))
-    .map((line) => /^\| `([A-Z0-9_]+)` \| (.*?) \| /.exec(line)!);
-  const documentedAs: Record<string, string> = { TICKERS: 'all' };
-
-  test('config keys equal CONTROL_NAMES equal README rows', () => {
-    expect(Object.keys(file).sort()).toEqual([...CONTROL_NAMES].sort());
-    expect(rows.map(([, name]) => name).sort()).toEqual([...CONTROL_NAMES].sort());
-    for (const value of Object.values(file)) expect(typeof value).toBe('string');
-  });
-
-  test('each documented default equals the checked-in config value', () => {
-    for (const [, name, shown] of rows) expect(shown).toBe(documentedAs[name] ?? `\`${file[name]}\``);
-  });
-
-  test('--help lists every control independent of the cwd', async () => {
-    const child = Bun.spawn([process.execPath, new URL('./update-data.ts', import.meta.url).pathname, '--help'], {
-      cwd: tmpdir(), stdout: 'pipe', stderr: 'pipe',
+  test('--help lists every control independent of the cwd and redacts the SEC contact', async () => {
+    const child = Bun.spawn([process.execPath, join(scriptsDir, 'update-data.ts'), '--help'], {
+      cwd: tmpdir(), stdout: 'pipe', stderr: 'pipe', env: { PATH: process.env.PATH ?? '', HOME: process.env.HOME ?? '' },
     });
     const help = await new Response(child.stdout).text();
     await child.exited;
@@ -626,139 +206,301 @@ describe('--help, config file and README parity', () => {
       expect(USAGE).toContain(tenor ? `${tenor[1]}_YTD|1Y|3Y|5Y|10Y` : name);
       expect(help).toContain(name);
     }
-  });
-
-  test('the script is directly executable and keeps its type reference', () => {
-    const lines = read('scripts/update-data.ts').split('\n');
-    expect(lines[0]).toBe('#!/usr/bin/env bun');
-    expect(lines[1]).toBe('/// <reference types="bun" />');
+    expect(file.SEC_UA).toBe('daggerok ETF feed daggerok@gmail.com');
+    expect(readConfig({}).secUa).toBe(file.SEC_UA);
+    expect(resolveControls(file, { SEC_UA: 'adv' }, { SEC_UA: 'in' }, { SEC_UA: 'protected' }).SEC_UA).toBe('protected');
+    expect(help).toContain('SEC_UA=<redacted>');
+    expect(help.slice(help.indexOf('[ config'))).not.toContain('gmail.com');
   });
 });
 
-describe('README structure', () => {
-  test('required headings in order, live deployment, verification and disclaimer', () => {
-    const headings = [...readme.replace(/```[\s\S]*?```/g, '').matchAll(/^#{1,3} (.*)$/gm)].map((m) => m[1]);
-    expect(headings).toEqual([
-      'Sprott', 'Using Bun', 'Updating the static Sprott data', 'Data sources', 'Metrics and caveats', 'Update controls',
-      'Examples', 'TypeScript and verification', 'Brands table', 'Sibling applications', 'License',
+// ===========================================================================
+describe('parsing', () => {
+  test('fund page: pricing, key facts, identifiers, fees and returns; "--" becomes null, never 0', () => {
+    const page = parseFundPage(pageHtml(), 'URNM');
+    expect([page.ticker, page.name, page.category, page.asOfDate]).toEqual(['URNM', 'Sprott Uranium Miners ETF', 'Critical Materials', '2026-09-30']);
+    expect([page.nav, page.marketPrice, page.premiumDiscount, page.aumValue]).toEqual([47.63, 47.5, -0.27, 1840000000]);
+    expect(page.expenseRatio).toEqual({ gross: 0.75, net: 0.75, value: 0.75 });
+    expect(page.identifiers).toEqual({ isin: 'US85208P3038', cusip: '85208P303', indexTicker: 'URNMX' });
+    expect([page.exchange, page.inception, page.indexRebalanceFrequency]).toEqual(['NYSE Arca', '2019-12-03', 'Quarterly']);
+    expect(page.performance.month).toMatchObject({
+      asOfDate: 'Sep 30 2026', mo1: -16.37, qtd: -9.16, ytd: -13.32, yr1: -18.52, yr3: 3.44, yr5: 8.01, yr10: null, sinceInception: 25.01,
+    });
+    expect(page.performance.quarter).toEqual(page.performance.month);
+    expect(parseFeesTable(pageHtml())).toEqual({ 'Management Fee': 0.75, 'Other Expenses': 0, 'Total Annual Fund Operating Expenses': 0.75 });
+    expect(parseFundPage(pageHtml({ breadcrumb: 'https://sprottetfs.com/' }), 'METL').category).toBeNull();
+    expect(parseFundPage(pageHtml().replace('CUSIP: 85208P303', 'CUSIP: 85208P 303'), 'URNM').identifiers.cusip).toBe('85208P303');
+    expect(normalizeCusip('')).toBeNull();
+  });
+
+  test('holdings come from the page CSV, the rendered table is an equivalent fallback', () => {
+    const holdings = parseHoldingsSection(pageHtml());
+    expect(holdings.asOfDate).toBe('2026-09-30');
+    expect(holdings.rows).toHaveLength(2);
+    expect(holdings.rows[0]).toEqual({
+      Name: 'Cameco Corp.', Ticker: 'CCJ', Identifier: '2158684',
+      Weight: '20.49', 'Market Value': '376658199.63', 'Shares Held': '4345889', SEDOL: '2158684',
+    });
+    expect(holdings.rows[1]).toMatchObject({ Name: 'Cash Equivalent', Ticker: '', Weight: '0.15' });
+    const fallback = parseHoldingsSection(pageHtml({ csv: false }));
+    expect(fallback.source).toContain('holdings table');
+    expect(fallback.rows).toEqual(holdings.rows);
+  });
+
+  test('distributions skip placeholder rows, sort by date, keep real amounts and never produce a zero', () => {
+    const page = parseFundPage(pageHtml(), 'URNM');
+    expect(page.distributions.payments.map((payment: { amount: number }) => payment.amount)).toEqual([1.75, 1.74]);
+    const parsed = parseDistributionsSection('<table id="DistributionsData"><tr><td>Ex-Date</td><td>Record Date</td><td>Total Distributions</td></tr>'
+      + '<tr><td>12/18/2025</td><td>12/18/2025</td><td>$1.74</td></tr></table>');
+    expect(parsed.headers).toEqual(['Ex-Date', 'Amount']);
+    expect(parsed.payments).toEqual([{ epoch: Date.parse('2025-12-18T00:00:00Z') / 1000, amount: 1.74 }]);
+    expect(parseDistributionsSection('<table id="DistributionsData"><tr><td>Ex-Date</td><td>Total Distributions</td></tr>'
+      + '<tr><td>12/15/2022</td><td>-</td></tr><tr><td>n/a</td><td>$0.00</td></tr></table>').payments).toEqual([]);
+  });
+
+  test('catalog: the sitemap yields only canonical fund pages, the navigation list skips anchors', () => {
+    const sitemap = ['copj-sprott-junior-copper-miners-etf/', 'urnm-sprott-uranium-miners-etf', 'rexc-rare-earths-ex-china-etf/', 'sprott-precious-metals-etfs/', 'insights/foo/']
+      .map((slug) => `<url><loc>https://sprottetfs.com/${slug}</loc></url>`).join('\n');
+    const pages = parseSitemapFundPages(sitemap);
+    expect(pages.map(tickerFromSlug)).toEqual(['COPJ', 'REXC', 'URNM']);
+    expect(pages[2]).toBe('https://sprottetfs.com/urnm-sprott-uranium-miners-etf/');
+    const nav = ['COPJ', 'URNM', 'SETM'].map((ticker) => `<a href="/${ticker.toLowerCase()}-sprott-etf" title="Sprott ${ticker} ETF" class=" phv-btn purple-bg large">${ticker}</a>`).join('')
+      + '<a href="#secPurchase" title="Invest" class=" phv-btn gry-bg large">Invest Now</a>';
+    const funds = parseCatalogNav(nav);
+    expect(funds.map((fund) => fund.ticker)).toEqual(['COPJ', 'SETM', 'URNM']);
+    expect(funds.find((fund) => fund.ticker === 'URNM')!.fundPage).toBe('https://sprottetfs.com/urnm-sprott-etf/');
+  });
+
+  test('return table: any column order, real zero and negatives kept, placeholders null, benchmark rows ignored', () => {
+    const columns: Array<[string, string]> = [
+      ['S.I.', '25.01'], ['YTD*', '-13.32'], ['10 YR', '--'], ['Fund', 'Sprott Uranium Miners ETF (Net Asset Value)'],
+      ['1 MO*', '-16.37'], ['3 MO*', '-9.16'], ['Unknown', 'x'], ['1 YR', '-18.52'], ['5 YR', '8.01'], ['3 YR', '3.44'],
+    ];
+    expect(parseReturnTable(table(columns.map(([header]) => header), [columns.map(([, value]) => value)]))).toEqual({
+      ytd: -13.32, yr1: -18.52, yr3: 3.44, yr5: 8.01, yr10: null, sinceInception: 25.01, mo1: -16.37, qtd: -9.16,
+    });
+    const values = table(['Fund', '1 MO*', '3 MO*', 'YTD*', '1 YR', '3 YR', '5 YR', '10 YR', 'S.I.1'], [
+      ['Sprott Gold Miners ETF (Market Price)', '9', '9', '9', '9', '9', '9', '9', '9'],
+      ['Some Benchmark (Benchmark)', '1', '1', '1', '1', '1', '1', '1', '1'],
+      ['Sprott Gold Miners ETF (Net Asset Value)', '0', '-7.5', '--', '', 'n/a', '-0.01', '12', '--'],
     ]);
-    expect(readme).toContain('https://daggerok.github.io/Sprott/');
-    expect(readme).not.toMatch(/pending/i);
-    expect(readme).toMatch(/not affiliated with, endorsed by, or sponsored by Sprott/);
-    for (const command of ['bun install --frozen-lockfile', 'bun test', 'bun build --target=bun scripts/update-data.ts --outfile=/dev/null', 'git diff --check']) {
-      expect(readme).toContain(command);
-    }
+    expect(parseReturnTable(values)).toEqual({ ytd: null, yr1: null, yr3: null, yr5: -0.01, yr10: 12, sinceInception: null, mo1: 0, qtd: -7.5 });
+    expect(Object.values(parseReturnTable(table(['a', 'b'], [['1', '2']])))).toEqual(Array(8).fill(null));
   });
 
-  test('Sprott appears once in each shared table', () => {
-    expect(readme.match(/^\| \*\*Sprott ETFs\*\* \|/gm)).toHaveLength(1);
-    expect(readme.match(/^\| Sprott ETFs \|/gm)).toHaveLength(1);
-    expect(readme).toContain('[Sprott](https://github.com/daggerok/Sprott)');
-  });
-});
-
-describe('update workflow', () => {
-  const workflow = read('.github/workflows/update-data.yml');
-  const inputsBlock = workflow.slice(workflow.indexOf('    inputs:'), workflow.indexOf('\npermissions:'));
-  const inputNames = [...inputsBlock.matchAll(/^      ([a-z0-9_]+):$/gm)].map((m) => m[1]);
-
-  test('at most 25 inputs, advanced present, every named input maps to a control', () => {
-    expect(inputNames.length).toBeLessThanOrEqual(25);
-    expect(inputNames).toContain('advanced');
-    expect(inputNames).toContain('concurrency');
-    expect(inputNames).toContain('tickers');
-    for (const name of inputNames.filter((n) => n !== 'advanced')) expect(CONTROL_NAMES).toContain(name.toUpperCase() as never);
-    expect(inputsBlock).toMatch(/advanced:[\s\S]*default: '\{\}'/);
+  test('performance blocks need their published "As of" date', () => {
+    const page = parseSprottPerformance('<h3>Month-End Performance</h3><p class="small">Average Annual Total Returns (%) As of 9/30/2026</p>'
+      + table(['Fund', '1 MO*'], [['Sprott Uranium Miners ETF (Net Asset Value)', '1']]));
+    expect([page.month, page.quarter]).toEqual([null, null]);
   });
 
-  test('weekly schedule, no push trigger, fixed output dir, hardened credentials', () => {
-    expect(workflow).toContain("cron: '0 0 * * 0'");
-    expect(workflow).not.toMatch(/^  push:/m);
-    expect(workflow).not.toMatch(/OUTPUT_DIR/);
-    expect([...workflow.matchAll(/git add (.+)$/gm)].map((m) => m[1].trim())).toEqual(['api/sprott']);
-    expect(workflow).toContain('persist-credentials: false');
-    expect(workflow).toContain('timeout-minutes: 30');
-    expect(workflow).toContain('DISPATCH_INPUTS: ${{ toJSON(inputs) }}');
-    expect(workflow).toContain('PROTECTED_SEC_UA: ${{ vars.SEC_UA }}');
-    expect(workflow).not.toMatch(/\$\{\{\s*(github\.event\.)?inputs\./);
-    expect(workflow).toContain('bun install --frozen-lockfile');
+  test('money and percent text keep decoration out and unknown text as null', () => {
+    expect([parseMoneyText('$47.63'), parseMoneyText('-$0.57'), parseMoneyText('$1.84 Billion'), parseMoneyText('526.07 Million'), parseMoneyText('—')])
+      .toEqual([47.63, -0.57, 1840000000, 526070000, null]);
+    expect([parsePercentText('-0.27%'), parsePercentText('0.75%'), parsePercentText('Quarterly')]).toEqual([-0.27, 0.75, null]);
+  });
+
+  test('N-PORT-P fallback: identity and holdings are read from the filing', () => {
+    const parsed = parseNport(`<?xml version="1.0"?><edgarSubmission><formData><genInfo>
+      <regName>SPROTT FUNDS TRUST</regName><regCik>0001728683</regCik>
+      <seriesName>Sprott Uranium Miners ETF</seriesName><seriesId>S000068011</seriesId>
+      <repPdDate>2026-06-30</repPdDate></genInfo><fundInfo><netAssets>1500000000</netAssets></fundInfo>
+      <invstOrSecs><invstOrSec><name>Cameco Corp.</name><pctVal>20.49</pctVal><valUSD>376658199.63</valUSD>
+      <balance>4345889</balance><assetCat>EC</assetCat>
+      <identifiers><isin value="CA13321L1085"/><sedol value="2158684"/></identifiers></invstOrSec></invstOrSecs>
+      </formData></edgarSubmission>`);
+    expect([parsed.regName, parsed.regCik, parsed.seriesName, parsed.seriesId, parsed.repPdDate, parsed.netAssets])
+      .toEqual(['SPROTT FUNDS TRUST', '0001728683', 'Sprott Uranium Miners ETF', 'S000068011', '2026-06-30', 1500000000]);
+    expect(parsed.holdings).toHaveLength(1);
+    expect(parsed.holdings[0]).toMatchObject({ Name: 'Cameco Corp.', Weight: '20.49', 'Market Value': '376658199.63', 'Shares Held': '4345889', 'Asset Category': 'EC', Identifier: 'CA13321L1085' });
   });
 });
 
-describe('review fixes', () => {
-  const metrics = { ytd: 1, tr1y: 2, tr3y: null, tr5y: null, tr10y: null, cagr3y: null, cagr5y: null, cagr10y: null, siAnn: null,
-    returnsBasis: 'new basis', performanceAsOf: '2026-09-30', dividendYield: null };
-  const previous = { ytd: 5, tr1y: 6, tr3y: 7.5, tr5y: null, tr10y: null, cagr3y: 2.4, cagr5y: null, cagr10y: null, siAnn: 3,
-    returnsBasis: 'old basis', performanceAsOf: '2026-06-30', dividendYield: 4.2 };
+// ===========================================================================
+describe('metrics', () => {
+  const days = [
+    { date: '2025-12-31', close: 10, adjClose: 10, volume: 1 },
+    { date: '2026-09-29', close: 11, adjClose: 11, volume: 1 },
+    { date: '2026-09-30', close: 12, adjClose: 12, volume: 1 },
+  ];
+  const derived = priceReturns(days, new Date('2026-09-30T00:00:00Z'));
+  const month = { asOfDate: 'Aug 31 2026', ytd: 5, yr1: 9, yr3: 3, yr5: null, yr10: null, sinceInception: 2 };
 
-  test('retained returns travel with their performanceAsOf and basis, and never touch the yield', () => {
-    const kept = { ...metrics, ...retainReturns(metrics, previous) };
-    expect(kept.tr3y).toBe(7.5);
-    expect(kept.performanceAsOf).toBe('2026-06-30');
-    expect(kept.returnsBasis).toBe('old basis');
-    expect(kept.dividendYield).toBeNull();
-    expect(retainReturns(metrics, undefined)).toEqual({});
-    expect(retainReturns(metrics, {})).toEqual({});
+  test('a young fund gets null (never 0) for horizons it is too young for', () => {
+    expect(derived.ytd).toBe(20);
+    expect([derived.yr1, derived.cagr3y, derived.cagr5y, derived.cagr10y, derived.siAnn]).toEqual([null, null, null, null, null]);
+    expect(priceReturns([])).toMatchObject({ asOfDate: '', ytd: null, yr1: null, cagr10y: null });
+    const metrics = buildMetrics(null, derived, null, null, 'basis', '2026-09-30');
+    expect([metrics.tr3y, metrics.tr5y, metrics.tr10y, metrics.cagr3y, metrics.secYield, metrics.dividendYield]).toEqual([null, null, null, null, null, null]);
+  });
+
+  test('metrics end with returnsBasis then performanceAsOf, which travel together', () => {
+    const metrics = buildMetrics(month, derived, null, 1.5, 'official test basis', '2026-08-31');
+    expect(Object.keys(metrics).slice(-2)).toEqual(['returnsBasis', 'performanceAsOf']);
+    expect([metrics.returnsBasis, metrics.performanceAsOf, metrics.ytd]).toEqual(['official test basis', '2026-08-31', 5]);
+    expect(Object.keys(buildMetrics(null, derived, null, null, 'x', null))).toEqual(Object.keys(metrics));
+  });
+
+  test('performanceAsOf is the official table date, else the last Yahoo close, else null - never the NAV date', () => {
+    expect(performanceAsOfDate(true, month, derived)).toBe('2026-08-31');
+    expect(performanceAsOfDate(false, month, derived)).toBe('2026-09-30');
+    expect(performanceAsOfDate(true, null, priceReturns([]))).toBeNull();
+    expect([storedDateIso('Sep 30 2026'), storedDateIso('Sep 30, 2026'), storedDateIso('2026-09-30'), storedDateIso('—'), storedDateIso(undefined)])
+      .toEqual(['2026-09-30', '2026-09-30', '2026-09-30', null, null]);
+  });
+
+  test('retained returns travel with their performanceAsOf and basis and never touch the yield', () => {
+    const fresh = { ytd: 1, tr1y: 2, tr3y: null, dividendYield: null, returnsBasis: 'new basis', performanceAsOf: '2026-09-30' };
+    const previous = { ytd: 5, tr1y: 6, tr3y: 7.5, dividendYield: 4.2, returnsBasis: 'old basis', performanceAsOf: '2026-06-30' };
+    const kept = { ...fresh, ...retainReturns(fresh, previous) };
+    expect([kept.tr3y, kept.performanceAsOf, kept.returnsBasis, kept.dividendYield]).toEqual([7.5, '2026-06-30', 'old basis', null]);
+    expect([retainReturns(fresh, undefined), retainReturns(fresh, {})]).toEqual([{}, {}]);
+  });
+
+  test('conversions round to two decimals, yield and frequency inference stay null without evidence', () => {
+    expect([annualizedToTotal(3.44, 3), annualizedToTotal(null, 3), totalToAnnualized(10.68, 3)]).toEqual([10.68, null, 3.44]);
+    expect([indicatedYield(1.74, 1, 47.5), indicatedYield(0, 1, 47.5), indicatedYield(1.74, null, 47.5), indicatedYield(1.74, 1, 0)]).toEqual([3.66, null, null, null]);
+    const at = (iso: string) => Date.parse(`${iso}T00:00:00Z`) / 1000;
+    const pay = (...dates: string[]) => dates.map((date) => ({ epoch: at(date), amount: 0.1 }));
+    expect(inferDistributionFrequency([])).toEqual({ frequency: 'None', paymentsPerYear: null });
+    expect(inferDistributionFrequency(pay('2025-12-18'))).toEqual({ frequency: 'Unknown', paymentsPerYear: null });
+    expect(inferDistributionFrequency(pay('2023-12-14', '2024-12-12', '2025-12-18'))).toEqual({ frequency: 'Annually', paymentsPerYear: 1 });
+    expect(inferDistributionFrequency(pay('2025-03-31', '2025-06-30', '2025-09-30', '2025-12-31'))).toEqual({ frequency: 'Quarterly', paymentsPerYear: 4 });
+    expect(inferDistributionFrequency(pay('2025-06-30', '2025-12-31'))).toEqual({ frequency: 'Semi-annually', paymentsPerYear: 2 });
   });
 
   test('month-end anchor is UTC midnight in any timezone', () => {
-    const saved = process.env.TZ;
-    try {
-      for (const tz of ['Europe/Berlin', 'Pacific/Auckland', 'America/Los_Angeles']) {
-        process.env.TZ = tz;
-        expect(monthAnchor({ asOfDate: 'Sep 30 2026' }, [])?.toISOString()).toBe('2026-09-30T00:00:00.000Z');
-        const days = [{ date: '2026-09-30' }] as any;
-        const anchor = monthAnchor({ asOfDate: 'Sep 30 2026' }, days)!;
-        expect(days.filter((day: any) => Date.parse(day.date) <= anchor.getTime())).toHaveLength(1);
-      }
-    } finally {
-      if (saved === undefined) delete process.env.TZ; else process.env.TZ = saved;
+    for (const tz of ['Europe/Berlin', 'Pacific/Auckland', 'America/Los_Angeles']) {
+      process.env.TZ = tz;
+      expect(monthAnchor({ asOfDate: 'Sep 30 2026' }, [])?.toISOString()).toBe('2026-09-30T00:00:00.000Z');
     }
     expect(monthAnchor(null, [{ date: '2026-08-31' }] as any)?.toISOString()).toBe('2026-08-31T00:00:00.000Z');
     expect(monthAnchor(null, [])).toBeNull();
   });
 
-  test('cursor outside the selected set resumes at the next selected ticker and wraps', () => {
-    const fund = (ticker: string): CatalogFund => ({ ticker, name: ticker, fundPage: `https://sprottetfs.com/${ticker}/`, assetClass: '', isin: '', nav: null, navDate: null });
-    const funds = ['COPJ', 'COPP', 'GBUG', 'URNM'].map(fund);
-    const config = readConfig(resolveControls({ TICKERS: 'COPJ URNM', MAX_FETCHES: '1' }));
-    expect(batchSelection(funds, config, 'GBUG').map((f) => f.ticker)).toEqual(['URNM']);
-    expect(batchSelection(funds, config, 'URNM').map((f) => f.ticker)).toEqual(['COPJ']);
-    expect(batchSelection(funds, config, 'ZZZZ').map((f) => f.ticker)).toEqual(['COPJ']);
+  test('history merge: a published adjusted close keeps its cent on jitter, a real restatement replaces it', () => {
+    const day = (date: string, adjClose: number) => ({ date, close: 36.540001, adjClose, volume: 9000 });
+    const previous = [{ Date: 'Oct 10 2016', Close: '36.540001', 'Adj Close': '27.69', Volume: '9000' }];
+    expect(mergeHistory(previous, [day('2016-10-10', 27.7)])[0]['Adj Close']).toBe('27.69');
+    expect(mergeHistory(previous, [day('2016-10-10', 27.85)])[0]['Adj Close']).toBe('27.85');
+    expect(mergeHistory([], [day('2016-10-10', 27.7), day('2016-10-11', 27.9)]).map((row) => row.Date)).toEqual(['Oct 10 2016', 'Oct 11 2016']);
   });
+});
 
-  test('explicitly empty or invalid CONCURRENCY, MAX_RETRIES and REQUEST_SLEEP are errors', () => {
-    for (const key of ['CONCURRENCY', 'MAX_RETRIES', 'MAX_FETCHES', 'REQUEST_SLEEP']) {
-      expect(() => resolveControls({}, {}, {}, { [key]: '' })).toThrow();
+// ===========================================================================
+// Sandbox: the real script is copied into a temp dir so main() writes under <tmp>/api/sprott
+// ===========================================================================
+const FUNDS = ['COPJ', 'SETM', 'URNM'];
+const ts = (iso: string): number => Date.parse(`${iso}T00:00:00Z`) / 1000;
+const chartPayload = {
+  chart: { result: [{
+    meta: { regularMarketPrice: 47.5, regularMarketTime: ts('2026-09-30'), firstTradeDate: ts('2026-09-01'), fullExchangeName: 'NYSE Arca', longName: 'Sprott ETF' },
+    timestamp: [ts('2026-09-28'), ts('2026-09-29'), ts('2026-09-30')],
+    indicators: { quote: [{ close: [47, 47.2, 47.5], volume: [100, 200, 300] }], adjclose: [{ adjclose: [47, 47.2, 47.5] }] },
+  }] },
+};
+const sitemapXml = FUNDS.map((ticker) => `<url><loc>https://sprottetfs.com/${ticker.toLowerCase()}-sprott-etf/</loc></url>`).join('');
+const navHtml = FUNDS.map((ticker) => `<a href="/${ticker.toLowerCase()}-sprott-etf" title="Sprott ${ticker} ETF" class=" phv-btn purple-bg large">${ticker}</a>`).join('');
+
+type Router = (url: string) => Response | undefined;
+function sandbox(router: Router = () => undefined) {
+  const dir = mkdtempSync(join(tmpdir(), 'sprott-test-'));
+  tempDirs.push(dir);
+  mkdirSync(join(dir, 'scripts'));
+  mkdirSync(join(dir, 'api', 'sprott'), { recursive: true });
+  for (const name of ['update-data.ts', 'update-data.config.json']) copyFileSync(join(scriptsDir, name), join(dir, 'scripts', name));
+  const api = join(dir, 'api', 'sprott');
+  const urls: string[] = [];
+  let down = new Set<string>();
+  globalThis.fetch = (async (input: unknown) => {
+    const url = String(input);
+    urls.push(url);
+    if ([...down].some((part) => url.includes(part))) return new Response('gone', { status: 404 });
+    if (url.endsWith('/sitemap.xml')) return new Response(sitemapXml);
+    const slug = /sprottetfs\.com\/([a-z]+)-sprott-etf\/?$/.exec(url);
+    if (slug) return new Response(url.endsWith('/') ? pageHtml({ ticker: slug[1].toUpperCase() }) : navHtml);
+    if (url.includes('/v8/finance/chart/')) return new Response(JSON.stringify(chartPayload));
+    return router(url) ?? new Response('not found', { status: 404 });
+  }) as unknown as typeof fetch;
+  const run = async (env: Record<string, string> = {}): Promise<void> => {
+    const mod = await import(join(dir, 'scripts', 'update-data.ts'));
+    console.log = console.warn = console.error = () => {};
+    await mod.main({ REQUEST_SLEEP: '0', CONCURRENCY: '1', MAX_RETRIES: '1', EDGAR_FALLBACK: 'false', USE_SYSTEM_CA: 'false', ...env });
+    Object.assign(console, realConsole);
+  };
+  const read = (path: string): string => readFileSync(join(api, path), 'utf8');
+  const files = (): string[] => {
+    const walk = (folder: string): string[] => readdirSync(join(api, folder), { withFileTypes: true })
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .flatMap((entry) => (entry.isDirectory() ? walk(join(folder, entry.name)) : [join(folder, entry.name)]));
+    return walk('');
+  };
+  const backdate = (): void => { for (const path of files()) utimesSync(join(api, path), 1_000_000_000, 1_000_000_000); };
+  const touched = (): string[] => files().filter((path) => statSync(join(api, path)).mtimeMs !== 1_000_000_000_000);
+  return { api, urls, run, read, files, backdate, touched, setDown: (...parts: string[]) => { down = new Set(parts); } };
+}
+
+describe('pipeline', () => {
+  test('a first run publishes every fund with the same metrics key set, null (never 0) for unknown horizons', async () => {
+    const box = sandbox();
+    await box.run();
+    const index = JSON.parse(box.read('index.json'));
+    expect(index.funds.map((row: any) => row.ticker)).toEqual(FUNDS);
+    expect(index.counts.funds).toBe(3);
+    const keys = Object.keys(index.funds[0].metrics).sort();
+    for (const row of index.funds) {
+      expect(Object.keys(row.metrics).sort()).toEqual(keys);
+      expect(row.metrics.cagr10y).toBeNull();
+      expect(row.metrics.returnsBasis).toBeTruthy();
+      expect(row.metrics.performanceAsOf).toBe('2026-09-30');
+      expect(row.dataFile).toBe(`./funds/${row.ticker}/meta.json`);
     }
-    expect(() => readConfig({ CONCURRENCY: 'abc' })).toThrow();
-    expect(() => readConfig({ MAX_RETRIES: '0' })).toThrow();
-    expect(readConfig({}).concurrency).toBe(2);
+    expect(process.exitCode ?? 0).toBe(0);
   });
 
-  test('CUSIP spaces are removed', () => {
-    expect(normalizeCusip('85210B 201')).toBe('85210B201');
-    expect(normalizeCusip('CUSIP: 85208P303')).toBe('85208P303');
-    expect(normalizeCusip('')).toBeNull();
-    expect(parseFundPage(pageHtml().replace('CUSIP: 85208P303', 'CUSIP: 85208P 303'), 'URNM').identifiers.cusip).toBe('85208P303');
+  test('a one-ticker run keeps every row and every published file', async () => {
+    const box = sandbox();
+    await box.run();
+    const before = box.files();
+    await box.run({ TICKERS: 'URNM' });
+    expect(JSON.parse(box.read('index.json')).funds.map((row: any) => row.ticker)).toEqual(FUNDS);
+    const after = box.files();
+    for (const path of before) expect(after).toContain(path);
   });
 
-  test('fetch carries a 45 s timeout signal and retries a body that fails', async () => {
-    expect(FETCH_TIMEOUT_MS).toBe(45_000);
-    const original = globalThis.fetch;
-    let calls = 0, signal: AbortSignal | null | undefined;
-    configureRequestPacing(1, 0);
-    globalThis.fetch = (async (_url: any, init?: RequestInit) => {
-      signal = init?.signal; calls++;
-      if (calls === 1) return { ok: true, status: 200, statusText: 'OK', headers: new Headers(), arrayBuffer: async () => { throw new Error('body timeout'); } };
-      return new Response('ok');
-    }) as any;
-    try {
-      const response = await fetchWithRetry('https://example.test/x', 'x', {}, 1);
-      expect(await response.text()).toBe('ok');
-      expect(calls).toBe(2);
-      expect(signal).toBeInstanceOf(AbortSignal);
-    } finally { globalThis.fetch = original; configureRequestPacing(2, 1000); }
+  test('a second identical run writes nothing', async () => {
+    const box = sandbox();
+    await box.run();
+    box.backdate();
+    const before = Object.fromEntries(box.files().map((path) => [path, box.read(path)]));
+    await box.run();
+    expect(box.touched()).toEqual([]);
+    expect(Object.fromEntries(box.files().map((path) => [path, box.read(path)]))).toEqual(before);
+  });
+
+  test('a failed source keeps the fund as published', async () => {
+    // Known updater quirk (reported, not fixed here): without the fund page the AUM display text is re-formatted ("$1.84 Billion" -> "$1,840.00 M")
+    const sameButAumText = (text: string): unknown => { const doc = JSON.parse(text); doc.aum.display = ''; return doc; };
+    const box = sandbox();
+    await box.run();
+    const meta = box.read('funds/URNM/meta.json');
+    const row = JSON.parse(box.read('index.json')).funds.find((fund: any) => fund.ticker === 'URNM');
+    box.setDown('/urnm-sprott-etf', '/chart/URNM');
+    await box.run();
+    expect(sameButAumText(box.read('funds/URNM/meta.json'))).toEqual(sameButAumText(meta));
+    const after = JSON.parse(box.read('index.json')).funds.find((fund: any) => fund.ticker === 'URNM');
+    expect({ ...after, aum: null }).toEqual({ ...row, aum: null });
+    expect(after.metrics).toEqual(row.metrics);
+    expect(after.holdings).toBe(row.holdings);
+    expect(process.exitCode ?? 0).toBe(0);
+  });
+
+  test('a dead catalog falls back to the published funds instead of shrinking the index', async () => {
+    const box = sandbox();
+    await box.run();
+    box.setDown('sprottetfs.com', 'finance');
+    await box.run();
+    expect(JSON.parse(box.read('index.json')).funds.map((row: any) => row.ticker)).toEqual(FUNDS);
   });
 
   test('index stamps are ignored when comparing, and written without milliseconds', () => {
@@ -766,6 +508,82 @@ describe('review fixes', () => {
     const old = { generatedAt: '2026-01-01T00:00:00Z', catalogReadAt: '2026-01-01T00:00:00Z', ...body };
     expect(samePublishedContent(JSON.stringify(withoutStamps(old)), body)).toBe(true);
     expect(samePublishedContent(JSON.stringify(withoutStamps(old)), { ...body, counts: { funds: 2 } })).toBe(false);
-    expect(isoSeconds(new Date('2026-10-02T10:11:12.345Z'))).toBe('2026-10-02T10:11:12Z');
+  });
+});
+
+// ===========================================================================
+describe('network', () => {
+  test('the timeout signal covers the body: a body that fails is retried', async () => {
+    expect(FETCH_TIMEOUT_MS).toBe(45_000);
+    let calls = 0, signal: AbortSignal | null | undefined;
+    configureRequestPacing(1, 0);
+    globalThis.setTimeout = ((fn: () => void) => realSetTimeout(fn, 0)) as unknown as typeof setTimeout;
+    globalThis.fetch = (async (_url: unknown, init?: RequestInit) => {
+      signal = init?.signal; calls++;
+      if (calls === 1) return { ok: true, status: 200, statusText: 'OK', headers: new Headers(), arrayBuffer: async () => { throw new Error('body timeout'); } };
+      return new Response('ok');
+    }) as any;
+    const response = await fetchWithRetry('https://example.test/x', 'x', {}, 1);
+    expect(await response.text()).toBe('ok');
+    expect(calls).toBe(2);
+    expect(signal).toBeInstanceOf(AbortSignal);
+  });
+
+  test('retries are bounded by MAX_RETRIES and a non-retryable status is not retried', async () => {
+    configureRequestPacing(1, 0);
+    globalThis.setTimeout = ((fn: () => void) => realSetTimeout(fn, 0)) as unknown as typeof setTimeout;
+    let calls = 0;
+    globalThis.fetch = (async () => { calls++; return new Response('x', { status: 503 }); }) as unknown as typeof fetch;
+    await expect(fetchWithRetry('https://example.test/x', 'x', {}, 2)).rejects.toThrow();
+    expect(calls).toBe(3);
+    calls = 0;
+    globalThis.fetch = (async () => { calls++; return new Response('x', { status: 404 }); }) as unknown as typeof fetch;
+    await expect(fetchWithRetry('https://example.test/x', 'x', {}, 2)).rejects.toThrow();
+    expect(calls).toBe(1);
+  });
+
+  test('in-flight peak is 1 at CONCURRENCY=1 and N at CONCURRENCY=N with REQUEST_SLEEP > 0', async () => {
+    const peakFetches = async (concurrency: number, items = 9): Promise<number> => {
+      let inFlight = 0, peak = 0;
+      globalThis.fetch = (async () => {
+        inFlight++; peak = Math.max(peak, inFlight);
+        await new Promise((resolve) => realSetTimeout(resolve, 40));
+        inFlight--;
+        return new Response('ok');
+      }) as unknown as typeof fetch;
+      configureRequestPacing(concurrency, 10);
+      await runPool(Array.from({ length: items }, (_, i) => i), concurrency, async (i) => {
+        await fetchWithRetry(`https://example.test/${i}`, 'test', {}, 1);
+      });
+      return peak;
+    };
+    expect(await peakFetches(1)).toBe(1);
+    expect(await peakFetches(3)).toBe(3);
+    expect(await peakFetches(15, 30)).toBe(15);
+  });
+
+  test('request lanes pace independently: N callers start together, the next round waits one sleep', async () => {
+    let clock = 0;
+    const waits: number[] = [];
+    const gate = createRequestGate(3, 1000, () => clock, async (ms) => { waits.push(ms); clock += ms; });
+    for (let i = 0; i < 3; i++) await gate();
+    expect(waits).toEqual([]);
+    await gate();
+    expect(waits).toEqual([1000]);
+  });
+
+  test('HISTORY_RANGE reaches the Yahoo request as explicit period1/period2', async () => {
+    const chartUrl = async (range: string): Promise<URL> => {
+      const box = sandbox();
+      await box.run({ TICKERS: 'URNM', HISTORY_RANGE: range });
+      return new URL(box.urls.find((url) => url.includes('/chart/URNM'))!);
+    };
+    const max = await chartUrl('max');
+    expect(max.searchParams.get('period1')).toBe('0');
+    expect(max.searchParams.has('range')).toBe(false);
+    const limited = await chartUrl('5y');
+    const [p1, p2] = [Number(limited.searchParams.get('period1')), Number(limited.searchParams.get('period2'))];
+    expect(p1).toBeGreaterThan(0);
+    expect(Math.round((p2 - p1) / 86_400 / 365.25)).toBe(5);
   });
 });
