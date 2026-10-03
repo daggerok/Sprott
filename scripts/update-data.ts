@@ -149,6 +149,8 @@ const SPROTT_TRUST_CIK = '0001728683';
 const API_ROOT = new URL('../api/sprott/', import.meta.url);
 const INDEX_FILE = new URL('index.json', API_ROOT);
 const STATE_FILE = new URL('update-state.json', API_ROOT);
+// Workflow timeout is 30 min: stop starting funds after 25 min, then still write the index.
+const SOFT_DEADLINE_MS = 25 * 60 * 1000;
 const HOLDINGS_PAGE_SIZE_FALLBACK = 250;
 const HISTORY_PAGE_SIZE_FALLBACK = 1000;
 const CONCURRENCY_FALLBACK = 2;
@@ -301,14 +303,17 @@ function envValue(env: Record<string, string | undefined>, name: string, aliases
   return '';
 }
 
-function parsePositiveInt(raw: string, fallback: number): number {
-  const value = Number.parseInt(raw, 10);
-  return Number.isFinite(value) && value > 0 ? value : fallback;
+function parsePositiveInt(raw: string, fallback: number, name = 'value'): number {
+  if (raw === '') return fallback;
+  if (!/^\d+$/.test(raw) || Number(raw) < 1) throw new Error(`${name}: expected integer >= 1, got "${raw}"`);
+  return Number(raw);
 }
 
-function parseNonNegativeFloat(raw: string, fallback: number): number {
-  const value = raw.trim() === '' ? NaN : Number(raw);
-  return Number.isFinite(value) && value >= 0 ? value : fallback;
+function parseNonNegativeFloat(raw: string, fallback: number, name = 'value'): number {
+  if (raw.trim() === '') return fallback;
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value < 0) throw new Error(`${name}: expected nonnegative number, got "${raw}"`);
+  return value;
 }
 
 function parseBoolean(raw: string, fallback = false): boolean {
@@ -389,13 +394,13 @@ function parseRanges(env: Record<string, string | undefined>, prefix: 'PERFORMAN
 
 export function readConfig(env: Record<string, string | undefined> = process.env): UpdaterConfig {
   return {
-    concurrency: parsePositiveInt(envValue(env, 'CONCURRENCY'), CONCURRENCY_FALLBACK),
-    requestSleep: parseNonNegativeFloat(envValue(env, 'REQUEST_SLEEP'), REQUEST_SLEEP_FALLBACK),
-    maxFetches: parsePositiveInt(envValue(env, 'MAX_FETCHES', ['SPROTT_LIMIT']), 0),
-    holdingsPageSize: parsePositiveInt(envValue(env, 'HOLDINGS_PAGE_SIZE'), HOLDINGS_PAGE_SIZE_FALLBACK),
-    historyPageSize: parsePositiveInt(envValue(env, 'HISTORY_PAGE_SIZE', ['HISTORICAL_PAGE_SIZE']), HISTORY_PAGE_SIZE_FALLBACK),
+    concurrency: parsePositiveInt(envValue(env, 'CONCURRENCY'), CONCURRENCY_FALLBACK, 'CONCURRENCY'),
+    requestSleep: parseNonNegativeFloat(envValue(env, 'REQUEST_SLEEP'), REQUEST_SLEEP_FALLBACK, 'REQUEST_SLEEP'),
+    maxFetches: envValue(env, 'MAX_FETCHES', ['SPROTT_LIMIT']) === '0' ? 0 : parsePositiveInt(envValue(env, 'MAX_FETCHES', ['SPROTT_LIMIT']), 0, 'MAX_FETCHES'),
+    holdingsPageSize: parsePositiveInt(envValue(env, 'HOLDINGS_PAGE_SIZE'), HOLDINGS_PAGE_SIZE_FALLBACK, 'HOLDINGS_PAGE_SIZE'),
+    historyPageSize: parsePositiveInt(envValue(env, 'HISTORY_PAGE_SIZE', ['HISTORICAL_PAGE_SIZE']), HISTORY_PAGE_SIZE_FALLBACK, 'HISTORY_PAGE_SIZE'),
     storeRawDownloads: parseBoolean(envValue(env, 'STORE_RAW_DOWNLOADS', ['SPROTT_STORE_RAW_DOWNLOADS']), false),
-    maxRetries: parsePositiveInt(envValue(env, 'MAX_RETRIES'), MAX_RETRIES_FALLBACK),
+    maxRetries: parsePositiveInt(envValue(env, 'MAX_RETRIES'), MAX_RETRIES_FALLBACK, 'MAX_RETRIES'),
     tickers: envValue(env, 'TICKERS')
       .split(/[\s,;]+/)
       .map(sanitizeTicker)
@@ -428,6 +433,7 @@ function errorMessage(error: unknown): string {
   return message.replace(/^\[[^\]]*\] ?/, '');
 }
 
+export const FETCH_TIMEOUT_MS = 45_000;
 export async function fetchWithRetry(
   url: string,
   label: string,
@@ -438,8 +444,9 @@ export async function fetchWithRetry(
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     await paceRequests();
     try {
-      const response = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(30_000), ...init });
-      if (response.ok) return response;
+      const response = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(FETCH_TIMEOUT_MS), ...init });
+      // Read the body inside the retry loop: the timeout signal covers headers AND body.
+      if (response.ok) return new Response(await response.arrayBuffer(), { status: response.status, statusText: response.statusText, headers: response.headers });
       const retryable = [403, 408, 425, 429].includes(response.status) || response.status >= 500;
       if (!retryable) throw new HttpError(`${label}: HTTP ${response.status} ${response.statusText}`, response.status, false);
       lastError = new HttpError(`${label}: HTTP ${response.status} (attempt ${attempt + 1} of ${maxRetries + 1})`, response.status, true);
@@ -1095,7 +1102,6 @@ async function writePages(
       pages.push(name);
     }
   }
-  await removeStalePages(dir, kind, new Set(pages));
   return { pages, pageSize, totalRows: rows.length };
 }
 
@@ -1179,6 +1185,13 @@ export function configureRequestPacing(concurrency: number, sleepMs: number): vo
   paceRequests = createRequestGate(concurrency, sleepMs);
 }
 
+/** Index content without the run stamps; a rerun with identical data must not move them. */
+export function withoutStamps(index: unknown): unknown {
+  if (!index || typeof index !== 'object') return index;
+  const { generatedAt: _g, catalogReadAt: _c, ...rest } = index as JsonRecord;
+  return rest;
+}
+export function isoSeconds(date = new Date()): string { return date.toISOString().replace(/\.\d{3}Z$/, 'Z'); }
 export function samePublishedContent(previous: string, value: unknown): boolean {
   try { return outputContentKey(JSON.parse(previous)) === outputContentKey(value); }
   catch { return false; }
@@ -1587,6 +1600,11 @@ export function parseSprottPerformance(html: unknown): { month: JsonRecord | nul
   return { month: block('Month-End Performance', 'Quarter-End Performance'), quarter: block('Quarter-End Performance', null) };
 }
 
+/** CUSIPs are 9 characters without spaces ("85210B 201" -> "85210B201"). */
+export function normalizeCusip(raw: unknown): string | null {
+  const text = String(raw ?? '').replace(/^\s*CUSIP\s*:?/i, '').replace(/\s+/g, '').toUpperCase();
+  return text || null;
+}
 export function parseFundPage(html: unknown, ticker: string): JsonRecord {
   const source = String(html ?? '');
   const labels = parseLabelValues(source);
@@ -1609,7 +1627,7 @@ export function parseFundPage(html: unknown, ticker: string): JsonRecord {
     expenseRatio: { gross, net, value: net ?? gross },
     identifiers: {
       isin: (labels.ISIN ?? '').replace(/^ISIN\s*:?\s*/i, '') || null,
-      cusip: (labels.CUSIP ?? '').replace(/^CUSIP\s*:?\s*/i, '') || null,
+      cusip: normalizeCusip(labels.CUSIP),
       indexTicker: labels['Benchmark Index'] ?? null,
     },
     exchange: labels['Listing Exchange'] ?? null,
@@ -1738,6 +1756,18 @@ export function performanceAsOfDate(official: boolean, month: JsonRecord | null,
   return table ?? (derived.asOfDate ? storedDateIso(derived.asOfDate) : null);
 }
 
+/** Month-end anchor as a UTC midnight: "Sep 30 2026" must not depend on the machine's timezone. */
+export function monthAnchor(month: JsonRecord | null, days: ChartDay[]): Date | null {
+  const iso = month?.asOfDate ? storedDateIso(month.asOfDate) : null;
+  if (iso) return new Date(`${iso}T00:00:00Z`);
+  return days.length ? new Date(`${days.at(-1)!.date}T00:00:00Z`) : null;
+}
+const RETURN_KEYS = ['ytd', 'tr1y', 'tr3y', 'tr5y', 'tr10y', 'cagr3y', 'cagr5y', 'cagr10y', 'siAnn', 'returnsBasis', 'performanceAsOf'];
+/** Previous return metrics as one unit (values + returnsBasis + performanceAsOf), or nothing when none were published. */
+export function retainReturns(metrics: JsonRecord, previous: JsonRecord | null | undefined): JsonRecord {
+  if (!previous || previous.performanceAsOf === undefined) return {};
+  return Object.fromEntries(RETURN_KEYS.filter((key) => previous[key] !== undefined).map((key) => [key, previous[key]]));
+}
 export function buildMetrics(month:JsonRecord|null,derived:PriceReturns,secYield:number|null,divYield:number|null,returnsBasis:string,performanceAsOf:string|null):JsonRecord {
   const ytd=month?.ytd??derived.ytd, tr1y=month?.yr1??derived.yr1;
   const cagr3y=month?.yr3??derived.cagr3y,cagr5y=month?.yr5??derived.cagr5y,cagr10y=month?.yr10??derived.cagr10y;
@@ -1810,10 +1840,11 @@ async function processFund(fund: CatalogFund, config: UpdaterConfig, previousInd
   const premium = page?.premiumDiscount ?? (nav !== null && nav > 0 && price !== null && navDate && priceDate && navDate === priceDate
     ? round((price / nav - 1) * 100, 2)
     : old.premiumDiscount?.value ?? null);
-  const divYield = indicatedYield(latest?.amount ?? null, frequency.paymentsPerYear, price) ?? old.yields?.dividendYield ?? null;
+  // Retain the old yield only when no source answered at all; an honest null (unknown frequency) stays null.
+  const divYield = indicatedYield(latest?.amount ?? null, frequency.paymentsPerYear, price) ?? (page || chart ? null : old.yields?.dividendYield ?? null);
   let month: JsonRecord | null = page?.performance?.month ?? old.returns?.monthEnd ?? null;
   const quarter: JsonRecord | null = page?.performance?.quarter ?? old.returns?.quarterEnd ?? null;
-  const anchor = month?.asOfDate ? new Date(Date.parse(month.asOfDate)) : days.length ? new Date(`${days.at(-1)!.date}T00:00:00Z`) : null;
+  const anchor = monthAnchor(month, days);
   const usable = anchor ? days.filter((day) => Date.parse(day.date) <= anchor.getTime()) : [];
   const derived = usable.length ? priceReturns(usable, anchor!) : { ...EMPTY_PRICE_RETURNS };
   // A range-limited Yahoo download is not a since-inception return.
@@ -1827,9 +1858,9 @@ async function processFund(fund: CatalogFund, config: UpdaterConfig, previousInd
   else if (usable.length) month = { asOfDate: formatEdgarDate(derived.asOfDate!), mo1: derived.mo1, qtd: derived.qtd, ytd: derived.ytd, yr1: derived.yr1, yr3: derived.cagr3y, yr5: derived.cagr5y, yr10: derived.cagr10y, sinceInception: derived.siAnn };
   const filtered = fundFilterReasons({ ticker, aumValue: aum, terValue: ter, metrics }, config);
   if (filtered.length) return null;
-  const previousMetrics = previousIndex.metrics ?? {};
-  // No fresh source must not null fields from the last successful publication.
-  for (const key of Object.keys(metrics)) if (key !== 'performanceAsOf' && metrics[key] === null && previousMetrics[key] !== undefined) metrics[key] = previousMetrics[key];
+  // Returns come from the official table or Yahoo closes; if neither answered, keep the previous
+  // returns together with the date and basis they describe (never old values under a new date).
+  if (!page?.performance?.month && !chart?.days.length) Object.assign(metrics, retainReturns(metrics, previousIndex.metrics));
   if (!page && !chart && !Object.keys(old).length) throw new Error(`${ticker}: no usable per-fund source`);
   const name = cleanText(page?.name) || fund.name || cleanText(old.name) || ticker;
   const category = cleanText(page?.category) || cleanText(old.category) || 'ETF';
@@ -1843,7 +1874,7 @@ async function processFund(fund: CatalogFund, config: UpdaterConfig, previousInd
     source: { fundPage: fund.fundPage, catalog: CATALOG_PAGE, holdingsDownload: fund.fundPage, holdingsSource: holdings.source, historySource, yahooChart: `${YAHOO_CHART_URL}/${ticker}`, provider: 'sprottetfs.com official fund pages; SEC EDGAR N-PORT-P holdings fallback; Yahoo Finance market-history/dividend fallback' },
     providerIds: { fundPage: fund.fundPage },
     legalStructure: old.legalStructure ?? null,
-    identifiers: { cusip: page?.identifiers?.cusip ?? old.identifiers?.cusip ?? null, isin: page?.identifiers?.isin ?? old.identifiers?.isin ?? fund.isin ?? null, indexTicker: page?.identifiers?.indexTicker ?? old.identifiers?.indexTicker ?? null },
+    identifiers: { cusip: normalizeCusip(page?.identifiers?.cusip ?? old.identifiers?.cusip), isin: page?.identifiers?.isin ?? old.identifiers?.isin ?? fund.isin ?? null, indexTicker: page?.identifiers?.indexTicker ?? old.identifiers?.indexTicker ?? null },
     inception: { fundInceptionDate: page?.inception ?? old.inception?.fundInceptionDate ?? null, shareClassInceptionDate: old.inception?.shareClassInceptionDate ?? null, exchange },
     expenseRatio: { display: percent(ter), value: ter, gross: page?.expenseRatio?.gross ?? old.expenseRatio?.gross ?? null, net: page?.expenseRatio?.net ?? old.expenseRatio?.net ?? null },
     nav: { display: money(nav), value: nav, asOfDate: navDate ? formatEdgarDate(navDate) : old.nav?.asOfDate ?? '—' },
@@ -1858,6 +1889,9 @@ async function processFund(fund: CatalogFund, config: UpdaterConfig, previousInd
     history: { ...historyManifest, asOf: days.length ? formatEdgarDate(days.at(-1)!.date) : old.history?.asOf ?? '—', source: historySource },
   };
   await writeIfChanged(new URL('meta.json', dir), meta);
+  // Stale pages go only after the new meta (which lists the new pages) is on disk.
+  await removeStalePages(dir, 'holdings', new Set(holdingsManifest.pages));
+  await removeStalePages(dir, 'history', new Set(historyManifest.pages));
   return { ticker, name, category, fundPage: fund.fundPage, dataFile: `./funds/${ticker}/meta.json`,
     cusip: meta.identifiers.cusip, isin: meta.identifiers.isin, ter: meta.expenseRatio.display, terValue: ter, nav: meta.nav.display, navValue: nav, aum: meta.aum.display, aumValue: aum,
     asOfDate: meta.nav.asOfDate, inceptionDate: meta.inception.fundInceptionDate ? formatEdgarDate(meta.inception.fundInceptionDate) : '—',
@@ -1868,9 +1902,9 @@ async function processFund(fund: CatalogFund, config: UpdaterConfig, previousInd
 export function batchSelection(funds:CatalogFund[],config:UpdaterConfig,cursor:string|null):CatalogFund[] {
   const selected=funds.filter(f=>!config.tickers.length||config.tickers.includes(f.ticker));
   if (!config.maxFetches) return selected;
-  const i=selected.findIndex(f=>f.ticker===cursor);
-  const ordered=i<0?selected:selected.slice(i+1).concat(selected.slice(0,i+1));
-  return ordered.slice(0,config.maxFetches);
+  // Resume after the cursor even when the cursor fund is outside the selection: next selected ticker, then wrap.
+  const i=cursor===null?0:selected.filter(f=>f.ticker.localeCompare(cursor)<=0).length;
+  return selected.slice(i).concat(selected.slice(0,i)).slice(0,config.maxFetches);
 }
 // --- TLS trust store (identical in every ETF repo) ---
 const SYSTEM_CA_MARKER = 'ETF_UPDATER_SYSTEM_CA';
@@ -1942,11 +1976,11 @@ export function resolveControls(file:unknown={},advanced:unknown={},inputs:unkno
     if(value!==undefined)apply({[key]:value});
   }
   for(const key of ['MAX_FETCHES','CONCURRENCY','HOLDINGS_PAGE_SIZE','HISTORY_PAGE_SIZE','MAX_RETRIES']){
-    const v=result[key];if(v===undefined||v==='')continue;
+    const v=result[key];if(v===undefined)continue;
     const min=key==='MAX_FETCHES'?0:1;
     if(!/^\d+$/.test(v)||!Number.isSafeInteger(Number(v))||Number(v)<min)throw new Error(`${key}: expected integer >= ${min}`);
   }
-  if(result.REQUEST_SLEEP && (!Number.isFinite(Number(result.REQUEST_SLEEP))||Number(result.REQUEST_SLEEP)<0))throw new Error('REQUEST_SLEEP: expected nonnegative seconds');
+  if(result.REQUEST_SLEEP!==undefined && (result.REQUEST_SLEEP.trim()===''||!Number.isFinite(Number(result.REQUEST_SLEEP))||Number(result.REQUEST_SLEEP)<0))throw new Error('REQUEST_SLEEP: expected nonnegative seconds');
   if(result.HISTORY_RANGE && !/^(max|[1-9]\d*y)$/i.test(result.HISTORY_RANGE))throw new Error('HISTORY_RANGE: use max or Ny');
   for(const key of ['STORE_RAW_DOWNLOADS','SKIP_YAHOO','SKIP_SPROTT','EDGAR_FALLBACK','VERBOSE']){
     if(result[key] && !/^(0|1|true|false|yes|no|y|n|on|off)$/i.test(result[key]))throw new Error(`${key}: expected boolean`);
@@ -1994,13 +2028,20 @@ export async function main(env:Record<string,string|undefined>=process.env):Prom
     }
   }
   catalog.sort((a,b)=>a.ticker.localeCompare(b.ticker));
+  const newFunds=oldFunds.size?catalog.filter(f=>!oldFunds.has(f.ticker)).map(f=>f.ticker):[];
+  if (newFunds.length) {
+    console.log(`NEW FUNDS: ${newFunds.join(', ')}`);
+    if(env.GITHUB_STEP_SUMMARY)await appendFile(env.GITHUB_STEP_SUMMARY,`NEW FUNDS: ${newFunds.join(', ')}\n\n`);
+  }
   if (!catalog.length) throw new Error('No official or previously published catalog; refusing empty success');
   console.log(`[ catalog  ] ${catalog.length} Sprott ETFs (sprottetfs.com fund navigation / published fallback)`);
   const state=await readJson(STATE_FILE), queue=batchSelection(catalog,config,state?.cursor??null);
   outputPrintFilter(queue.length,catalog.length,outputHasOutputFilters(config));
   const reporter=outputCreateReporter(API_ROOT,queue.length), result=new Map(oldFunds);
-  let failures=0,processed=0,skipped=0;
+  let failures=0,processed=0,skipped=0,deferred=0;
+  const deadline=Date.now()+SOFT_DEADLINE_MS;
   await runPool(queue,config.concurrency,async(fund)=>{
+    if(Date.now()>deadline){deferred++;return;} // stop taking new funds; the index is still written
     const before=await reporter.before(fund.ticker);
     try {
       const row=await processFund(fund,config,oldFunds.get(fund.ticker)??{});
@@ -2012,12 +2053,16 @@ export async function main(env:Record<string,string|undefined>=process.env):Prom
   if (!result.size) throw new Error('No publishable funds; not replacing the index');
   const funds=[...result.values()].sort((a,b)=>a.ticker.localeCompare(b.ticker));
   const counts={funds:funds.length,holdings:funds.reduce((s,f)=>s+f.holdings,0),history:funds.reduce((s,f)=>s+f.history,0)};
-  await writeIfChanged(INDEX_FILE,{generatedAt:new Date().toISOString(),catalogReadAt:new Date().toISOString(),source:{provider:'Sprott ETFs',site:SPROTT_SITE,catalog:CATALOG_PAGE},counts,funds});
+  const indexBody={source:{provider:'Sprott ETFs',site:SPROTT_SITE,catalog:CATALOG_PAGE},counts,funds};
+  if(!samePublishedContent(JSON.stringify(withoutStamps(previous)),indexBody)){
+    const stamp=isoSeconds();
+    await writeIfChanged(INDEX_FILE,{generatedAt:stamp,catalogReadAt:stamp,...indexBody});
+  }
   // Cursor follows deterministic queue order, not asynchronous completion order.
   // Failed batches leave the cursor in place so the next run retries them.
-  if (config.maxFetches && !failures && queue.length) await writeIfChanged(STATE_FILE,{cursor:queue.at(-1)!.ticker});
-  else if (!config.maxFetches && !failures) await rm(STATE_FILE,{force:true});
-  console.log(`[ done     ] ${processed} funds processed, ${skipped} skipped, ${failures} failures`);
+  if (config.maxFetches && !failures && !deferred && queue.length) await writeIfChanged(STATE_FILE,{cursor:queue.at(-1)!.ticker});
+  else if (!config.maxFetches && !failures && !deferred && !config.tickers.length) await rm(STATE_FILE,{force:true});
+  console.log(`[ done     ] ${processed} funds processed, ${skipped} skipped, ${failures} failures${deferred?`, ${deferred} deferred (soft deadline)`:''}`);
   console.log(`[ done     ] counts: ${counts.funds} funds / ${counts.holdings} holdings rows / ${counts.history} history rows`);
   if(env.GITHUB_STEP_SUMMARY)await appendFile(env.GITHUB_STEP_SUMMARY,`### Sprott update\n\n${processed} processed; ${skipped} skipped; ${failures} failed.\n${counts.funds} funds / ${counts.holdings} holdings / ${counts.history} history rows.\n`);
   if(failures)process.exitCode=1;
