@@ -8,7 +8,7 @@ import {
   formatUsDate, indicatedYield, inferDistributionFrequency, isoDate, mergeHistory, normalizeNumberText, numberOrNull,
   parseCatalogNav, parseFeesTable, parseFundPage, parseHoldingsSection, parseLongDate, parseMoneyText,
   parseNport, parsePercentText, parseSitemapFundPages, parseSprottPerformance, parseReturnTable,
-  parseDistributionsSection, installSystemCa, isCertError, resolveControls, readConfig, runPool, runtimeControls, stripHtml, tickerFromSlug, totalToAnnualized,
+  parseDistributionsSection, FETCH_TIMEOUT_MS, installSystemCa, isoSeconds, monthAnchor, normalizeCusip, retainReturns, samePublishedContent, withoutStamps, isCertError, resolveControls, readConfig, runPool, runtimeControls, stripHtml, tickerFromSlug, totalToAnnualized,
 } from './update-data';
 import type { CatalogFund } from './update-data';
 
@@ -682,5 +682,90 @@ describe('update workflow', () => {
     expect(workflow).toContain('PROTECTED_SEC_UA: ${{ vars.SEC_UA }}');
     expect(workflow).not.toMatch(/\$\{\{\s*(github\.event\.)?inputs\./);
     expect(workflow).toContain('bun install --frozen-lockfile');
+  });
+});
+
+describe('review fixes', () => {
+  const metrics = { ytd: 1, tr1y: 2, tr3y: null, tr5y: null, tr10y: null, cagr3y: null, cagr5y: null, cagr10y: null, siAnn: null,
+    returnsBasis: 'new basis', performanceAsOf: '2026-09-30', dividendYield: null };
+  const previous = { ytd: 5, tr1y: 6, tr3y: 7.5, tr5y: null, tr10y: null, cagr3y: 2.4, cagr5y: null, cagr10y: null, siAnn: 3,
+    returnsBasis: 'old basis', performanceAsOf: '2026-06-30', dividendYield: 4.2 };
+
+  test('retained returns travel with their performanceAsOf and basis, and never touch the yield', () => {
+    const kept = { ...metrics, ...retainReturns(metrics, previous) };
+    expect(kept.tr3y).toBe(7.5);
+    expect(kept.performanceAsOf).toBe('2026-06-30');
+    expect(kept.returnsBasis).toBe('old basis');
+    expect(kept.dividendYield).toBeNull();
+    expect(retainReturns(metrics, undefined)).toEqual({});
+    expect(retainReturns(metrics, {})).toEqual({});
+  });
+
+  test('month-end anchor is UTC midnight in any timezone', () => {
+    const saved = process.env.TZ;
+    try {
+      for (const tz of ['Europe/Berlin', 'Pacific/Auckland', 'America/Los_Angeles']) {
+        process.env.TZ = tz;
+        expect(monthAnchor({ asOfDate: 'Sep 30 2026' }, [])?.toISOString()).toBe('2026-09-30T00:00:00.000Z');
+        const days = [{ date: '2026-09-30' }] as any;
+        const anchor = monthAnchor({ asOfDate: 'Sep 30 2026' }, days)!;
+        expect(days.filter((day: any) => Date.parse(day.date) <= anchor.getTime())).toHaveLength(1);
+      }
+    } finally {
+      if (saved === undefined) delete process.env.TZ; else process.env.TZ = saved;
+    }
+    expect(monthAnchor(null, [{ date: '2026-08-31' }] as any)?.toISOString()).toBe('2026-08-31T00:00:00.000Z');
+    expect(monthAnchor(null, [])).toBeNull();
+  });
+
+  test('cursor outside the selected set resumes at the next selected ticker and wraps', () => {
+    const fund = (ticker: string): CatalogFund => ({ ticker, name: ticker, fundPage: `https://sprottetfs.com/${ticker}/`, assetClass: '', isin: '', nav: null, navDate: null });
+    const funds = ['COPJ', 'COPP', 'GBUG', 'URNM'].map(fund);
+    const config = readConfig(resolveControls({ TICKERS: 'COPJ URNM', MAX_FETCHES: '1' }));
+    expect(batchSelection(funds, config, 'GBUG').map((f) => f.ticker)).toEqual(['URNM']);
+    expect(batchSelection(funds, config, 'URNM').map((f) => f.ticker)).toEqual(['COPJ']);
+    expect(batchSelection(funds, config, 'ZZZZ').map((f) => f.ticker)).toEqual(['COPJ']);
+  });
+
+  test('explicitly empty or invalid CONCURRENCY, MAX_RETRIES and REQUEST_SLEEP are errors', () => {
+    for (const key of ['CONCURRENCY', 'MAX_RETRIES', 'MAX_FETCHES', 'REQUEST_SLEEP']) {
+      expect(() => resolveControls({}, {}, {}, { [key]: '' })).toThrow();
+    }
+    expect(() => readConfig({ CONCURRENCY: 'abc' })).toThrow();
+    expect(() => readConfig({ MAX_RETRIES: '0' })).toThrow();
+    expect(readConfig({}).concurrency).toBe(2);
+  });
+
+  test('CUSIP spaces are removed', () => {
+    expect(normalizeCusip('85210B 201')).toBe('85210B201');
+    expect(normalizeCusip('CUSIP: 85208P303')).toBe('85208P303');
+    expect(normalizeCusip('')).toBeNull();
+    expect(parseFundPage(pageHtml().replace('CUSIP: 85208P303', 'CUSIP: 85208P 303'), 'URNM').identifiers.cusip).toBe('85208P303');
+  });
+
+  test('fetch carries a 45 s timeout signal and retries a body that fails', async () => {
+    expect(FETCH_TIMEOUT_MS).toBe(45_000);
+    const original = globalThis.fetch;
+    let calls = 0, signal: AbortSignal | null | undefined;
+    configureRequestPacing(1, 0);
+    globalThis.fetch = (async (_url: any, init?: RequestInit) => {
+      signal = init?.signal; calls++;
+      if (calls === 1) return { ok: true, status: 200, statusText: 'OK', headers: new Headers(), arrayBuffer: async () => { throw new Error('body timeout'); } };
+      return new Response('ok');
+    }) as any;
+    try {
+      const response = await fetchWithRetry('https://example.test/x', 'x', {}, 1);
+      expect(await response.text()).toBe('ok');
+      expect(calls).toBe(2);
+      expect(signal).toBeInstanceOf(AbortSignal);
+    } finally { globalThis.fetch = original; configureRequestPacing(2, 1000); }
+  });
+
+  test('index stamps are ignored when comparing, and written without milliseconds', () => {
+    const body = { counts: { funds: 1 }, funds: [{ ticker: 'URNM' }] };
+    const old = { generatedAt: '2026-01-01T00:00:00Z', catalogReadAt: '2026-01-01T00:00:00Z', ...body };
+    expect(samePublishedContent(JSON.stringify(withoutStamps(old)), body)).toBe(true);
+    expect(samePublishedContent(JSON.stringify(withoutStamps(old)), { ...body, counts: { funds: 2 } })).toBe(false);
+    expect(isoSeconds(new Date('2026-10-02T10:11:12.345Z'))).toBe('2026-10-02T10:11:12Z');
   });
 });
