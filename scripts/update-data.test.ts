@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import {
-  CONTROL_NAMES, USAGE, configureRequestPacing, createRequestGate, fetchWithRetry, annualizedToTotal, batchSelection, buildMetrics,
+  CONTROL_NAMES, USAGE, configureRequestPacing, createRequestGate, fetchWithRetry, annualizedToTotal, batchSelection, buildMetrics, dividendYieldBasis, withYieldBasis,
   indicatedYield, inferDistributionFrequency, installSystemCa, isCertError, mergeHistory, monthAnchor, normalizeCusip,
   parseCatalogNav, parseFeesTable, parseFundPage, parseHoldingsSection, parseMoneyText, parseNport, parsePercentText,
   parseDistributionsSection, parseReturnTable, parseSitemapFundPages, parseSprottPerformance, performanceAsOfDate,
@@ -341,6 +341,26 @@ describe('metrics', () => {
     expect(Object.keys(buildMetrics(null, derived, null, null, 'x', null))).toEqual(Object.keys(metrics));
   });
 
+  test('dividendYieldBasis is indicated for every yield and null exactly when the yield is null', () => {
+    expect([dividendYieldBasis(1.5), dividendYieldBasis(0), dividendYieldBasis(null), dividendYieldBasis(undefined), dividendYieldBasis(NaN)])
+      .toEqual(['indicated', 'indicated', null, null, null]);
+    const withYield = buildMetrics(month, derived, null, 1.5, 'x', null);
+    const noYield = buildMetrics(null, derived, null, null, 'x', null);
+    expect([withYield.dividendYieldBasis, noYield.dividendYieldBasis]).toEqual(['indicated', null]);
+    expect(Object.keys(noYield)).toEqual(Object.keys(withYield));
+  });
+
+  test('rows kept from an older index get the code of their own yield and the same key set', () => {
+    const fresh = buildMetrics(month, derived, null, 2.5, 'x', '2026-08-31');
+    const old = (dividendYield: number | null) => ({ ticker: 'T', metrics: { ytd: 1, dividendYield, dividendYieldText: '-', returnsBasis: 'b', performanceAsOf: null } });
+    const kept = withYieldBasis(old(4.2)).metrics;
+    const none = withYieldBasis(old(null)).metrics;
+    expect([kept.dividendYieldBasis, none.dividendYieldBasis]).toEqual(['indicated', null]);
+    expect(Object.keys(kept)).toEqual(['ytd', 'dividendYield', 'dividendYieldText', 'dividendYieldBasis', 'returnsBasis', 'performanceAsOf']);
+    expect(withYieldBasis({ ticker: 'T', metrics: fresh }).metrics).toEqual(fresh);
+    expect(withYieldBasis({ ticker: 'T' }).metrics.dividendYieldBasis).toBeNull();
+  });
+
   test('performanceAsOf is the official table date, else the last Yahoo close, else null - never the NAV date', () => {
     expect(performanceAsOfDate(true, month, derived)).toBe('2026-08-31');
     expect(performanceAsOfDate(false, month, derived)).toBe('2026-09-30');
@@ -452,6 +472,7 @@ describe('pipeline', () => {
       expect(Object.keys(row.metrics).sort()).toEqual(keys);
       expect(row.metrics.cagr10y).toBeNull();
       expect(row.metrics.returnsBasis).toBeTruthy();
+      expect(row.metrics.dividendYieldBasis).toBe(row.metrics.dividendYield === null ? null : 'indicated');
       expect(row.metrics.performanceAsOf).toBe('2026-09-30');
       expect(row.dataFile).toBe(`./funds/${row.ticker}/meta.json`);
     }
