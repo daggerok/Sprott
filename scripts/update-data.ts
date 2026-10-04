@@ -1768,11 +1768,28 @@ export function retainReturns(metrics: JsonRecord, previous: JsonRecord | null |
   if (!previous || previous.performanceAsOf === undefined) return {};
   return Object.fromEntries(RETURN_KEYS.filter((key) => previous[key] !== undefined).map((key) => [key, previous[key]]));
 }
+export type DividendYieldBasis = 'official-trailing-12m' | 'official-distribution-rate' | 'official-other' | 'computed-trailing-12m' | 'indicated';
+/** Sprott publishes no yield of its own: every dividendYield is the updater's indicated estimate; no yield -> no code. */
+export function dividendYieldBasis(divYield: number | null | undefined): DividendYieldBasis | null {
+  return divYield === null || divYield === undefined || !Number.isFinite(divYield) ? null : 'indicated';
+}
+/** Rows kept from an older index get the code derived from their own yield, so every row has the same key set. */
+export function withYieldBasis(row: JsonRecord): JsonRecord {
+  const old = row.metrics ?? {};
+  const metrics: JsonRecord = {};
+  for (const [key, value] of Object.entries(old)) {
+    if (key === 'dividendYieldBasis') continue;
+    metrics[key] = value;
+    if (key === 'dividendYieldText') metrics.dividendYieldBasis = dividendYieldBasis(numberOrNull(old.dividendYield));
+  }
+  if (!('dividendYieldBasis' in metrics)) metrics.dividendYieldBasis = dividendYieldBasis(numberOrNull(old.dividendYield));
+  return { ...row, metrics };
+}
 export function buildMetrics(month:JsonRecord|null,derived:PriceReturns,secYield:number|null,divYield:number|null,returnsBasis:string,performanceAsOf:string|null):JsonRecord {
   const ytd=month?.ytd??derived.ytd, tr1y=month?.yr1??derived.yr1;
   const cagr3y=month?.yr3??derived.cagr3y,cagr5y=month?.yr5??derived.cagr5y,cagr10y=month?.yr10??derived.cagr10y;
   return {ytd,tr1y,cagr3y,cagr5y,cagr10y,tr3y:annualizedToTotal(cagr3y,3),tr5y:annualizedToTotal(cagr5y,5),tr10y:annualizedToTotal(cagr10y,10),
-    siAnn:month?.sinceInception??derived.siAnn,secYield,secYieldText:percent(secYield),dividendYield:divYield,dividendYieldText:percent(divYield),returnsBasis,performanceAsOf};
+    siAnn:month?.sinceInception??derived.siAnn,secYield,secYieldText:percent(secYield),dividendYield:divYield,dividendYieldText:percent(divYield),dividendYieldBasis:dividendYieldBasis(divYield),returnsBasis,performanceAsOf};
 }
 function mergeSprottDividends(old: JsonRecord, page: JsonRecord | null, chart: ParsedChart | null): Array<{ epoch: number; amount: number }> {
   const byDate = new Map(previousDividends(old).map((dividend) => [epochToIsoDate(dividend.epoch), dividend]));
@@ -2051,7 +2068,7 @@ export async function main(env:Record<string,string|undefined>=process.env):Prom
     } catch(e) {failures++;await reporter.result(fund.ticker,before,'failed',errorMessage(e));}
   });
   if (!result.size) throw new Error('No publishable funds; not replacing the index');
-  const funds=[...result.values()].sort((a,b)=>a.ticker.localeCompare(b.ticker));
+  const funds=[...result.values()].map(withYieldBasis).sort((a,b)=>a.ticker.localeCompare(b.ticker));
   const counts={funds:funds.length,holdings:funds.reduce((s,f)=>s+f.holdings,0),history:funds.reduce((s,f)=>s+f.history,0)};
   const indexBody={source:{provider:'Sprott ETFs',site:SPROTT_SITE,catalog:CATALOG_PAGE},counts,funds};
   if(!samePublishedContent(JSON.stringify(withoutStamps(previous)),indexBody)){

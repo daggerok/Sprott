@@ -79,11 +79,19 @@ Each fund carries a derived `metrics` object that powers the catalog columns sha
 - `tr3y` / `tr5y` / `tr10y` - cumulative 3Y/5Y/10Y figures `(1 + CAGR)^n - 1` -> *TR 3Y/5Y/10Y*
 - `siAnn` - since-inception annualized when date/age/coverage support it (not young cumulative SI) -> *SI Ann.*
 - `dividendYield` - indicated rate: latest positive distribution × payments per year ÷ market price
+- `dividendYieldBasis` - code for the definition behind `dividendYield`, `null` exactly when `dividendYield` is `null` (table below)
 - `secYield` - a dash placeholder: Sprott publishes none
 - `returnsBasis` - mandatory non-empty text saying how the returns were computed: official sprottetfs.com NAV total returns with gaps derived from Yahoo adjusted closes, or Yahoo adjusted market-price returns (an estimate, not official NAV)
 - `performanceAsOf` - mandatory ISO `YYYY-MM-DD` date the returns are as of: the month-end performance table date on the fund page, or the last Yahoo close date when derived; not the NAV date; `null` only when truly unknown
 
 Both fields are the last two keys of each `metrics` object.
+
+| `dividendYieldBasis` | Meaning for Sprott |
+| --- | --- |
+| `indicated` | Updater estimate: latest positive distribution x inferred payments per year / market price; the only code Sprott produces, because the fund pages publish no yield |
+| `null` | `dividendYield` is `null` (no distribution or unknown frequency) |
+
+The other codes of the shared standard (`official-trailing-12m`, `official-distribution-rate`, `official-other`, `computed-trailing-12m`) are not used by this feed.
 
 Unavailable data is never published as zero, and no tickers are excluded.
 
