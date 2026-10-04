@@ -1,6 +1,6 @@
 {
- "generatedAt": "2026-10-03T05:20:23Z",
- "catalogReadAt": "2026-10-03T05:20:23Z",
+ "generatedAt": "2026-10-04T03:27:37Z",
+ "catalogReadAt": "2026-10-04T03:27:37Z",
  "source": {
   "provider": "Sprott ETFs",
   "site": "https://sprottetfs.com",
@@ -77,6 +77,7 @@
     "secYieldText": "—",
     "dividendYield": 10.36,
     "dividendYieldText": "10.36%",
+    "dividendYieldBasis": "indicated",
     "returnsBasis": "official sprottetfs.com month-end/quarter-end average annual total returns (NAV); missing metrics derived from Yahoo adjusted closes at the same reporting date",
     "performanceAsOf": "2026-09-30"
    },
@@ -148,6 +149,7 @@
     "secYieldText": "—",
     "dividendYield": 1.93,
     "dividendYieldText": "1.93%",
+    "dividendYieldBasis": "indicated",
     "returnsBasis": "official sprottetfs.com month-end/quarter-end average annual total returns (NAV); missing metrics derived from Yahoo adjusted closes at the same reporting date",
     "performanceAsOf": "2026-09-30"
    },
@@ -219,6 +221,7 @@
     "secYieldText": "—",
     "dividendYield": null,
     "dividendYieldText": "—",
+    "dividendYieldBasis": null,
     "returnsBasis": "official sprottetfs.com month-end/quarter-end average annual total returns (NAV); missing metrics derived from Yahoo adjusted closes at the same reporting date",
     "performanceAsOf": "2026-09-30"
    },
@@ -290,6 +293,7 @@
     "secYieldText": "—",
     "dividendYield": 9.92,
     "dividendYieldText": "9.92%",
+    "dividendYieldBasis": "indicated",
     "returnsBasis": "official sprottetfs.com month-end/quarter-end average annual total returns (NAV); missing metrics derived from Yahoo adjusted closes at the same reporting date",
     "performanceAsOf": "2026-09-30"
    },
@@ -361,6 +365,7 @@
     "secYieldText": "—",
     "dividendYield": null,
     "dividendYieldText": "—",
+    "dividendYieldBasis": null,
     "returnsBasis": "official sprottetfs.com month-end/quarter-end average annual total returns (NAV); missing metrics derived from Yahoo adjusted closes at the same reporting date",
     "performanceAsOf": "2026-09-30"
    },
@@ -432,6 +437,7 @@
     "secYieldText": "—",
     "dividendYield": 3.01,
     "dividendYieldText": "3.01%",
+    "dividendYieldBasis": "indicated",
     "returnsBasis": "official sprottetfs.com month-end/quarter-end average annual total returns (NAV); missing metrics derived from Yahoo adjusted closes at the same reporting date",
     "performanceAsOf": "2026-09-30"
    },
@@ -503,6 +509,7 @@
     "secYieldText": "—",
     "dividendYield": null,
     "dividendYieldText": "—",
+    "dividendYieldBasis": null,
     "returnsBasis": "official sprottetfs.com month-end/quarter-end average annual total returns (NAV); missing metrics derived from Yahoo adjusted closes at the same reporting date",
     "performanceAsOf": "2026-08-31"
    },
@@ -574,6 +581,7 @@
     "secYieldText": "—",
     "dividendYield": 1.54,
     "dividendYieldText": "1.54%",
+    "dividendYieldBasis": "indicated",
     "returnsBasis": "official sprottetfs.com month-end/quarter-end average annual total returns (NAV); missing metrics derived from Yahoo adjusted closes at the same reporting date",
     "performanceAsOf": "2026-09-30"
    },
@@ -645,6 +653,7 @@
     "secYieldText": "—",
     "dividendYield": 8.02,
     "dividendYieldText": "8.02%",
+    "dividendYieldBasis": "indicated",
     "returnsBasis": "official sprottetfs.com month-end/quarter-end average annual total returns (NAV); missing metrics derived from Yahoo adjusted closes at the same reporting date",
     "performanceAsOf": "2026-09-30"
    },
@@ -716,6 +725,7 @@
     "secYieldText": "—",
     "dividendYield": 0.99,
     "dividendYieldText": "0.99%",
+    "dividendYieldBasis": "indicated",
     "returnsBasis": "official sprottetfs.com month-end/quarter-end average annual total returns (NAV); missing metrics derived from Yahoo adjusted closes at the same reporting date",
     "performanceAsOf": "2026-09-30"
    },
@@ -787,6 +797,7 @@
     "secYieldText": "—",
     "dividendYield": null,
     "dividendYieldText": "—",
+    "dividendYieldBasis": null,
     "returnsBasis": "official sprottetfs.com month-end/quarter-end average annual total returns (NAV); missing metrics derived from Yahoo adjusted closes at the same reporting date",
     "performanceAsOf": "2026-09-30"
    },
@@ -858,6 +869,7 @@
     "secYieldText": "—",
     "dividendYield": 8.23,
     "dividendYieldText": "8.23%",
+    "dividendYieldBasis": "indicated",
     "returnsBasis": "official sprottetfs.com month-end/quarter-end average annual total returns (NAV); missing metrics derived from Yahoo adjusted closes at the same reporting date",
     "performanceAsOf": "2026-09-30"
    },
@@ -929,6 +941,7 @@
     "secYieldText": "—",
     "dividendYield": 3.67,
     "dividendYieldText": "3.67%",
+    "dividendYieldBasis": "indicated",
     "returnsBasis": "official sprottetfs.com month-end/quarter-end average annual total returns (NAV); missing metrics derived from Yahoo adjusted closes at the same reporting date",
     "performanceAsOf": "2026-09-30"
    },
