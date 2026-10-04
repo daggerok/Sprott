@@ -373,7 +373,7 @@ describe('metrics', () => {
     const fresh = { ytd: 1, tr1y: 2, tr3y: null, dividendYield: null, returnsBasis: 'new basis', performanceAsOf: '2026-09-30' };
     const previous = { ytd: 5, tr1y: 6, tr3y: 7.5, dividendYield: 4.2, returnsBasis: 'old basis', performanceAsOf: '2026-06-30' };
     const kept = { ...fresh, ...retainReturns(fresh, previous) };
-    expect([kept.tr3y, kept.performanceAsOf, kept.returnsBasis, kept.dividendYield]).toEqual([7.5, '2026-06-30', 'old basis', null]);
+    expect<unknown[]>([kept.tr3y, kept.performanceAsOf, kept.returnsBasis, kept.dividendYield]).toEqual([7.5, '2026-06-30', 'old basis', null]);
     expect([retainReturns(fresh, undefined), retainReturns(fresh, {})]).toEqual([{}, {}]);
   });
 
