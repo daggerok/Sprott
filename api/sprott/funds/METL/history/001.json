@@ -2,7 +2,7 @@
  "ticker": "METL",
  "page": 1,
  "pageSize": 1000,
- "totalRows": 268,
+ "totalRows": 273,
  "headers": [
   "Date",
   "Close",
@@ -1617,6 +1617,36 @@
    "Close": "25.587",
    "Adj Close": "25.59",
    "Volume": "9600"
+  },
+  {
+   "Date": "Oct 05 2026",
+   "Close": "25.733999",
+   "Adj Close": "25.73",
+   "Volume": "7600"
+  },
+  {
+   "Date": "Oct 06 2026",
+   "Close": "25.889999",
+   "Adj Close": "25.89",
+   "Volume": "12400"
+  },
+  {
+   "Date": "Oct 07 2026",
+   "Close": "25.09",
+   "Adj Close": "25.09",
+   "Volume": "3500"
+  },
+  {
+   "Date": "Oct 08 2026",
+   "Close": "24.715",
+   "Adj Close": "24.72",
+   "Volume": "19500"
+  },
+  {
+   "Date": "Oct 09 2026",
+   "Close": "25.165001",
+   "Adj Close": "25.17",
+   "Volume": "4300"
   }
  ]
 }

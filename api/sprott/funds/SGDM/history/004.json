@@ -2,7 +2,7 @@
  "ticker": "SGDM",
  "page": 4,
  "pageSize": 1000,
- "totalRows": 3074,
+ "totalRows": 3079,
  "headers": [
   "Date",
   "Close",
@@ -453,6 +453,36 @@
    "Close": "73.800003",
    "Adj Close": "73.8",
    "Volume": "20200"
+  },
+  {
+   "Date": "Oct 05 2026",
+   "Close": "73.290001",
+   "Adj Close": "73.29",
+   "Volume": "28400"
+  },
+  {
+   "Date": "Oct 06 2026",
+   "Close": "73.800003",
+   "Adj Close": "73.8",
+   "Volume": "21400"
+  },
+  {
+   "Date": "Oct 07 2026",
+   "Close": "71.440002",
+   "Adj Close": "71.44",
+   "Volume": "17500"
+  },
+  {
+   "Date": "Oct 08 2026",
+   "Close": "72.510002",
+   "Adj Close": "72.51",
+   "Volume": "35500"
+  },
+  {
+   "Date": "Oct 09 2026",
+   "Close": "74.940002",
+   "Adj Close": "74.94",
+   "Volume": "24000"
   }
  ]
 }
