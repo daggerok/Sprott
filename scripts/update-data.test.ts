@@ -6,7 +6,7 @@ import { join } from 'node:path';
 
 import {
   CONTROL_NAMES, USAGE, configureRequestPacing, createRequestGate, fetchWithRetry, annualizedToTotal, batchSelection, buildMetrics, dividendYieldBasis, withYieldBasis,
-  indicatedYield, inferDistributionFrequency, installSystemCa, isCertError, mergeHistory, monthAnchor, normalizeCusip,
+  indicatedYield, inferDistributionFrequency, installSystemCa, isCertError, mergeHistory, ADJ_CLOSE_NOISE, monthAnchor, normalizeCusip,
   parseCatalogNav, parseFeesTable, parseFundPage, parseHoldingsSection, parseMoneyText, parseNport, parsePercentText,
   parseDistributionsSection, parseReturnTable, parseSitemapFundPages, parseSprottPerformance, performanceAsOfDate,
   priceReturns, readConfig, resolveControls, retainReturns, runPool, runtimeControls, samePublishedContent, storedDateIso,
@@ -398,11 +398,11 @@ describe('metrics', () => {
     expect(monthAnchor(null, [])).toBeNull();
   });
 
-  test('history merge: a published adjusted close keeps its cent on jitter, a real restatement replaces it', () => {
-    const day = (date: string, adjClose: number) => ({ date, close: 36.540001, adjClose, volume: 9000 });
+  test('history merge: a published adjusted close keeps its cent within float noise only, a real change of one cent replaces it', () => {
+    const day = (date: string, adjCloseRaw: number) => ({ date, close: 36.540001, adjClose: Math.round(adjCloseRaw * 100) / 100, volume: 9000, adjCloseRaw });
     const previous = [{ Date: 'Oct 10 2016', Close: '36.540001', 'Adj Close': '27.69', Volume: '9000' }];
-    expect(mergeHistory(previous, [day('2016-10-10', 27.7)])[0]['Adj Close']).toBe('27.69');
-    expect(mergeHistory(previous, [day('2016-10-10', 27.85)])[0]['Adj Close']).toBe('27.85');
+    expect(ADJ_CLOSE_NOISE).toBe(1e-4);
+    expect([27.695001, 27.6952, 27.7, 27.85].map((raw) => mergeHistory(previous, [day('2016-10-10', raw)])[0]['Adj Close'])).toEqual(['27.69', '27.7', '27.7', '27.85']);
     expect(mergeHistory([], [day('2016-10-10', 27.7), day('2016-10-11', 27.9)]).map((row) => row.Date)).toEqual(['Oct 10 2016', 'Oct 11 2016']);
   });
 });
@@ -497,6 +497,31 @@ describe('pipeline', () => {
     await box.run();
     expect(box.touched()).toEqual([]);
     expect(Object.fromEntries(box.files().map((path) => [path, box.read(path)]))).toEqual(before);
+  });
+
+  test('two runs on the same source data write zero changes even when Yahoo adjusted closes jitter across a cent boundary', async () => {
+    // Yahoo float32 noise seen live: SPDV 2024-11-12 came back as 31.544998 and 31.545001 a minute apart
+    const adjusted = chartPayload.chart.result[0].indicators.adjclose[0];
+    const original = adjusted.adjclose;
+    try {
+      const box = sandbox();
+      adjusted.adjclose = [47.005001, 47.194999, 47.5];
+      await box.run();
+      box.backdate();
+      const snapshot = () => Object.fromEntries(box.files().map((path) => [path, box.read(path)]));
+      const before = snapshot();
+      adjusted.adjclose = [47.004998, 47.195002, 47.5];
+      await box.run();
+      expect(box.touched()).toEqual([]);
+      expect(snapshot()).toEqual(before);
+      // a real change of one cent is still written
+      adjusted.adjclose = [47.02, 47.18, 47.5];
+      await box.run();
+      expect(snapshot()).not.toEqual(before);
+      expect(JSON.parse(box.read('funds/URNM/history/001.json')).rows.map((row: Record<string, string>) => row['Adj Close'])).toEqual(['47.02', '47.18', '47.5']);
+    } finally {
+      adjusted.adjclose = original;
+    }
   });
 
   test('a failed source keeps the fund as published', async () => {
