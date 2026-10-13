@@ -2,7 +2,7 @@
  "ticker": "SETM",
  "page": 1,
  "pageSize": 1000,
- "totalRows": 925,
+ "totalRows": 926,
  "headers": [
   "Date",
   "Close",
@@ -5559,6 +5559,12 @@
    "Close": "28.719999",
    "Adj Close": "28.72",
    "Volume": "69000"
+  },
+  {
+   "Date": "Oct 12 2026",
+   "Close": "28.1",
+   "Adj Close": "28.1",
+   "Volume": "196300"
   }
  ]
 }

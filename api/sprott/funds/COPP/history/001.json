@@ -2,7 +2,7 @@
  "ticker": "COPP",
  "page": 1,
  "pageSize": 1000,
- "totalRows": 652,
+ "totalRows": 653,
  "headers": [
   "Date",
   "Close",
@@ -3921,6 +3921,12 @@
    "Close": "42.470001",
    "Adj Close": "42.47",
    "Volume": "60000"
+  },
+  {
+   "Date": "Oct 12 2026",
+   "Close": "42.400002",
+   "Adj Close": "42.4",
+   "Volume": "84100"
   }
  ]
 }
