@@ -2,7 +2,7 @@
  "ticker": "NIKL",
  "page": 1,
  "pageSize": 1000,
- "totalRows": 893,
+ "totalRows": 897,
  "headers": [
   "Date",
   "Close",
@@ -5367,6 +5367,30 @@
    "Close": "12.741",
    "Adj Close": "12.74",
    "Volume": "17800"
+  },
+  {
+   "Date": "Oct 13 2026",
+   "Close": "12.522",
+   "Adj Close": "12.52",
+   "Volume": "33000"
+  },
+  {
+   "Date": "Oct 14 2026",
+   "Close": "12.178",
+   "Adj Close": "12.18",
+   "Volume": "33200"
+  },
+  {
+   "Date": "Oct 15 2026",
+   "Close": "12.11",
+   "Adj Close": "12.11",
+   "Volume": "46200"
+  },
+  {
+   "Date": "Oct 16 2026",
+   "Close": "11.28",
+   "Adj Close": "11.28",
+   "Volume": "89500"
   }
  ]
 }

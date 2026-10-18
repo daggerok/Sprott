@@ -33,28 +33,28 @@
   "net": 0.5
  },
  "nav": {
-  "display": "$87.31",
-  "value": 87.31,
-  "asOfDate": "Oct 12 2026"
+  "display": "$84.14",
+  "value": 84.14,
+  "asOfDate": "Oct 16 2026"
  },
  "marketPrice": {
-  "display": "$87.03",
-  "value": 87.03,
-  "asOfDate": "Oct 12 2026"
+  "display": "$84.28",
+  "value": 84.28,
+  "asOfDate": "Oct 16 2026"
  },
  "premiumDiscount": {
-  "display": "-0.32%",
-  "value": -0.32
+  "display": "0.17%",
+  "value": 0.17
  },
  "aum": {
-  "display": "$330.04 Million",
-  "value": 330040000,
-  "asOfDate": "Oct 12 2026",
+  "display": "$318.04 Million",
+  "value": 318040000,
+  "asOfDate": "Oct 16 2026",
   "source": "sprottetfs.com fund page (Total Net Asset Value)"
  },
  "yields": {
-  "dividendYield": 8.09,
-  "dividendYieldText": "8.09%",
+  "dividendYield": 8.35,
+  "dividendYieldText": "8.35%",
   "dividendYieldKind": "indicated (latest distribution x payments per year / market price)",
   "secYield": null,
   "secYieldText": "—",
@@ -146,8 +146,8 @@
   ],
   "pageSize": 250,
   "totalRows": 32,
-  "asOfDate": "2026-10-12",
-  "asOf": "Oct 12 2026",
+  "asOfDate": "2026-10-16",
+  "asOf": "Oct 16 2026",
   "source": "sprottetfs.com \"Download All Holdings\" CSV",
   "status": "available"
  },
@@ -158,8 +158,8 @@
    "history/003.json"
   ],
   "pageSize": 1000,
-  "totalRows": 2901,
-  "asOf": "Oct 12 2026",
+  "totalRows": 2905,
+  "asOf": "Oct 16 2026",
   "source": "Yahoo Finance daily market-price closes / adjusted closes (not official NAV)"
  }
 }

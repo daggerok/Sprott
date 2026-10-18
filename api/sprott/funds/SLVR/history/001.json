@@ -2,7 +2,7 @@
  "ticker": "SLVR",
  "page": 1,
  "pageSize": 1000,
- "totalRows": 437,
+ "totalRows": 441,
  "headers": [
   "Date",
   "Close",
@@ -2631,6 +2631,30 @@
    "Close": "53.469002",
    "Adj Close": "53.47",
    "Volume": "54000"
+  },
+  {
+   "Date": "Oct 13 2026",
+   "Close": "52.056",
+   "Adj Close": "52.06",
+   "Volume": "56000"
+  },
+  {
+   "Date": "Oct 14 2026",
+   "Close": "48.91",
+   "Adj Close": "48.91",
+   "Volume": "288700"
+  },
+  {
+   "Date": "Oct 15 2026",
+   "Close": "50.93",
+   "Adj Close": "50.93",
+   "Volume": "125900"
+  },
+  {
+   "Date": "Oct 16 2026",
+   "Close": "50.962002",
+   "Adj Close": "50.96",
+   "Volume": "104700"
   }
  ]
 }

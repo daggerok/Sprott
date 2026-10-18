@@ -2,7 +2,7 @@
  "ticker": "SGDM",
  "page": 2,
  "pageSize": 1000,
- "totalRows": 3080,
+ "totalRows": 3084,
  "headers": [
   "Date",
   "Close",

@@ -2,7 +2,7 @@
  "ticker": "SGDJ",
  "page": 2,
  "pageSize": 1000,
- "totalRows": 2901,
+ "totalRows": 2905,
  "headers": [
   "Date",
   "Close",

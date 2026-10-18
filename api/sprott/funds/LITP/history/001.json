@@ -2,7 +2,7 @@
  "ticker": "LITP",
  "page": 1,
  "pageSize": 1000,
- "totalRows": 926,
+ "totalRows": 930,
  "headers": [
   "Date",
   "Close",
@@ -5565,6 +5565,30 @@
    "Close": "8.18",
    "Adj Close": "8.18",
    "Volume": "28500"
+  },
+  {
+   "Date": "Oct 13 2026",
+   "Close": "7.882",
+   "Adj Close": "7.88",
+   "Volume": "34400"
+  },
+  {
+   "Date": "Oct 14 2026",
+   "Close": "7.754",
+   "Adj Close": "7.75",
+   "Volume": "40900"
+  },
+  {
+   "Date": "Oct 15 2026",
+   "Close": "7.668",
+   "Adj Close": "7.67",
+   "Volume": "49000"
+  },
+  {
+   "Date": "Oct 16 2026",
+   "Close": "7.51",
+   "Adj Close": "7.51",
+   "Volume": "43000"
   }
  ]
 }
