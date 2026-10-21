@@ -17,8 +17,8 @@
    "Name": "MP Materials Corp.",
    "Ticker": "MP",
    "Identifier": "BN15Y35",
-   "Weight": "19.75",
-   "Market Value": "13483204.65",
+   "Weight": "19.88",
+   "Market Value": "13517821.35",
    "Shares Held": "346167",
    "SEDOL": "BN15Y35"
   },
@@ -26,8 +26,8 @@
    "Name": "Lynas Rare Earths Ltd.",
    "Ticker": "LYC AU",
    "Identifier": "6121176",
-   "Weight": "19.25",
-   "Market Value": "13139977.39",
+   "Weight": "19.39",
+   "Market Value": "13182297.04",
    "Shares Held": "1658844",
    "SEDOL": "6121176"
   },
@@ -35,8 +35,8 @@
    "Name": "Sunrise Energy Metals Ltd.",
    "Ticker": "SRL AU",
    "Identifier": "BN4MX14",
-   "Weight": "5.9",
-   "Market Value": "4025525.39",
+   "Weight": "5.51",
+   "Market Value": "3747052.87",
    "Shares Held": "371653",
    "SEDOL": "BN4MX14"
   },
@@ -44,8 +44,8 @@
    "Name": "Neo Performance Materials Inc.",
    "Ticker": "NEO CN",
    "Identifier": "BF5LL43",
-   "Weight": "5.37",
-   "Market Value": "3663997.36",
+   "Weight": "5.45",
+   "Market Value": "3705071.78",
    "Shares Held": "198787",
    "SEDOL": "BF5LL43"
   },
@@ -53,8 +53,8 @@
    "Name": "USA Rare Earth Inc.",
    "Ticker": "USAR",
    "Identifier": "BSBGKF7",
-   "Weight": "5.13",
-   "Market Value": "3502582.06",
+   "Weight": "5.14",
+   "Market Value": "3492168.04",
    "Shares Held": "347134",
    "SEDOL": "BSBGKF7"
   },
@@ -63,7 +63,7 @@
    "Ticker": "ILU AU",
    "Identifier": "6957575",
    "Weight": "4.89",
-   "Market Value": "3341612.55",
+   "Market Value": "3326735.24",
    "Shares Held": "915506",
    "SEDOL": "6957575"
   },
@@ -71,8 +71,8 @@
    "Name": "Critical Metals Corp.",
    "Ticker": "CRML",
    "Identifier": "BSNX0D4",
-   "Weight": "4.19",
-   "Market Value": "2860611.18",
+   "Weight": "4.14",
+   "Market Value": "2812275.2",
    "Shares Held": "439418",
    "SEDOL": "BSNX0D4"
   },
@@ -80,44 +80,44 @@
    "Name": "Arafura Rare Earths Ltd.",
    "Ticker": "ARU AU",
    "Identifier": "6711726",
-   "Weight": "3.92",
-   "Market Value": "2674943.54",
+   "Weight": "3.95",
+   "Market Value": "2683558.68",
    "Shares Held": "25552309",
    "SEDOL": "6711726"
-  },
-  {
-   "Name": "Meteoric Resources Ltd.",
-   "Ticker": "MEI AU",
-   "Identifier": "B01CRT2",
-   "Weight": "3.15",
-   "Market Value": "2149370.08",
-   "Shares Held": "13998945",
-   "SEDOL": "B01CRT2"
-  },
-  {
-   "Name": "NioCorp Developments Ltd.",
-   "Ticker": "NB",
-   "Identifier": "BMYD3L0",
-   "Weight": "3.13",
-   "Market Value": "2138858.25",
-   "Shares Held": "701265",
-   "SEDOL": "BMYD3L0"
   },
   {
    "Name": "REalloys Inc.",
    "Ticker": "ALOY",
    "Identifier": "BSRFQG1",
-   "Weight": "3.09",
-   "Market Value": "2108348.63",
+   "Weight": "3.15",
+   "Market Value": "2144440.19",
    "Shares Held": "300763",
    "SEDOL": "BSRFQG1"
+  },
+  {
+   "Name": "NioCorp Developments Ltd.",
+   "Ticker": "NB",
+   "Identifier": "BMYD3L0",
+   "Weight": "3.12",
+   "Market Value": "2124832.95",
+   "Shares Held": "701265",
+   "SEDOL": "BMYD3L0"
+  },
+  {
+   "Name": "Meteoric Resources Ltd.",
+   "Ticker": "MEI AU",
+   "Identifier": "B01CRT2",
+   "Weight": "3.1",
+   "Market Value": "2107285.86",
+   "Shares Held": "13998945",
+   "SEDOL": "B01CRT2"
   },
   {
    "Name": "Lindian Resources Ltd.",
    "Ticker": "LIN AU",
    "Identifier": "6214816",
-   "Weight": "2.87",
-   "Market Value": "1961087.58",
+   "Weight": "2.96",
+   "Market Value": "2015981.48",
    "Shares Held": "6938231",
    "SEDOL": "6214816"
   },
@@ -125,8 +125,8 @@
    "Name": "Viridis Mining and Minerals Ltd.",
    "Ticker": "VMM AU",
    "Identifier": "BKPGF18",
-   "Weight": "2.48",
-   "Market Value": "1694764.77",
+   "Weight": "2.52",
+   "Market Value": "1715679.64",
    "Shares Held": "735872",
    "SEDOL": "BKPGF18"
   },
@@ -134,8 +134,8 @@
    "Name": "Brazilian Rare Earths Ltd.",
    "Ticker": "BRE AU",
    "Identifier": "BMVMLB6",
-   "Weight": "1.86",
-   "Market Value": "1267169.72",
+   "Weight": "1.78",
+   "Market Value": "1209790.9",
    "Shares Held": "924015",
    "SEDOL": "BMVMLB6"
   },
@@ -143,8 +143,8 @@
    "Name": "Energy Fuels Inc.",
    "Ticker": "UUUU",
    "Identifier": "BFV4XW8",
-   "Weight": "1.73",
-   "Market Value": "1183754.88",
+   "Weight": "1.75",
+   "Market Value": "1191008.28",
    "Shares Held": "145068",
    "SEDOL": "BFV4XW8"
   },
@@ -152,8 +152,8 @@
    "Name": "St George Mining Ltd.",
    "Ticker": "SGQ AU",
    "Identifier": "B53ZW66",
-   "Weight": "1.35",
-   "Market Value": "921963.28",
+   "Weight": "1.32",
+   "Market Value": "894606.97",
    "Shares Held": "21656615",
    "SEDOL": "B53ZW66"
   },
@@ -161,8 +161,8 @@
    "Name": "Ucore Rare Metals Inc.",
    "Ticker": "UCU CN",
    "Identifier": "BMCMMH8",
-   "Weight": "1.13",
-   "Market Value": "770356.97",
+   "Weight": "1.1",
+   "Market Value": "746140.66",
    "Shares Held": "546276",
    "SEDOL": "BMCMMH8"
   },
@@ -170,71 +170,71 @@
    "Name": "Aclara Resources Inc.",
    "Ticker": "ARA CN",
    "Identifier": "BMG55Q3",
-   "Weight": "1.11",
-   "Market Value": "759739.42",
+   "Weight": "1.08",
+   "Market Value": "736743.32",
    "Shares Held": "364662",
    "SEDOL": "BMG55Q3"
-  },
-  {
-   "Name": "Mkango Magnetic Materials Ltd.",
-   "Ticker": "MKA LN",
-   "Identifier": "BTSK7N6",
-   "Weight": "1.07",
-   "Market Value": "728851.03",
-   "Shares Held": "1611361",
-   "SEDOL": "BTSK7N6"
   },
   {
    "Name": "Northern Minerals Ltd.",
    "Ticker": "NTU AU",
    "Identifier": "B1FMNY2",
-   "Weight": "1.03",
-   "Market Value": "705092.15",
+   "Weight": "1.04",
+   "Market Value": "707363.03",
    "Shares Held": "42096058",
    "SEDOL": "B1FMNY2"
+  },
+  {
+   "Name": "Mkango Magnetic Materials Ltd.",
+   "Ticker": "MKA LN",
+   "Identifier": "BTSK7N6",
+   "Weight": "1.03",
+   "Market Value": "700647.99",
+   "Shares Held": "1611361",
+   "SEDOL": "BTSK7N6"
   },
   {
    "Name": "Rainbow Rare Earths Ltd.",
    "Ticker": "RBW LN",
    "Identifier": "BD59ZW9",
-   "Weight": "1",
-   "Market Value": "680509.35",
+   "Weight": "0.97",
+   "Market Value": "658047.78",
    "Shares Held": "2314594",
    "SEDOL": "BD59ZW9"
-  },
-  {
-   "Name": "Victory Metals Ltd.",
-   "Ticker": "VTM AU",
-   "Identifier": "BP94V71",
-   "Weight": "0.87",
-   "Market Value": "596103.08",
-   "Shares Held": "635047",
-   "SEDOL": "BP94V71"
-  },
-  {
-   "Name": "Pensana PLC",
-   "Ticker": "PRE LN",
-   "Identifier": "BKV4DS9",
-   "Weight": "0.85",
-   "Market Value": "578711.98",
-   "Shares Held": "1111127",
-   "SEDOL": "BKV4DS9"
   },
   {
    "Name": "American Rare Earths Ltd.",
    "Ticker": "ARR AU",
    "Identifier": "BMHKT87",
-   "Weight": "0.84",
-   "Market Value": "573147.7",
+   "Weight": "0.88",
+   "Market Value": "600739.6",
    "Shares Held": "2451481",
    "SEDOL": "BMHKT87"
+  },
+  {
+   "Name": "Pensana PLC",
+   "Ticker": "PRE LN",
+   "Identifier": "BKV4DS9",
+   "Weight": "0.87",
+   "Market Value": "589427.73",
+   "Shares Held": "1111127",
+   "SEDOL": "BKV4DS9"
+  },
+  {
+   "Name": "Victory Metals Ltd.",
+   "Ticker": "VTM AU",
+   "Identifier": "BP94V71",
+   "Weight": "0.85",
+   "Market Value": "580237.87",
+   "Shares Held": "635047",
+   "SEDOL": "BP94V71"
   },
   {
    "Name": "Ionic Rare Earths Ltd.",
    "Ticker": "IXR AU",
    "Identifier": "BMDYLR6",
-   "Weight": "0.58",
-   "Market Value": "398638.7",
+   "Weight": "0.71",
+   "Market Value": "481724.94",
    "Shares Held": "1298176",
    "SEDOL": "BMDYLR6"
   },
@@ -242,8 +242,8 @@
    "Name": "Brazilian Critical Minerals Ltd.",
    "Ticker": "BCM AU",
    "Identifier": "BRT6ZF7",
-   "Weight": "0.54",
-   "Market Value": "369030.13",
+   "Weight": "0.53",
+   "Market Value": "363487.41",
    "Shares Held": "9614040",
    "SEDOL": "BRT6ZF7"
   },
@@ -251,8 +251,8 @@
    "Name": "Scandium Canada Ltd.",
    "Ticker": "SCD CN",
    "Identifier": "BPG5R02",
-   "Weight": "0.44",
-   "Market Value": "301492.06",
+   "Weight": "0.45",
+   "Market Value": "302660.97",
    "Shares Held": "2578488",
    "SEDOL": "BPG5R02"
   },
@@ -261,7 +261,7 @@
    "Ticker": "CRI AU",
    "Identifier": "BRQPKP2",
    "Weight": "0.36",
-   "Market Value": "246639.98",
+   "Market Value": "247434.33",
    "Shares Held": "15365349",
    "SEDOL": "BRQPKP2"
   },
@@ -269,8 +269,8 @@
    "Name": "Idaho Strategic Resources Inc.",
    "Ticker": "IDR",
    "Identifier": "BMB5CZ6",
-   "Weight": "0.32",
-   "Market Value": "218437.28",
+   "Weight": "0.33",
+   "Market Value": "222174.8",
    "Shares Held": "10382",
    "SEDOL": "BMB5CZ6"
   },
@@ -278,8 +278,8 @@
    "Name": "Ramaco Resources Inc.",
    "Ticker": "METC",
    "Identifier": "BRXYZ91",
-   "Weight": "0.31",
-   "Market Value": "213301.16",
+   "Weight": "0.3",
+   "Market Value": "201575.18",
    "Shares Held": "27919",
    "SEDOL": "BRXYZ91"
   },
@@ -287,8 +287,8 @@
    "Name": "VHM Ltd.",
    "Ticker": "VHM AU",
    "Identifier": "BP9P970",
-   "Weight": "0.28",
-   "Market Value": "189285.64",
+   "Weight": "0.27",
+   "Market Value": "185579.47",
    "Shares Held": "1232826",
    "SEDOL": "BP9P970"
   },
@@ -296,8 +296,8 @@
    "Name": "Hastings Technology Metals Ltd.",
    "Ticker": "HAS AU",
    "Identifier": "B29V502",
-   "Weight": "0.26",
-   "Market Value": "180112.44",
+   "Weight": "0.25",
+   "Market Value": "169158.95",
    "Shares Held": "1098203",
    "SEDOL": "B29V502"
   },
@@ -306,8 +306,8 @@
    "Ticker": "",
    "Identifier": "",
    "Weight": "0.19",
-   "Market Value": "130570.08",
-   "Shares Held": "130570.08",
+   "Market Value": "133211.98",
+   "Shares Held": "133211.98",
    "SEDOL": ""
   },
   {
@@ -315,7 +315,7 @@
    "Ticker": "DEFN CN",
    "Identifier": "BG5Q7K3",
    "Weight": "0.19",
-   "Market Value": "130597.88",
+   "Market Value": "131104.22",
    "Shares Held": "1842932",
    "SEDOL": "BG5Q7K3"
   },
@@ -323,8 +323,8 @@
    "Name": "Leading Edge Materials Corp.",
    "Ticker": "LEM CN",
    "Identifier": "BYMHHV6",
-   "Weight": "0.16",
-   "Market Value": "107755.58",
+   "Weight": "0.15",
+   "Market Value": "99633.35",
    "Shares Held": "800312",
    "SEDOL": "BYMHHV6"
   },
@@ -332,8 +332,8 @@
    "Name": "Evolution Metals & Technologies Corp.",
    "Ticker": "EMAT",
    "Identifier": "BTY6329",
-   "Weight": "0.14",
-   "Market Value": "94777.76",
+   "Weight": "0.13",
+   "Market Value": "88007.92",
    "Shares Held": "61544",
    "SEDOL": "BTY6329"
   },
@@ -342,7 +342,7 @@
    "Ticker": "APXC CN",
    "Identifier": "BQ66J28",
    "Weight": "0.08",
-   "Market Value": "52796.48",
+   "Market Value": "56817.26",
    "Shares Held": "59603",
    "SEDOL": "BQ66J28"
   },
@@ -351,7 +351,7 @@
    "Ticker": "ATR AU",
    "Identifier": "B8D0NR0",
    "Weight": "0.06",
-   "Market Value": "41800.35",
+   "Market Value": "42265.17",
    "Shares Held": "94322",
    "SEDOL": "B8D0NR0"
   },
@@ -360,7 +360,7 @@
    "Ticker": "ETM AU",
    "Identifier": "BQWMF33",
    "Weight": "0.06",
-   "Market Value": "41376.61",
+   "Market Value": "39743.49",
    "Shares Held": "1261432",
    "SEDOL": "BQWMF33"
   },
@@ -369,7 +369,7 @@
    "Ticker": "GMA CN",
    "Identifier": "B4R1Q94",
    "Weight": "0.03",
-   "Market Value": "20538.23",
+   "Market Value": "19776.31",
    "Shares Held": "118296",
    "SEDOL": "B4R1Q94"
   },
@@ -378,7 +378,7 @@
    "Ticker": "AVL CN",
    "Identifier": "BWL88J1",
    "Weight": "0.02",
-   "Market Value": "11427.06",
+   "Market Value": "12135.5",
    "Shares Held": "2829",
    "SEDOL": "BWL88J1"
   },
@@ -387,7 +387,7 @@
    "Ticker": "KEN LN",
    "Identifier": "BNBQZW4",
    "Weight": "0.02",
-   "Market Value": "14384.01",
+   "Market Value": "14465.6",
    "Shares Held": "205946",
    "SEDOL": "BNBQZW4"
   }

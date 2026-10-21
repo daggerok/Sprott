@@ -2,7 +2,7 @@
  "ticker": "SGDM",
  "page": 4,
  "pageSize": 1000,
- "totalRows": 3085,
+ "totalRows": 3086,
  "headers": [
   "Date",
   "Close",
@@ -519,6 +519,12 @@
    "Close": "73.169998",
    "Adj Close": "73.17",
    "Volume": "19300"
+  },
+  {
+   "Date": "Oct 20 2026",
+   "Close": "72.879997",
+   "Adj Close": "72.88",
+   "Volume": "14000"
   }
  ]
 }

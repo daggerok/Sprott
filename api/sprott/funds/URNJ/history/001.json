@@ -2,7 +2,7 @@
  "ticker": "URNJ",
  "page": 1,
  "pageSize": 1000,
- "totalRows": 931,
+ "totalRows": 932,
  "headers": [
   "Date",
   "Close",
@@ -5595,6 +5595,12 @@
    "Close": "17.57",
    "Adj Close": "17.57",
    "Volume": "413400"
+  },
+  {
+   "Date": "Oct 20 2026",
+   "Close": "17.6",
+   "Adj Close": "17.6",
+   "Volume": "615100"
   }
  ]
 }
