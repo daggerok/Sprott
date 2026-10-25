@@ -6,7 +6,7 @@ import { join } from 'node:path';
 
 import {
   CONTROL_NAMES, USAGE, configureRequestPacing, createRequestGate, fetchWithRetry, annualizedToTotal, batchSelection, buildMetrics, dividendYieldBasis, withYieldBasis,
-  holdingsGuard, indicatedYield, inferDistributionFrequency, installSystemCa, isCertError, mergeHistory, ADJ_CLOSE_NOISE, monthAnchor, normalizeCusip,
+  holdingsGuard, indicatedYield, inferDistributionFrequency, installSystemCa, isCertError, mergeHistory, ADJ_CLOSE_NOISE, monthAnchor, normalizeCusip, nportIsNewer,
   parseCatalogNav, parseFeesTable, parseFundPage, parseHoldingsSection, parseMoneyText, parseNport, parsePercentText,
   parseDistributionsSection, parseReturnTable, parseSitemapFundPages, parseSprottPerformance, performanceAsOfDate,
   priceReturns, readConfig, resolveControls, retainReturns, runPool, runtimeControls, samePublishedContent, storedDateIso,
@@ -294,6 +294,14 @@ describe('parsing', () => {
     expect([page.month, page.quarter]).toEqual([null, null]);
   });
 
+  test('N-PORT holdings replace published ones only when the filing is strictly newer; an unknown date keeps them', () => {
+    const published = { totalRows: 26, asOfDate: '2026-10-22', asOf: 'Oct 22 2026' };
+    expect([nportIsNewer('2026-07-31', published), nportIsNewer('2026-10-22', published), nportIsNewer('2026-10-31', published)]).toEqual([false, false, true]);
+    expect(nportIsNewer('10/31/2026', { totalRows: 26, asOfDate: null, asOf: 'Oct 22 2026' })).toBe(true);
+    expect([nportIsNewer('2026-10-31', { totalRows: 26, asOfDate: null, asOf: '—' }), nportIsNewer('', published)]).toEqual([false, false]);
+    expect([nportIsNewer('2026-07-31', undefined), nportIsNewer('2026-07-31', { totalRows: 0, asOfDate: null })]).toEqual([true, true]);
+  });
+
   test('money and percent text keep decoration out and unknown text as null', () => {
     expect([parseMoneyText('$47.63'), parseMoneyText('-$0.57'), parseMoneyText('$1.84 Billion'), parseMoneyText('526.07 Million'), parseMoneyText('—')])
       .toEqual([47.63, -0.57, 1840000000, 526070000, null]);
@@ -569,6 +577,32 @@ describe('pipeline', () => {
     await box.run({ TICKERS: 'URNM' });
     expect(snapshot()).toEqual(before);
     expect(process.exitCode).toBe(1);
+  });
+
+  test('without the fund page an older N-PORT keeps the fresher published holdings, a newer one replaces them', async () => {
+    let repPdDate = '2026-06-30';
+    const nport = () => `<edgarSubmission><formData><genInfo><regName>SPROTT FUNDS TRUST</regName><regCik>0001728683</regCik>
+      <seriesName>Sprott Uranium Miners ETF</seriesName><seriesId>S000068011</seriesId><repPdDate>${repPdDate}</repPdDate></genInfo>
+      <invstOrSecs><invstOrSec><name>Cameco Corp.</name><pctVal>60</pctVal><valUSD>600</valUSD><balance>6</balance></invstOrSec>
+      <invstOrSec><name>NexGen Energy Ltd.</name><pctVal>40</pctVal><valUSD>400</valUSD><balance>4</balance></invstOrSec></invstOrSecs></formData></edgarSubmission>`;
+    const box = sandbox((url) => {
+      if (url.endsWith('/company_tickers_mf.json')) return new Response(JSON.stringify({ fields: ['cik', 'seriesId', 'classId', 'symbol'], data: [[1728683, 'S000068011', 'C000220000', 'URNM']] }));
+      if (url.includes('/submissions/CIK0001728683.json')) return new Response(JSON.stringify({ cik: '1728683', filings: { recent: { form: ['NPORT-P'], accessionNumber: ['0001728683-26-000001'], filingDate: ['2026-08-28'], reportDate: ['2026-06-30'] } } }));
+      if (url.endsWith('/primary_doc.xml')) return new Response(nport());
+      return undefined;
+    });
+    await box.run({ EDGAR_FALLBACK: 'true' });
+    const holdings = box.read('funds/URNM/holdings/001.json');
+    box.setDown('/urnm-sprott-etf/');
+    await box.run({ EDGAR_FALLBACK: 'true', TICKERS: 'URNM' });
+    expect(box.read('funds/URNM/holdings/001.json')).toBe(holdings);
+    expect(JSON.parse(box.read('funds/URNM/meta.json')).holdings).toMatchObject({ asOfDate: '2026-09-30', totalRows: 2 });
+    expect(box.urls.some((url) => url.endsWith('/primary_doc.xml'))).toBe(true);
+    repPdDate = '2026-10-31';
+    await box.run({ EDGAR_FALLBACK: 'true', TICKERS: 'URNM' });
+    expect(JSON.parse(box.read('funds/URNM/meta.json')).holdings).toMatchObject({ asOfDate: '2026-10-31', source: expect.stringContaining('primary_doc.xml') });
+    expect(JSON.parse(box.read('funds/URNM/holdings/001.json')).rows.map((row: Record<string, string>) => row.Name)).toEqual(['Cameco Corp.', 'NexGen Energy Ltd.']);
+    expect(process.exitCode ?? 0).toBe(0);
   });
 
   test('a dead catalog falls back to the published funds instead of shrinking the index', async () => {

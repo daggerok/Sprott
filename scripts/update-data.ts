@@ -1730,6 +1730,17 @@ async function resolveNportFiling(fund:CatalogFund,config:UpdaterConfig):Promise
   return null;
 }
 
+/**
+ * May N-PORT holdings reported as of `repPdDate` replace the published holdings (`meta.holdings`)? Only when nothing
+ * is published, or the filing is strictly newer than the published as-of date. An unparseable date on either side
+ * keeps the published sheet: freshness cannot be proven, and keeping is undone by the next fund-page fetch.
+ */
+export function nportIsNewer(repPdDate: unknown, published: JsonRecord | null | undefined): boolean {
+  if (!published || !(Number(published.totalRows) > 0)) return true;
+  const filing = storedDateIso(repPdDate);
+  const current = storedDateIso(published.asOfDate) ?? storedDateIso(published.asOf);
+  return filing !== null && current !== null && filing > current;
+}
 async function optional<T>(label:string, action:()=>Promise<T>):Promise<T|null> {
   try {return await action();} catch(e){outputNote(`[ fallback ] ${label}: ${errorMessage(e)}`);return null;}
 }
@@ -1859,7 +1870,14 @@ async function processFund(fund: CatalogFund, config: UpdaterConfig, previousInd
   if (pageRows.length) {
     holdings = { rows: sortHoldings(pageRows), headers: HOLDINGS_HEADERS, asOfDate: page?.holdings?.asOfDate ?? null, source: page?.holdings?.source ?? 'sprottetfs.com fund page', status: 'available' };
   }
-  if (!holdings && config.edgarFallback) holdings = await optional(`${ticker} SEC holdings`, () => resolveNportFiling(fund, config));
+  if (!holdings && config.edgarFallback) holdings = await optional(`${ticker} SEC holdings`, async () => {
+    const filing = await resolveNportFiling(fund, config);
+    // An N-PORT filing is weeks old; it must not replace published holdings that are as new or newer (they are kept below).
+    if (filing && !nportIsNewer(filing.asOfDate, old.holdings)) {
+      throw new Error(`N-PORT as of ${filing.asOfDate || 'an unknown date'} is not newer than the published holdings (${old.holdings?.asOfDate ?? 'unknown date'}); kept them`);
+    }
+    return filing;
+  });
   const holdingsFresh = holdings !== null; // false when the previous run's sheet is re-read below
   if (!holdings) {
     const rows = await readPreviousSheet(ticker, 'holdings'), headers = await readPreviousSheetHeaders(ticker, 'holdings');
