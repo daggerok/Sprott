@@ -6,7 +6,7 @@ import { join } from 'node:path';
 
 import {
   CONTROL_NAMES, USAGE, configureRequestPacing, createRequestGate, fetchWithRetry, annualizedToTotal, batchSelection, buildMetrics, dividendYieldBasis, withYieldBasis,
-  indicatedYield, inferDistributionFrequency, installSystemCa, isCertError, mergeHistory, ADJ_CLOSE_NOISE, monthAnchor, normalizeCusip,
+  holdingsGuard, indicatedYield, inferDistributionFrequency, installSystemCa, isCertError, mergeHistory, ADJ_CLOSE_NOISE, monthAnchor, normalizeCusip,
   parseCatalogNav, parseFeesTable, parseFundPage, parseHoldingsSection, parseMoneyText, parseNport, parsePercentText,
   parseDistributionsSection, parseReturnTable, parseSitemapFundPages, parseSprottPerformance, performanceAsOfDate,
   priceReturns, readConfig, resolveControls, retainReturns, runPool, runtimeControls, samePublishedContent, storedDateIso,
@@ -48,11 +48,11 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 const holdingsCsv = [
   'Security,Symbol,SEDOL,Weight,Market Value,Quantity',
-  'Cameco Corp.,CCJ,2158684,20.49,376658199.63,4345889',
+  'Cameco Corp.,CCJ,2158684,99.85,376658199.63,4345889',
   'Cash Equivalent,,,0.15,2757000.00,',
 ].join('\n');
 const holdingsTable = '<table><tr><th>Security</th><th>Market Value</th><th>Symbol</th><th>SEDOL</th><th>Quantity</th><th>Weight</th></tr>'
-  + '<tr><td>Cameco Corp.</td><td>376,658,199.63</td><td>CCJ</td><td>2158684</td><td>4,345,889</td><td>20.49</td></tr>'
+  + '<tr><td>Cameco Corp.</td><td>376,658,199.63</td><td>CCJ</td><td>2158684</td><td>4,345,889</td><td>99.85</td></tr>'
   + '<tr><td>Cash Equivalent</td><td>2,757,000.00</td><td></td><td></td><td></td><td>0.15</td></tr></table>';
 const perfTable = (rows: string): string => '<table><tr><td>Fund</td><td>1 MO*</td><td>3 MO*</td><td>YTD*</td><td>1 YR</td><td>3 YR</td><td>5 YR</td><td>10 YR</td><td>S.I.</td></tr>'
   + rows + '</table>';
@@ -239,7 +239,7 @@ describe('parsing', () => {
     expect(holdings.rows).toHaveLength(2);
     expect(holdings.rows[0]).toEqual({
       Name: 'Cameco Corp.', Ticker: 'CCJ', Identifier: '2158684',
-      Weight: '20.49', 'Market Value': '376658199.63', 'Shares Held': '4345889', SEDOL: '2158684',
+      Weight: '99.85', 'Market Value': '376658199.63', 'Shares Held': '4345889', SEDOL: '2158684',
     });
     expect(holdings.rows[1]).toMatchObject({ Name: 'Cash Equivalent', Ticker: '', Weight: '0.15' });
     const fallback = parseHoldingsSection(pageHtml({ csv: false }));
@@ -298,6 +298,21 @@ describe('parsing', () => {
     expect([parseMoneyText('$47.63'), parseMoneyText('-$0.57'), parseMoneyText('$1.84 Billion'), parseMoneyText('526.07 Million'), parseMoneyText('—')])
       .toEqual([47.63, -0.57, 1840000000, 526070000, null]);
     expect([parsePercentText('-0.27%'), parsePercentText('0.75%'), parsePercentText('Quarterly')]).toEqual([-0.27, 0.75, null]);
+  });
+
+  test('holdings guard: header-only, renamed weight column, broken weights, a bad weight sum and a halved sheet are rejected', () => {
+    const headers = ['Name', 'Ticker', 'Weight'];
+    const rows = [{ Name: 'A', Ticker: 'A', Weight: '60%' }, { Name: 'B', Ticker: 'B', Weight: '40%' }];
+    expect(holdingsGuard(headers, rows, 2)).toBeNull();
+    expect(holdingsGuard(headers, [['A', 'A', '60'], ['B', 'B', '40']], null)).toBeNull();
+    expect(holdingsGuard([], [], 0)).toBeNull(); // nothing published before: an empty sheet is honest
+    expect(holdingsGuard(headers, [], 505)).toContain('no holdings rows');
+    expect(holdingsGuard(['Name', 'Ticker', 'Wt'], rows, 2)).toContain('no weight column');
+    expect(holdingsGuard(headers, rows.map((row) => ({ ...row, Weight: '6\u200B0' })), 2)).toContain('numeric weight');
+    const allocation = [{ Name: 'Cash&Collateral', Ticker: '-', Weight: '100' }, { Name: 'Equities', Ticker: '-', Weight: '476' }];
+    expect(holdingsGuard(headers, allocation, 2)).toContain('outside 50..150');
+    expect(holdingsGuard(headers, allocation, 2, ['sum'])).toBeNull();
+    expect(holdingsGuard(headers, rows, 5)).toContain('less than half');
   });
 
   test('N-PORT-P fallback: identity and holdings are read from the filing', () => {
@@ -539,6 +554,21 @@ describe('pipeline', () => {
     expect(after.metrics).toEqual(row.metrics);
     expect(after.holdings).toBe(row.holdings);
     expect(process.exitCode ?? 0).toBe(0);
+  });
+
+  test('fresh holdings that fail the guard keep the fund exactly as published and report it failed', async () => {
+    const box = sandbox();
+    await box.run();
+    const snapshot = () => Object.fromEntries(box.files().map((path) => [path, box.read(path)]));
+    const before = snapshot();
+    const good = globalThis.fetch;
+    // the page CSV renames its Weight column: every row parses with an empty weight
+    globalThis.fetch = (async (input: unknown) => (String(input).endsWith('/urnm-sprott-etf/')
+      ? new Response(pageHtml({ ticker: 'URNM' }).replace('Weight%2CMarket', 'Wt%2CMarket'))
+      : good(String(input)))) as unknown as typeof fetch;
+    await box.run({ TICKERS: 'URNM' });
+    expect(snapshot()).toEqual(before);
+    expect(process.exitCode).toBe(1);
   });
 
   test('a dead catalog falls back to the published funds instead of shrinking the index', async () => {
