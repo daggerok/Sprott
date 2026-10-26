@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import {
-  CONTROL_NAMES, USAGE, configureRequestPacing, createRequestGate, fetchWithRetry, annualizedToTotal, batchSelection, buildMetrics, dividendYieldBasis, withYieldBasis,
+  CONTROL_NAMES, USAGE, closedFund, configureRequestPacing, createRequestGate, fetchWithRetry, annualizedToTotal, batchSelection, buildMetrics, dividendYieldBasis, withYieldBasis,
   holdingsGuard, indicatedYield, inferDistributionFrequency, installSystemCa, isCertError, mergeHistory, ADJ_CLOSE_NOISE, monthAnchor, normalizeCusip, nportDateWarning, nportIsNewer,
   parseCatalogNav, parseFeesTable, parseFundPage, parseHoldingsSection, parseMoneyText, parseNport, parsePercentText,
   parseDistributionsSection, parseReturnTable, parseSitemapFundPages, parseSprottPerformance, performanceAsOfDate,
@@ -141,7 +141,9 @@ describe('controls', () => {
     expect((await runtimeControls({ CONCURRENCY: '7' })).CONCURRENCY).toBe('7');
     expect((await runtimeControls({ SPROTT_TICKERS: 'URNM' })).TICKERS).toBe('URNM');
   });
+});
 
+describe('controls 2', () => {
   test('filters, history range and tickers flow through readConfig', () => {
     const config = readConfig(resolveControls({
       HISTORY_RANGE: '5y', AUM: '100M:', TER: ':0.7', TICKERS: 'urnm, setm;URNJ', PERFORMANCE_1Y: '10:', TOTAL_RETURN_YTD: ':-1',
@@ -287,7 +289,9 @@ describe('parsing', () => {
     expect(parseReturnTable(values)).toEqual({ ytd: null, yr1: null, yr3: null, yr5: -0.01, yr10: 12, sinceInception: null, mo1: 0, qtd: -7.5 });
     expect(Object.values(parseReturnTable(table(['a', 'b'], [['1', '2']])))).toEqual(Array(8).fill(null));
   });
+});
 
+describe('parsing 2', () => {
   test('performance blocks need their published "As of" date', () => {
     const page = parseSprottPerformance('<h3>Month-End Performance</h3><p class="small">Average Annual Total Returns (%) As of 9/30/2026</p>'
       + table(['Fund', '1 MO*'], [['Sprott Uranium Miners ETF (Net Asset Value)', '1']]));
@@ -395,7 +399,9 @@ describe('metrics', () => {
     expect([storedDateIso('Sep 30 2026'), storedDateIso('Sep 30, 2026'), storedDateIso('2026-09-30'), storedDateIso('—'), storedDateIso(undefined)])
       .toEqual(['2026-09-30', '2026-09-30', '2026-09-30', null, null]);
   });
+});
 
+describe('metrics 2', () => {
   test('retained returns travel with their performanceAsOf and basis and never touch the yield', () => {
     const fresh = { ytd: 1, tr1y: 2, tr3y: null, dividendYield: null, returnsBasis: 'new basis', performanceAsOf: '2026-09-30' };
     const previous = { ytd: 5, tr1y: 6, tr3y: 7.5, dividendYield: 4.2, returnsBasis: 'old basis', performanceAsOf: '2026-06-30' };
@@ -484,7 +490,9 @@ function sandbox(router: Router = () => undefined) {
   };
   const backdate = (): void => { for (const path of files()) utimesSync(join(api, path), 1_000_000_000, 1_000_000_000); };
   const touched = (): string[] => files().filter((path) => statSync(join(api, path)).mtimeMs !== 1_000_000_000_000);
-  return { api, urls, run, read, files, backdate, touched, setDown: (...parts: string[]) => { down = new Set(parts); } };
+  // the module main() runs in (its own copy, so CLOSED_FUNDS of this sandbox is reached here, not through the test's import)
+  const module = (): Promise<any> => import(join(dir, 'scripts', 'update-data.ts'));
+  return { api, urls, run, read, files, backdate, touched, module, setDown: (...parts: string[]) => { down = new Set(parts); } };
 }
 
 describe('pipeline', () => {
@@ -550,7 +558,9 @@ describe('pipeline', () => {
       adjusted.adjclose = original;
     }
   });
+});
 
+describe('pipeline 2', () => {
   test('a failed source keeps the fund as published', async () => {
     // Known updater quirk (reported, not fixed here): without the fund page the AUM display text is re-formatted ("$1.84 Billion" -> "$1,840.00 M")
     const sameButAumText = (text: string): unknown => { const doc = JSON.parse(text); doc.aum.display = ''; return doc; };
@@ -581,6 +591,96 @@ describe('pipeline', () => {
     await box.run({ TICKERS: 'URNM' });
     expect(snapshot()).toEqual(before);
     expect(process.exitCode).toBe(1);
+  });
+
+  test('a closed fund is never fetched or reported failed: its files stay as published, its index row says closed, a rerun writes nothing', async () => {
+    const entry = { ticker: 'URNM', closed: '2026-10-01', source: 'https://www.sec.gov/Archives/edgar/data/1728683/notice.htm' };
+    expect(() => closedFund([{ ...entry, closed: 'soon' }], 'URNM')).toThrow('CLOSED_FUNDS');
+    expect(closedFund([entry], 'urnm')).toEqual(entry);
+    const box = sandbox();
+    await box.run();
+    const snapshot = () => Object.fromEntries(box.files().map((path) => [path, box.read(path)]));
+    const first = snapshot();
+    const firstRow = JSON.parse(box.read('index.json')).funds.find((row: any) => row.ticker === 'URNM');
+    const good = globalThis.fetch, calls: string[] = [];
+    let listed = true;
+    // the COPJ page carries the fund list (so the catalog reads no other page), URNM's holdings would fail the guard
+    globalThis.fetch = (async (input: unknown) => {
+      const url = String(input);
+      calls.push(url);
+      if (url.endsWith('/sitemap.xml') && !listed) return new Response(sitemapXml.replace(/<url><loc>[^<]*urnm[^<]*<\/loc><\/url>/, ''));
+      if (url.endsWith('/copj-sprott-etf/')) return new Response(navHtml);
+      if (url.endsWith('/urnm-sprott-etf/')) return new Response(pageHtml({ ticker: 'URNM' }).replace('Weight%2CMarket', 'Wt%2CMarket'));
+      return good(url);
+    }) as unknown as typeof fetch;
+    const { CLOSED_FUNDS } = await box.module();
+    CLOSED_FUNDS.push(entry);
+    try {
+      await box.run({ TICKERS: 'URNM' });
+      expect(calls.filter((url) => /urnm/i.test(url))).toEqual([]);
+      expect(process.exitCode).not.toBe(1);
+      const closed = snapshot();
+      for (const path of Object.keys(first)) if (path !== 'index.json') expect([path, closed[path]]).toEqual([path, first[path]]);
+      const rows = JSON.parse(box.read('index.json')).funds;
+      expect(rows.map((row: any) => row.ticker)).toEqual(FUNDS);
+      const { status, closedDate, closedSource, ...rest } = rows.find((row: any) => row.ticker === 'URNM');
+      expect([status, closedDate, closedSource]).toEqual(['closed', '2026-10-01', entry.source]);
+      expect(rest).toEqual(firstRow);
+      expect(rows.filter((row: any) => row.status === 'closed')).toHaveLength(1);
+      const recording = globalThis.fetch;
+      globalThis.fetch = good;
+      await box.run();
+      expect(snapshot()).toEqual(closed);
+      // the live catalog drops the closed fund: TICKERS still accepts it, its row and files survive unchanged
+      globalThis.fetch = recording;
+      listed = false;
+      await box.run({ TICKERS: 'URNM' });
+      expect(process.exitCode).not.toBe(1);
+      expect(snapshot()).toEqual(closed);
+    } finally {
+      CLOSED_FUNDS.splice(CLOSED_FUNDS.indexOf(entry), 1);
+    }
+  });
+
+  test('a new fund whose holdings fail the guard is failed and still gets a catalog-only row (dataFile null, full metrics key set) and no files', async () => {
+    const box = sandbox();
+    const good = globalThis.fetch;
+    globalThis.fetch = (async (input: unknown) => (String(input).endsWith('/urnm-sprott-etf/')
+      ? new Response(pageHtml({ ticker: 'URNM' }).replace('Weight%2CMarket', 'Wt%2CMarket'))
+      : good(String(input)))) as unknown as typeof fetch;
+    await box.run();
+    expect(process.exitCode).toBe(1);
+    const rows = JSON.parse(box.read('index.json')).funds;
+    expect(rows.map((row: any) => row.ticker)).toEqual(FUNDS);
+    const row = rows.find((fund: any) => fund.ticker === 'URNM');
+    expect(row).toMatchObject({ dataFile: null, holdings: 0, history: 0, fundPage: 'https://sprottetfs.com/urnm-sprott-etf/' });
+    expect(Object.keys(row.metrics)).toEqual(Object.keys(rows[0].metrics));
+    expect([row.metrics.tr1y, row.metrics.dividendYield, row.metrics.performanceAsOf]).toEqual([null, null, null]);
+    expect(row.metrics.returnsBasis).toBeTruthy();
+    expect(box.files().filter((path) => path.startsWith('funds/URNM/'))).toEqual([]);
+  });
+});
+
+describe('pipeline 3', () => {
+  test('a new fund that no source answered is failed with a catalog-only row, and that row is never read as published data on the next run', async () => {
+    const box = sandbox();
+    box.setDown('/urnm-sprott-etf', '/chart/URNM');
+    await box.run();
+    expect(process.exitCode).toBe(1);
+    expect(box.files().filter((path) => path.startsWith('funds/URNM/'))).toEqual([]);
+    expect(JSON.parse(box.read('index.json')).funds.find((row: any) => row.ticker === 'URNM')).toMatchObject({ dataFile: null, holdings: 0 });
+    // next run: the page answers without a performance table and Yahoo is still down, so no returns are known yet
+    process.exitCode = 0;
+    box.setDown('/chart/URNM');
+    const good = globalThis.fetch;
+    globalThis.fetch = (async (input: unknown) => (String(input).endsWith('/urnm-sprott-etf/')
+      ? new Response(pageHtml({ ticker: 'URNM' }).replace(/(Month|Quarter)-End Performance/g, 'Performance'))
+      : good(String(input)))) as unknown as typeof fetch;
+    await box.run({ TICKERS: 'URNM' });
+    expect(process.exitCode ?? 0).toBe(0);
+    const row = JSON.parse(box.read('index.json')).funds.find((fund: any) => fund.ticker === 'URNM');
+    expect(row.dataFile).toBe('./funds/URNM/meta.json');
+    expect([row.metrics.returnsBasis, row.metrics.performanceAsOf]).toEqual(['Yahoo adjusted market-price returns, not official NAV', null]);
   });
 
   test('without the fund page an older N-PORT keeps the fresher published holdings, a newer one replaces them', async () => {
