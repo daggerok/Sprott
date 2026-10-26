@@ -1,6 +1,6 @@
 {
- "generatedAt": "2026-10-26T01:57:50Z",
- "catalogReadAt": "2026-10-26T01:57:50Z",
+ "generatedAt": "2026-10-26T06:49:41Z",
+ "catalogReadAt": "2026-10-26T06:49:41Z",
  "source": {
   "provider": "Sprott ETFs",
   "site": "https://sprottetfs.com",
@@ -478,7 +478,7 @@
      "yr3": null,
      "yr5": null,
      "yr10": null,
-     "sinceInception": -22.68,
+     "sinceInception": null,
      "mo1": -12.87,
      "qtd": -19.86
     },
@@ -489,7 +489,7 @@
      "yr3": null,
      "yr5": null,
      "yr10": null,
-     "sinceInception": -22.68,
+     "sinceInception": null,
      "mo1": -12.87,
      "qtd": -19.86
     },
@@ -504,7 +504,7 @@
     "tr3y": null,
     "tr5y": null,
     "tr10y": null,
-    "siAnn": -22.68,
+    "siAnn": null,
     "secYield": null,
     "secYieldText": "—",
     "dividendYield": null,
