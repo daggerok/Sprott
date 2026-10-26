@@ -1480,6 +1480,8 @@ export function parseFeesTable(html: unknown): Record<string, number | null> {
 export const HOLDINGS_HEADERS = ['Name', 'Ticker', 'Identifier', 'Weight', 'Market Value', 'Shares Held', 'SEDOL'];
 /** Funds whose holdings legitimately fail a holdingsGuard check (geared, futures, look-through, top-N lists): ticker, or '*' for every fund -> relaxed checks. */
 const HOLDINGS_GUARD_RELAX: Record<string, string[]> = {};
+/** Funds the issuer closed, each confirmed from an SEC filing or the issuer notice (`source`): never fetched or guarded, last published data kept, index row marked closed. */
+export const CLOSED_FUNDS: ClosedFund[] = [];
 
 /** Quote-aware CSV for the page's embedded data-URI holdings download. */
 export function parseCsv(text: string): string[][] {
@@ -1983,8 +1985,18 @@ async function processFund(fund: CatalogFund, config: UpdaterConfig, previousInd
     distributions: { frequency: frequency.frequency, exDate: latest ? formatUsDate(latest.epoch) : '—', dividend: latest ? String(round(latest.amount, 6)) : '—' },
     returns: meta.returns, metrics, holdings: holdings.rows.length, history: history.length };
 }
+/** Index row of a catalog fund with no published meta.json (new, or its first refresh failed or the guard rejected it): catalog headlines only, dataFile null, every metric unknown (null). */
+export function catalogOnlyRow(fund: CatalogFund): JsonRecord {
+  const metrics = buildMetrics(null, { ...EMPTY_PRICE_RETURNS }, null, null, 'no returns published for this fund yet', null);
+  return { ticker: fund.ticker, name: fund.name || fund.ticker, category: fund.assetClass || 'ETF', fundPage: fund.fundPage, dataFile: null,
+    cusip: null, isin: fund.isin || null, ter: '—', terValue: null, nav: money(fund.nav), navValue: fund.nav, aum: '—', aumValue: null,
+    asOfDate: fund.navDate ? formatEdgarDate(fund.navDate) : '—', inceptionDate: '—', exchange: '', closePrice: '—', closePriceValue: null,
+    premiumDiscount: '—', premiumDiscountValue: null, distributions: { frequency: '—', exDate: '—', dividend: '—' },
+    returns: { monthEnd: null, quarterEnd: null, derivedFrom: null }, metrics, holdings: 0, history: 0 };
+}
 export function batchSelection(funds:CatalogFund[],config:UpdaterConfig,cursor:string|null):CatalogFund[] {
-  const selected=funds.filter(f=>!config.tickers.length||config.tickers.includes(f.ticker));
+  // A closed fund leaves the queue after the TICKERS filter and before the MAX_FETCHES budget: never fetched, guarded or reported.
+  const selected=withoutClosedFunds(funds.filter(f=>!config.tickers.length||config.tickers.includes(f.ticker)),f=>f.ticker,CLOSED_FUNDS);
   if (!config.maxFetches) return selected;
   // Resume after the cursor even when the cursor fund is outside the selection: next selected ticker, then wrap.
   const i=cursor===null?0:selected.filter(f=>f.ticker.localeCompare(cursor)<=0).length;
@@ -2129,14 +2141,18 @@ export async function main(env:Record<string,string|undefined>=process.env):Prom
     if(Date.now()>deadline){deferred++;return;} // stop taking new funds; the index is still written
     const before=await reporter.before(fund.ticker);
     try {
-      const row=await processFund(fund,config,oldFunds.get(fund.ticker)??{});
+      // A catalog-only row (dataFile null) is not published data: never read it as the fund's previous state.
+      const published=oldFunds.get(fund.ticker);
+      const row=await processFund(fund,config,published&&published.dataFile?published:{});
       if(row){result.set(fund.ticker,row);processed++;}
       else skipped++;
       await reporter.result(fund.ticker,before,row?undefined:'skipped');
     } catch(e) {failures++;await reporter.result(fund.ticker,before,'failed',errorMessage(e));}
   });
   if (!result.size) throw new Error('No publishable funds; not replacing the index');
-  const funds=[...result.values()].map(withYieldBasis).sort((a,b)=>a.ticker.localeCompare(b.ticker));
+  // A catalog fund with nothing published (new, or its first refresh failed or the guard rejected it) is still listed: no meta.json, so dataFile is null.
+  for (const fund of catalog) if (!result.has(fund.ticker) && !await readJson(new URL(`funds/${fund.ticker}/meta.json`,API_ROOT))) result.set(fund.ticker,catalogOnlyRow(fund));
+  const funds=markClosedFunds([...result.values()].map(withYieldBasis).sort((a,b)=>a.ticker.localeCompare(b.ticker)),CLOSED_FUNDS);
   const counts={funds:funds.length,holdings:funds.reduce((s,f)=>s+f.holdings,0),history:funds.reduce((s,f)=>s+f.history,0)};
   const indexBody={source:{provider:'Sprott ETFs',site:SPROTT_SITE,catalog:CATALOG_PAGE},counts,funds};
   if(!samePublishedContent(JSON.stringify(withoutStamps(previous)),indexBody)){
@@ -2203,7 +2219,7 @@ if(import.meta.main){
  * Weight (%) or Market Weight) are required, >= 80% of the rows carry a numeric weight, the weights add up to
  * 50..150 and the sheet keeps >= 50% of the previously published rows. `relax` switches off the checks a fund
  * legitimately fails: 'numeric' and 'sum' (geared, inverse, futures, look-through, top-N lists) and 'count'.
- * Rows are arrays in header order or objects keyed by the header text.
+ * Rows are arrays in header order or objects keyed by the header text. A fund in the brand's CLOSED_FUNDS never reaches the guard.
  */
 export function holdingsGuard(headers: ReadonlyArray<string>, rows: ReadonlyArray<unknown>, previousRows: number | null | undefined, relax: ReadonlyArray<string> = []): string | null {
   const previous = Number(previousRows) > 0 ? Number(previousRows) : 0;
@@ -2238,5 +2254,44 @@ function holdingsGuardNumber(value: unknown): number | null {
   if (negative) text = text.slice(1, -1);
   if (!/^[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?$/i.test(text)) return null;
   return negative ? -Number(text) : Number(text);
+}
+
+/** A fund its issuer closed (liquidated, delisted or merged away), confirmed from an official source: an SEC filing or the issuer's notice. */
+export type ClosedFund = { ticker: string; closed: string; source: string };
+
+/**
+ * The brand's CLOSED_FUNDS entry for a ticker, or null. A closed fund is never fetched, never guarded and never reported failed: it keeps
+ * its last published data and its index row carries `status: 'closed'`, `closedDate` and `closedSource`. A malformed entry throws, so a
+ * typo (no ISO date, no https source) never ships.
+ */
+export function closedFund(list: ReadonlyArray<ClosedFund>, ticker: unknown): ClosedFund | null {
+  const wanted = String(ticker === null || ticker === undefined ? '' : ticker).trim().toUpperCase();
+  let found: ClosedFund | null = null;
+  for (let i = 0; i < list.length; i++) {
+    const fund = list[i];
+    if (!/^[A-Z0-9][A-Z0-9.-]{0,9}$/.test(fund.ticker) || !/^\d{4}-\d{2}-\d{2}$/.test(fund.closed) || !/^https:\/\/\S+$/.test(fund.source)) throw new Error(`CLOSED_FUNDS: ${fund.ticker} needs an upper-case ticker, an ISO closing date and an https source`);
+    if (fund.ticker === wanted) found = fund;
+  }
+  return found;
+}
+
+/** The index rows with every closed fund marked (`status: 'closed'`, `closedDate`, `closedSource`); other rows are returned as they are. */
+export function markClosedFunds<T extends object>(rows: ReadonlyArray<T>, list: ReadonlyArray<ClosedFund>): T[] {
+  return rows.map((row) => {
+    const fund = closedFund(list, (row as { ticker?: unknown }).ticker);
+    return fund ? ({ ...row, status: 'closed', closedDate: fund.closed, closedSource: fund.source } as T) : row;
+  });
+}
+
+/** A run's queue without the closed funds, which are named once in the log: they are neither fetched nor counted as failed. */
+export function withoutClosedFunds<T>(queue: ReadonlyArray<T>, tickerOf: (item: T) => string, list: ReadonlyArray<ClosedFund>): T[] {
+  const closed: string[] = [];
+  const open: T[] = [];
+  for (let i = 0; i < queue.length; i++) {
+    if (closedFund(list, tickerOf(queue[i]))) closed.push(tickerOf(queue[i]));
+    else open.push(queue[i]);
+  }
+  if (closed.length) console.log(`[ closed   ] ${closed.join(', ')}: closed by the issuer, published data kept`);
+  return open;
 }
 // </holdings-guard>
