@@ -1526,17 +1526,10 @@ function holdingsRowFromCsv(headers: string[], cells: string[]): JsonRecord {
   };
 }
 
-function holdingsRowFromCells(cells: string[]): JsonRecord {
-  const [security, marketValue, symbol, sedol, quantity, weight] = cells;
-  return {
-    Name: cleanText(security),
-    Ticker: cleanText(symbol),
-    Identifier: cleanText(sedol),
-    Weight: numberText(weight),
-    'Market Value': numberText(marketValue),
-    'Shares Held': numberText(quantity),
-    SEDOL: cleanText(sedol),
-  };
+/** The CSV and the rendered table are both read by their header text: a security name and a weight column are required. */
+function missingHoldingsColumns(headers: string[]): string[] {
+  const has = (...names: string[]): boolean => headers.some((header) => names.some((name) => header.toLowerCase() === name.toLowerCase()));
+  return [has('Security', 'Name') ? '' : 'Security', has('Weight') ? '' : 'Weight'].filter(Boolean);
 }
 
 export function parseHoldingsSection(html: unknown): { rows: JsonRecord[]; asOfDate: string | null; source: string; headers: string[] } {
@@ -1554,15 +1547,21 @@ export function parseHoldingsSection(html: unknown): { rows: JsonRecord[]; asOfD
     const csv = parseCsv(decoded);
     if (csv.length > 1) {
       const [headers, ...body] = csv;
+      const missing = missingHoldingsColumns(headers);
+      if (missing.length) throw new Error(`Holdings CSV has no ${missing.join(' or ')} column (headers: ${headers.join(', ')})`);
       const rows = body.filter((cells) => cells.some((cell) => cell !== '')).map((cells) => holdingsRowFromCsv(headers, cells));
       if (rows.length) return { rows, asOfDate, source: 'sprottetfs.com "Download All Holdings" CSV', headers: HOLDINGS_HEADERS };
     }
   }
   const table = tablesIn(source).find((candidate) => /<th[^>]*>\s*Security\s*<\/th>/i.test(candidate));
   if (!table) throw new Error('Holdings table not found on the fund page');
-  const body = rowsIn(table).slice(1).map(cellsIn).filter((cells) => cells.length >= 6 && cells[0]);
-  if (!body.length) throw new Error('Holdings table has no data rows');
-  return { rows: body.map(holdingsRowFromCells), asOfDate, source: 'sprottetfs.com fund page holdings table', headers: HOLDINGS_HEADERS };
+  // Mapped by the header row, never by position: a reordered table must not put the market value into Weight or the SEDOL into Ticker.
+  const [headers = [], ...body] = rowsIn(table).map(cellsIn);
+  const missing = missingHoldingsColumns(headers);
+  if (missing.length) throw new Error(`Holdings table has no ${missing.join(' or ')} column (headers: ${headers.join(', ')})`);
+  const rows = body.filter((cells) => cells.length >= headers.length).map((cells) => holdingsRowFromCsv(headers, cells)).filter((row) => row.Name);
+  if (!rows.length) throw new Error('Holdings table has no data rows');
+  return { rows, asOfDate, source: 'sprottetfs.com fund page holdings table', headers: HOLDINGS_HEADERS };
 }
 
 export function parseDistributionsSection(html: unknown): { headers: string[]; payments: Array<{ epoch: number; amount: number }> } {
@@ -1763,9 +1762,10 @@ const money=(v:number|null|undefined)=>v==null?'—':`$${v.toFixed(2)}`;
 export const ADJ_CLOSE_NOISE=1e-4;
 export function mergeHistory(previous:JsonRecord[], fresh:ChartDay[]):JsonRecord[] {
   const byDate=new Map<string,JsonRecord>();
+  // "Oct 01 2026" is read as a calendar date, never through the machine's timezone (a run east of UTC wrote a second Oct 01 row).
   for (const row of previous) {
-    const epoch=Date.parse(String(row.Date));
-    if (Number.isFinite(epoch)) byDate.set(new Date(epoch).toISOString().slice(0,10),row);
+    const iso=storedDateIso(row.Date);
+    if (iso) byDate.set(iso,row);
   }
   for (const day of fresh) {
     const [row]=historyRows([day]), published=byDate.get(day.date);
@@ -1775,10 +1775,10 @@ export function mergeHistory(previous:JsonRecord[], fresh:ChartDay[]):JsonRecord
   }
   return [...byDate].sort(([a],[b])=>a.localeCompare(b)).map(([,row])=>row);
 }
-function chartDaysFromRows(rows:JsonRecord[]):ChartDay[] {
+export function chartDaysFromRows(rows:JsonRecord[]):ChartDay[] {
   return rows.flatMap(row=>{
-    const date=new Date(Date.parse(String(row.Date))), close=numberOrNull(row.Close), adjClose=numberOrNull(row['Adj Close']);
-    return Number.isFinite(date.getTime())&&close!==null&&adjClose!==null?[{date:date.toISOString().slice(0,10),close,adjClose,volume:numberOrNull(row.Volume)??0}]:[];
+    const date=storedDateIso(row.Date), close=numberOrNull(row.Close), adjClose=numberOrNull(row['Adj Close']);
+    return date&&close!==null&&adjClose!==null?[{date,close,adjClose,volume:numberOrNull(row.Volume)??0}]:[];
   });
 }
 function previousDividends(meta:JsonRecord):Array<{epoch:number;amount:number}> {
@@ -1856,6 +1856,11 @@ function mergeSprottDividends(old: JsonRecord, page: JsonRecord | null, chart: P
   return [...byDate.values()].sort((a, b) => a.epoch - b.epoch);
 }
 
+/** Why a published fund is kept whole: one of its required sources did not answer. */
+export function requiredSourceFailed(source: string): string {
+  return `required source failed: ${source}; kept the previous complete data`;
+}
+
 async function processFund(fund: CatalogFund, config: UpdaterConfig, previousIndex: JsonRecord): Promise<JsonRecord | null> {
   const ticker = fund.ticker, dir = new URL(`funds/${ticker}/`, API_ROOT);
   const old = await readJson(new URL('meta.json', dir)) ?? {};
@@ -1875,6 +1880,10 @@ async function processFund(fund: CatalogFund, config: UpdaterConfig, previousInd
   if (!inRange(aum, config.aumRange) || !inRange(ter, config.terRange)) return null;
   const secYield = old.yields?.secYield ?? null; // Sprott publishes no 30-day SEC yield on its fund pages.
   if (!inRange(secYield, config.secYieldRange)) return null;
+  // The fund page and Yahoo are required sources: when one of them failed, a published fund stays exactly as it was
+  // (never fresh Yahoo prices, history and yields next to the previous NAV, AUM, TER and official returns).
+  const published = Object.keys(old).length > 0;
+  if (published && !config.skipSprott && !page) throw new Error(requiredSourceFailed('fund page'));
 
   let holdings: JsonRecord | null = null;
   const pageRows: JsonRecord[] = page?.holdings?.rows ?? [];
@@ -1904,6 +1913,7 @@ async function processFund(fund: CatalogFund, config: UpdaterConfig, previousInd
     await storeRaw(ticker, 'yahoo', raw, config);
     return parseChart(raw);
   });
+  if (published && !config.skipYahoo && !chart) throw new Error(requiredSourceFailed('Yahoo chart'));
   const oldHistory = await readPreviousSheet(ticker, 'history');
   if (old.history?.totalRows && oldHistory.length !== old.history.totalRows) throw new Error(`${ticker}: previous history incomplete; refusing overwrite`);
   const history = chart?.days.length ? mergeHistory(oldHistory, chart.days) : oldHistory;
@@ -1948,6 +1958,8 @@ async function processFund(fund: CatalogFund, config: UpdaterConfig, previousInd
   const holdingsProblem = holdingsFresh ? holdingsGuard(holdings.headers, holdings.rows, numberOrNull(old.holdings?.totalRows), HOLDINGS_GUARD_RELAX[ticker] ?? HOLDINGS_GUARD_RELAX['*'] ?? []) : null;
   if (holdingsProblem) throw new Error(`holdings guard: ${holdingsProblem}; ${Object.keys(old).length ? 'kept the previous complete data' : 'no data published for this fund yet'}`);
   if (!page && !chart && !Object.keys(old).length) throw new Error(`${ticker}: no usable per-fund source`);
+  // A new fund is published only with holdings: Yahoo alone would give it an empty sheet reported as updated.
+  if (!published && !holdingsFresh) throw new Error(`${ticker}: no holdings source answered; no data published for this fund yet`);
   const name = cleanText(page?.name) || fund.name || cleanText(old.name) || ticker;
   const category = cleanText(page?.category) || cleanText(old.category) || 'ETF';
   const exchange = cleanText(page?.exchange) || cleanText(old.inception?.exchange) || chart?.exchangeName || '';

@@ -6,7 +6,7 @@ import { join } from 'node:path';
 
 import {
   CONTROL_NAMES, USAGE, closedFund, configureRequestPacing, createRequestGate, fetchWithRetry, annualizedToTotal, batchSelection, buildMetrics, dividendYieldBasis, withYieldBasis,
-  holdingsGuard, indicatedYield, inferDistributionFrequency, installSystemCa, isCertError, mergeHistory, ADJ_CLOSE_NOISE, monthAnchor, normalizeCusip, nportDateWarning, nportIsNewer,
+  chartDaysFromRows, holdingsGuard, indicatedYield, inferDistributionFrequency, installSystemCa, isCertError, mergeHistory, ADJ_CLOSE_NOISE, monthAnchor, normalizeCusip, nportDateWarning, nportIsNewer,
   parseCatalogNav, parseFeesTable, parseFundPage, parseHoldingsSection, parseMoneyText, parseNport, parsePercentText,
   parseDistributionsSection, parseReturnTable, parseSitemapFundPages, parseSprottPerformance, performanceAsOfDate,
   priceReturns, readConfig, resolveControls, retainReturns, runPool, runtimeControls, samePublishedContent, storedDateIso,
@@ -348,6 +348,20 @@ describe('parsing 2', () => {
 });
 
 // ===========================================================================
+describe('parsing 3', () => {
+  test('the holdings table is read by its header text: a reordered table maps every column, a missing Security or Weight column fails', () => {
+    const reordered = '<div class="holdings-table"><table><tr><th>Weight</th><th>SEDOL</th><th>Security</th><th>Quantity</th><th>Symbol</th><th>Market Value</th></tr>'
+      + '<tr><td>99.85</td><td>2158684</td><td>Cameco Corp.</td><td>4,345,889</td><td>CCJ</td><td>376,658,199.63</td></tr></table></div>';
+    expect(parseHoldingsSection(reordered).rows).toEqual([{
+      Name: 'Cameco Corp.', Ticker: 'CCJ', Identifier: '2158684', Weight: '99.85', 'Market Value': '376658199.63', 'Shares Held': '4345889', SEDOL: '2158684',
+    }]);
+    expect(() => parseHoldingsSection(reordered.replace('<th>Weight</th>', '<th>Wt</th>'))).toThrow('no Weight column');
+    const csv = (header: string) => `<a href="data:application/csv;charset=utf-8,${encodeURIComponent(`${header}\nCameco Corp.,CCJ,99.85`)}">Download</a>`;
+    expect(parseHoldingsSection(csv('Security,Symbol,Weight')).rows[0]).toMatchObject({ Name: 'Cameco Corp.', Ticker: 'CCJ', Weight: '99.85' });
+    expect(() => parseHoldingsSection(csv('Holding,Symbol,Weight'))).toThrow('no Security column');
+  });
+});
+
 describe('metrics', () => {
   const days = [
     { date: '2025-12-31', close: 10, adjClose: 10, volume: 1 },
@@ -429,6 +443,17 @@ describe('metrics 2', () => {
     }
     expect(monthAnchor(null, [{ date: '2026-08-31' }] as any)?.toISOString()).toBe('2026-08-31T00:00:00.000Z');
     expect(monthAnchor(null, [])).toBeNull();
+  });
+
+  test('published history dates are calendar dates: the same rows and dates in every timezone', () => {
+    const previous = [{ Date: 'Oct 01 2026', Close: '10', 'Adj Close': '10', Volume: '1' }];
+    const fresh = [{ date: '2026-10-01', close: 10, adjClose: 10, volume: 1 }, { date: '2026-10-02', close: 11, adjClose: 11, volume: 1 }];
+    for (const tz of ['UTC', 'America/New_York', 'Asia/Tokyo', 'Europe/Berlin']) {
+      process.env.TZ = tz;
+      const merged = mergeHistory(previous, fresh);
+      expect(merged.map((row) => row.Date)).toEqual(['Oct 01 2026', 'Oct 02 2026']);
+      expect(chartDaysFromRows(merged).map((day) => day.date)).toEqual(['2026-10-01', '2026-10-02']);
+    }
   });
 
   test('history merge: a published adjusted close keeps its cent within float noise only, a real change of one cent replaces it', () => {
@@ -561,21 +586,29 @@ describe('pipeline', () => {
 });
 
 describe('pipeline 2', () => {
-  test('a failed source keeps the fund as published', async () => {
-    // Known updater quirk (reported, not fixed here): without the fund page the AUM display text is re-formatted ("$1.84 Billion" -> "$1,840.00 M")
-    const sameButAumText = (text: string): unknown => { const doc = JSON.parse(text); doc.aum.display = ''; return doc; };
+  test('a failed fund page or Yahoo chart keeps the published fund byte for byte and reports it failed', async () => {
     const box = sandbox();
     await box.run();
-    const meta = box.read('funds/URNM/meta.json');
-    const row = JSON.parse(box.read('index.json')).funds.find((fund: any) => fund.ticker === 'URNM');
-    box.setDown('/urnm-sprott-etf', '/chart/URNM');
-    await box.run();
-    expect(sameButAumText(box.read('funds/URNM/meta.json'))).toEqual(sameButAumText(meta));
-    const after = JSON.parse(box.read('index.json')).funds.find((fund: any) => fund.ticker === 'URNM');
-    expect({ ...after, aum: null }).toEqual({ ...row, aum: null });
-    expect(after.metrics).toEqual(row.metrics);
-    expect(after.holdings).toBe(row.holdings);
-    expect(process.exitCode ?? 0).toBe(0);
+    const snapshot = () => Object.fromEntries(box.files().map((path) => [path, box.read(path)]));
+    const before = snapshot();
+    // the page fails while Yahoo answers with a newer close: no fresh price, history or yield next to the old NAV
+    const newer = { ...chartPayload.chart.result[0], timestamp: [...chartPayload.chart.result[0].timestamp, ts('2026-10-01')],
+      indicators: { quote: [{ close: [47, 47.2, 47.5, 49], volume: [100, 200, 300, 400] }], adjclose: [{ adjclose: [47, 47.2, 47.5, 49] }] } };
+    const good = globalThis.fetch;
+    globalThis.fetch = (async (input: unknown) => (String(input).includes('/chart/URNM')
+      ? new Response(JSON.stringify({ chart: { result: [newer] } }))
+      : good(String(input)))) as unknown as typeof fetch;
+    box.setDown('/urnm-sprott-etf/');
+    await box.run({ TICKERS: 'URNM' });
+    expect(snapshot()).toEqual(before);
+    expect(process.exitCode).toBe(1);
+    // the page answers and Yahoo fails: kept whole as well
+    process.exitCode = 0;
+    globalThis.fetch = good;
+    box.setDown('/chart/URNM');
+    await box.run({ TICKERS: 'URNM' });
+    expect(snapshot()).toEqual(before);
+    expect(process.exitCode).toBe(1);
   });
 
   test('fresh holdings that fail the guard keep the fund exactly as published and report it failed', async () => {
@@ -584,9 +617,9 @@ describe('pipeline 2', () => {
     const snapshot = () => Object.fromEntries(box.files().map((path) => [path, box.read(path)]));
     const before = snapshot();
     const good = globalThis.fetch;
-    // the page CSV renames its Weight column: every row parses with an empty weight
+    // the page CSV publishes a broken weight (9.85 instead of 99.85): the weights add up to 10
     globalThis.fetch = (async (input: unknown) => (String(input).endsWith('/urnm-sprott-etf/')
-      ? new Response(pageHtml({ ticker: 'URNM' }).replace('Weight%2CMarket', 'Wt%2CMarket'))
+      ? new Response(pageHtml({ ticker: 'URNM' }).replace('%2C99.85%2C', '%2C9.85%2C'))
       : good(String(input)))) as unknown as typeof fetch;
     await box.run({ TICKERS: 'URNM' });
     expect(snapshot()).toEqual(before);
@@ -646,7 +679,7 @@ describe('pipeline 2', () => {
     const box = sandbox();
     const good = globalThis.fetch;
     globalThis.fetch = (async (input: unknown) => (String(input).endsWith('/urnm-sprott-etf/')
-      ? new Response(pageHtml({ ticker: 'URNM' }).replace('Weight%2CMarket', 'Wt%2CMarket'))
+      ? new Response(pageHtml({ ticker: 'URNM' }).replace('%2C99.85%2C', '%2C9.85%2C'))
       : good(String(input)))) as unknown as typeof fetch;
     await box.run();
     expect(process.exitCode).toBe(1);
@@ -683,7 +716,7 @@ describe('pipeline 3', () => {
     expect([row.metrics.returnsBasis, row.metrics.performanceAsOf]).toEqual(['Yahoo adjusted market-price returns, not official NAV', null]);
   });
 
-  test('without the fund page an older N-PORT keeps the fresher published holdings, a newer one replaces them', async () => {
+  test('a failed fund page keeps the fund whole; with SKIP_SPROTT an older N-PORT keeps the fresher holdings, a newer one replaces them', async () => {
     let repPdDate = '2026-06-30';
     const nport = () => `<edgarSubmission><formData><genInfo><regName>SPROTT FUNDS TRUST</regName><regCik>0001728683</regCik>
       <seriesName>Sprott Uranium Miners ETF</seriesName><seriesId>S000068011</seriesId><repPdDate>${repPdDate}</repPdDate></genInfo>
@@ -697,16 +730,30 @@ describe('pipeline 3', () => {
     });
     await box.run({ EDGAR_FALLBACK: 'true' });
     const holdings = box.read('funds/URNM/holdings/001.json');
+    const meta = box.read('funds/URNM/meta.json');
     box.setDown('/urnm-sprott-etf/');
     await box.run({ EDGAR_FALLBACK: 'true', TICKERS: 'URNM' });
+    expect([box.read('funds/URNM/holdings/001.json'), box.read('funds/URNM/meta.json')]).toEqual([holdings, meta]);
+    expect(process.exitCode).toBe(1);
+    process.exitCode = 0;
+    await box.run({ EDGAR_FALLBACK: 'true', TICKERS: 'URNM', SKIP_SPROTT: 'true' });
     expect(box.read('funds/URNM/holdings/001.json')).toBe(holdings);
     expect(JSON.parse(box.read('funds/URNM/meta.json')).holdings).toMatchObject({ asOfDate: '2026-09-30', totalRows: 2 });
     expect(box.urls.some((url) => url.endsWith('/primary_doc.xml'))).toBe(true);
     repPdDate = '2026-10-31';
-    await box.run({ EDGAR_FALLBACK: 'true', TICKERS: 'URNM' });
+    await box.run({ EDGAR_FALLBACK: 'true', TICKERS: 'URNM', SKIP_SPROTT: 'true' });
     expect(JSON.parse(box.read('funds/URNM/meta.json')).holdings).toMatchObject({ asOfDate: '2026-10-31', source: expect.stringContaining('primary_doc.xml') });
     expect(JSON.parse(box.read('funds/URNM/holdings/001.json')).rows.map((row: Record<string, string>) => row.Name)).toEqual(['Cameco Corp.', 'NexGen Energy Ltd.']);
     expect(process.exitCode ?? 0).toBe(0);
+  });
+
+  test('a new fund whose page fails while Yahoo answers is failed with a catalog-only row, never an empty updated fund', async () => {
+    const box = sandbox();
+    box.setDown('/urnm-sprott-etf/');
+    await box.run();
+    expect(process.exitCode).toBe(1);
+    expect(box.files().filter((path) => path.startsWith('funds/URNM/'))).toEqual([]);
+    expect(JSON.parse(box.read('index.json')).funds.find((row: any) => row.ticker === 'URNM')).toMatchObject({ dataFile: null, holdings: 0, history: 0 });
   });
 
   test('a dead catalog falls back to the published funds instead of shrinking the index', async () => {
