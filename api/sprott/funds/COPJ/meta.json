@@ -124,8 +124,8 @@
    "history/001.json"
   ],
   "pageSize": 1000,
-  "totalRows": 935,
-  "asOf": "Oct 23 2026",
+  "totalRows": 936,
+  "asOf": "Oct 26 2026",
   "source": "Yahoo Finance daily market-price closes / adjusted closes (not official NAV)"
  }
 }

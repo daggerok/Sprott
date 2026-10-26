@@ -1,6 +1,6 @@
 {
- "generatedAt": "2026-10-26T06:49:41Z",
- "catalogReadAt": "2026-10-26T06:49:41Z",
+ "generatedAt": "2026-10-26T19:37:53Z",
+ "catalogReadAt": "2026-10-26T19:37:53Z",
  "source": {
   "provider": "Sprott ETFs",
   "site": "https://sprottetfs.com",
@@ -9,7 +9,7 @@
  "counts": {
   "funds": 13,
   "holdings": 733,
-  "history": 14319
+  "history": 14320
  },
  "funds": [
   {
@@ -82,7 +82,7 @@
     "performanceAsOf": "2026-09-30"
    },
    "holdings": 69,
-   "history": 935
+   "history": 936
   },
   {
    "ticker": "COPP",
