@@ -66,7 +66,7 @@ Dependabot is monthly for Bun and GitHub Actions.
 | Key facts, expenses, distributions | The same fund pages: NAV/pricing block, key-facts cells (ISIN, CUSIP, listing exchange, benchmark, inception), the fee table and `#DistributionsData`. |
 | Returns | The official month-end/quarter-end average annual total-return tables on each fund page; missing metrics are derived from Yahoo adjusted closes at the same reporting date. |
 | Daily history, dividends | Yahoo Finance chart prices, adjusted closes and dividend events. |
-| Fallback | SEC EDGAR N-PORT-P holdings (Sprott-focused trusts, CIK `0001728683`, exact series matching) + previously published data as the last resort. |
+| Fallback | SEC EDGAR N-PORT-P holdings, used only when the fund page gives no holdings, `EDGAR_FALLBACK` is on, the filing names the fund's own series (a fund missing from the SEC ticker table is looked up in the Sprott Funds Trust filings, CIK `0001728683`, by its exact name) and its report period is strictly newer than the published holdings (the newest report period first, read from the trust's own EDGAR folder) + previously published data as the last resort. |
 
 The published snapshot contains **13 funds, 736 holdings rows and 14,111 daily-history rows** (e.g. URNM 27 holdings / 1,715 history rows, SGDM 49 / 3,073, SGDJ 32 / 2,894). Unknown facts are unavailable, never invented as zero.
 
@@ -74,7 +74,7 @@ The published snapshot contains **13 funds, 736 holdings rows and 14,111 daily-h
 
 Sprott publishes no 30-day SEC yield, so `secYield` renders a dash placeholder and `secYieldKind` records `not published`; the catalog column stays honest for every fund. The history series is **market price, not official NAV**: `historySource` states Yahoo daily market-price closes/adjusted closes, and the derived figures are **not published standardized NAV returns**. Returns that a fund page publishes officially are used as published; only missing metrics are derived. The holdings CSV is the primary source and the page's holdings table is the fallback, so a fund page that drops the download still updates. Both are read by their header text (a Security and a Weight column are required), never by column position.
 
-The fund page and Yahoo are required sources: when either fails for a published fund, the fund is kept exactly as published and reported failed, never fresh prices next to an older NAV. The N-PORT fallback therefore serves new funds and `SKIP_SPROTT` runs. Retention applies only when a source failed: if neither the official performance table nor Yahoo answered for a fund, the previous returns are kept as one unit together with their `returnsBasis` and `performanceAsOf`. An honest null (for example a 3-year figure the provider stopped publishing, or an unknown distribution frequency) stays null and is never filled from an older publication. Month-end dates and published history dates are read as calendar dates, never through the machine's timezone, so a run gives the same output in any timezone. CUSIPs are stored without spaces. Every request has a 45 second timeout covering headers and body and is retried per `MAX_RETRIES`. A rerun with identical upstream data writes nothing (`generatedAt` and `catalogReadAt` move only with content), new catalog tickers are printed as `NEW FUNDS: ...` (also in the workflow summary), and the run stops taking new funds after 25 minutes but still writes the index.
+The fund page and Yahoo are required sources: when either fails for a published fund, the fund is kept exactly as published and reported failed, never fresh prices next to an older NAV. The N-PORT fallback therefore serves new funds and `SKIP_SPROTT` runs. Retention applies only when a source failed: if neither the official performance table nor Yahoo answered for a fund, the previous returns are kept as one unit together with their `returnsBasis` and `performanceAsOf`. An honest null (for example a 3-year figure the provider stopped publishing, or an unknown distribution frequency) stays null and is never filled from an older publication. Month-name, U.S. and ISO dates (month-end tables, published history, holdings dates) are read as plain calendar text, never through the machine's time zone, so a run gives the same output in any time zone. A fund younger than one year (calendar anniversary of its inception, inclusive) publishes no 1-year or since-inception return, and no 3, 5 or 10-year one before those anniversaries, official or derived; the month-end and quarter-end tables follow the same rule. CUSIPs are stored without spaces. Every request has a 45 second timeout covering headers and body and is retried per `MAX_RETRIES`. A rerun with identical upstream data writes nothing (`generatedAt` and `catalogReadAt` move only with content), `NEW FUNDS: ...` is printed (and added to the workflow summary) when a fund is published for the first time, also when its first read failed and a later run succeeds, `NEW FUNDS (not published yet): ...` names new catalog funds whose first read failed, a catalog-only row that the live catalog no longer lists (for example an old mistyped `TICKERS` entry) is dropped, and the run stops taking new funds after 25 minutes but still writes the index.
 
 Each fund carries a derived `metrics` object that powers the catalog columns shared with the sibling sites:
 
@@ -97,7 +97,7 @@ Both fields are the last two keys of each `metrics` object.
 
 The other codes of the shared standard (`official-trailing-12m`, `official-distribution-rate`, `official-other`, `computed-trailing-12m`) are not used by this feed.
 
-Unavailable data is never published as zero, and no tickers are excluded.
+Unavailable data is never published as zero (an N-PORT sheet leaves a missing weight, value or share count empty), and no tickers are excluded. An N-PORT sheet has exactly the published columns: the `SEDOL` column holds the position's SEDOL when the filing gives one, else `-`; identifiers are the position's own (a derivative never takes its reference security's CUSIP or ticker), and a ticker is set only for a U.S. equity traded in USD and never on two different securities.
 
 ### Update controls
 
@@ -108,7 +108,7 @@ Defaults below are exactly the values in `scripts/update-data.config.json`; blan
 | `MAX_FETCHES` | `0` | Batch evaluation size: positive resumes the scoped cursor in `api/sprott/update-state.json`; the cursor is scoped to the selected funds (it resumes at the next selected ticker and wraps); `0` is a full unfiltered pass and resets the cursor, a `TICKERS` run never deletes it. |
 | `REQUEST_SLEEP` | `1` | Minimum seconds between outgoing request starts on each worker lane, including retries. Every worker paces itself, so the overall rate is about `CONCURRENCY / REQUEST_SLEEP` requests per second. |
 | `CONCURRENCY` | `2` | Parallel fund workers (worker pool), each with its own request lane. With `REQUEST_SLEEP=0` requests are not paced. |
-| `TICKERS` | all | Space/comma/semicolon allowlist, e.g. `URNM URNJ SETM`; empty means all funds. |
+| `TICKERS` | all | Space/comma/semicolon allowlist, e.g. `URNM URNJ SETM`; empty means all funds. A ticker that is neither in the live catalog nor a published fund is an error before any fund request (nothing is written). |
 | `AUM` | `:` | Total net assets range: USD amounts or K/M/B/T suffixes; nano/micro/small/mid/large presets; inclusive min:max. |
 | `TER` | `:` | Net total expense ratio range in % (strict min:max). |
 | `DIVIDEND_YIELD` | `:` | Indicated distribution-yield range in %, min:max; missing values do not pass an active range. |
@@ -116,7 +116,7 @@ Defaults below are exactly the values in `scripts/update-data.config.json`; blan
 | `HOLDINGS_PAGE_SIZE` | `250` | Holdings rows per JSON page |
 | `HISTORY_PAGE_SIZE` | `1000` | Daily history rows per JSON page |
 | `MAX_RETRIES` | `2` | Retries after the initial request, integer >= 1, an empty value is an error (transient HTTP/network failures only) |
-| `HISTORY_RANGE` | `max` | Yahoo daily history range: `max` or `Ny` (e.g. `5y`); merges with previously published history |
+| `HISTORY_RANGE` | `max` | Yahoo daily history range: `max` or `Ny` (e.g. `5y`), applied as an explicit `period1`/`period2` request window; a window keeps the older published history (rescaled by the overlapping days), and a window that does not join it keeps the fund as published |
 | `STORE_RAW_DOWNLOADS` | `false` | Keep raw provider payload snapshots beside the feed (config/`advanced` only) |
 | `SEC_UA` | `daggerok ETF feed daggerok@gmail.com` | SEC EDGAR contact User-Agent, redacted in logs; the Actions variable `SEC_UA` overrides it when nonblank. Do not put credentials here. |
 | `SKIP_YAHOO` | `false` | Skip Yahoo history and dividends; retain published data |
