@@ -17,8 +17,8 @@
    "Name": "NexGen Energy Ltd.",
    "Ticker": "NXG AU",
    "Identifier": "BLR8K36",
-   "Weight": "14.61",
-   "Market Value": "41812112.26",
+   "Weight": "14.36",
+   "Market Value": "40226938.81",
    "Shares Held": "5009717",
    "SEDOL": "BLR8K36"
   },
@@ -26,8 +26,8 @@
    "Name": "Denison Mines Corp.",
    "Ticker": "DNN",
    "Identifier": "B0122F3",
-   "Weight": "11.63",
-   "Market Value": "33284100.96",
+   "Weight": "11.94",
+   "Market Value": "33438194.02",
    "Shares Held": "15409306",
    "SEDOL": "B0122F3"
   },
@@ -35,8 +35,8 @@
    "Name": "Paladin Energy Ltd.",
    "Ticker": "PDN AU",
    "Identifier": "6668468",
-   "Weight": "11.18",
-   "Market Value": "31995552.83",
+   "Weight": "10.85",
+   "Market Value": "30398525.84",
    "Shares Held": "6278356",
    "SEDOL": "6668468"
   },
@@ -45,7 +45,7 @@
    "Ticker": "UUUU",
    "Identifier": "BFV4XW8",
    "Weight": "9.51",
-   "Market Value": "27234642.54",
+   "Market Value": "26632576.32",
    "Shares Held": "3541566",
    "SEDOL": "BFV4XW8"
   },
@@ -53,8 +53,8 @@
    "Name": "CGN Mining Co. Ltd.",
    "Ticker": "1164 HK",
    "Identifier": "B755514",
-   "Weight": "5.42",
-   "Market Value": "15504662.3",
+   "Weight": "5.73",
+   "Market Value": "16040685.48",
    "Shares Held": "61522500",
    "SEDOL": "B755514"
   },
@@ -62,8 +62,8 @@
    "Name": "IsoEnergy Ltd.",
    "Ticker": "ISO CN",
    "Identifier": "BTTRKM6",
-   "Weight": "5.21",
-   "Market Value": "14924840.84",
+   "Weight": "5.23",
+   "Market Value": "14638182.44",
    "Shares Held": "1848846",
    "SEDOL": "BTTRKM6"
   },
@@ -71,8 +71,8 @@
    "Name": "Bannerman Energy Ltd.",
    "Ticker": "BMN AU",
    "Identifier": "B07DXJ1",
-   "Weight": "4.82",
-   "Market Value": "13808482.98",
+   "Weight": "4.74",
+   "Market Value": "13268871.04",
    "Shares Held": "6284845",
    "SEDOL": "B07DXJ1"
   },
@@ -80,8 +80,8 @@
    "Name": "Boss Energy Ltd.",
    "Ticker": "BOE AU",
    "Identifier": "B1XLCQ6",
-   "Weight": "4.54",
-   "Market Value": "12986934.68",
+   "Weight": "4.36",
+   "Market Value": "12209606.36",
    "Shares Held": "14397811",
    "SEDOL": "B1XLCQ6"
   },
@@ -89,62 +89,62 @@
    "Name": "Ur-Energy Inc.",
    "Ticker": "URG",
    "Identifier": "B0WW4L2",
-   "Weight": "3.7",
-   "Market Value": "10586179.7",
+   "Weight": "3.76",
+   "Market Value": "10523877.52",
    "Shares Held": "12979622",
    "SEDOL": "B0WW4L2"
-  },
-  {
-   "Name": "Deep Yellow Ltd.",
-   "Ticker": "DYL AU",
-   "Identifier": "6480275",
-   "Weight": "3.08",
-   "Market Value": "8829914.24",
-   "Shares Held": "17593141",
-   "SEDOL": "6480275"
   },
   {
    "Name": "Atha Energy Corp.",
    "Ticker": "SASK CN",
    "Identifier": "BNQNDF9",
-   "Weight": "2.87",
-   "Market Value": "8211174.17",
+   "Weight": "3.04",
+   "Market Value": "8517419.49",
    "Shares Held": "14202797",
    "SEDOL": "BNQNDF9"
+  },
+  {
+   "Name": "Deep Yellow Ltd.",
+   "Ticker": "DYL AU",
+   "Identifier": "6480275",
+   "Weight": "2.98",
+   "Market Value": "8357286.75",
+   "Shares Held": "17593141",
+   "SEDOL": "6480275"
   },
   {
    "Name": "Berkeley Energia Ltd.",
    "Ticker": "BKY AU",
    "Identifier": "6589473",
-   "Weight": "2.85",
-   "Market Value": "8160650.18",
+   "Weight": "2.77",
+   "Market Value": "7750946.74",
    "Shares Held": "15296924",
    "SEDOL": "6589473"
-  },
-  {
-   "Name": "Encore Energy Corp.",
-   "Ticker": "EU CN",
-   "Identifier": "BN48958",
-   "Weight": "1.91",
-   "Market Value": "5472652.65",
-   "Shares Held": "7099500",
-   "SEDOL": "BN48958"
   },
   {
    "Name": "Mega Uranium Ltd.",
    "Ticker": "MGA CN",
    "Identifier": "2817833",
-   "Weight": "1.74",
-   "Market Value": "4985991.01",
+   "Weight": "1.8",
+   "Market Value": "5042650.62",
    "Shares Held": "15523606",
    "SEDOL": "2817833"
+  },
+  {
+   "Name": "Encore Energy Corp.",
+   "Ticker": "EU CN",
+   "Identifier": "BN48958",
+   "Weight": "1.76",
+   "Market Value": "4916481.05",
+   "Shares Held": "7099500",
+   "SEDOL": "BN48958"
   },
   {
    "Name": "Global Atomic Corp.",
    "Ticker": "GLO CN",
    "Identifier": "BF11BK3",
-   "Weight": "1.63",
-   "Market Value": "4658407.24",
+   "Weight": "1.66",
+   "Market Value": "4659571.26",
    "Shares Held": "19777762",
    "SEDOL": "BF11BK3"
   },
@@ -152,8 +152,8 @@
    "Name": "Alligator Energy Ltd.",
    "Ticker": "AGE AU",
    "Identifier": "B55ZH25",
-   "Weight": "1.3",
-   "Market Value": "3725433.62",
+   "Weight": "1.33",
+   "Market Value": "3734976.87",
    "Shares Held": "171201701",
    "SEDOL": "B55ZH25"
   },
@@ -161,8 +161,8 @@
    "Name": "Atomic Eagle Ltd.",
    "Ticker": "AEU AU",
    "Identifier": "BSQM0M7",
-   "Weight": "1.09",
-   "Market Value": "3106861.1",
+   "Weight": "1.1",
+   "Market Value": "3069677.47",
    "Shares Held": "12829085",
    "SEDOL": "BSQM0M7"
   },
@@ -171,7 +171,7 @@
    "Ticker": "NUCL",
    "Identifier": "BSRFLX3",
    "Weight": "1.06",
-   "Market Value": "3039342.6",
+   "Market Value": "2964909.72",
    "Shares Held": "620274",
    "SEDOL": "BSRFLX3"
   },
@@ -179,8 +179,8 @@
    "Name": "Laramide Resources Ltd.",
    "Ticker": "LAM CN",
    "Identifier": "2507952",
-   "Weight": "0.94",
-   "Market Value": "2682166.63",
+   "Weight": "1.01",
+   "Market Value": "2838815.72",
    "Shares Held": "8739185",
    "SEDOL": "2507952"
   },
@@ -188,8 +188,8 @@
    "Name": "DevEx Resources Ltd.",
    "Ticker": "DEV AU",
    "Identifier": "BYV3KD8",
-   "Weight": "0.86",
-   "Market Value": "2448948.12",
+   "Weight": "0.91",
+   "Market Value": "2539884.27",
    "Shares Held": "24060493",
    "SEDOL": "BYV3KD8"
   },
@@ -197,8 +197,8 @@
    "Name": "Elevate Uranium Ltd.",
    "Ticker": "EL8 AU",
    "Identifier": "BM8ZH21",
-   "Weight": "0.83",
-   "Market Value": "2390084.45",
+   "Weight": "0.86",
+   "Market Value": "2396207.01",
    "Shares Held": "17461099",
    "SEDOL": "BM8ZH21"
   },
@@ -206,44 +206,35 @@
    "Name": "Lotus Resources Ltd.",
    "Ticker": "LOT AU",
    "Identifier": "BK6XLC1",
-   "Weight": "0.81",
-   "Market Value": "2315370.05",
+   "Weight": "0.8",
+   "Market Value": "2253027.65",
    "Shares Held": "19402801",
    "SEDOL": "BK6XLC1"
-  },
-  {
-   "Name": "Peninsula Energy Ltd.",
-   "Ticker": "PEN AU",
-   "Identifier": "6486381",
-   "Weight": "0.79",
-   "Market Value": "2264844.31",
-   "Shares Held": "16132486",
-   "SEDOL": "6486381"
   },
   {
    "Name": "Skyharbour Resources Ltd.",
    "Ticker": "SYH CN",
    "Identifier": "BDFGHL3",
-   "Weight": "0.73",
-   "Market Value": "2100963.88",
+   "Weight": "0.76",
+   "Market Value": "2133329.61",
    "Shares Held": "8919865",
    "SEDOL": "BDFGHL3"
   },
   {
-   "Name": "Cauldron Energy Ltd.",
-   "Ticker": "CXU AU",
-   "Identifier": "B04D4W4",
-   "Weight": "0.71",
-   "Market Value": "2039937.6",
-   "Shares Held": "50105088",
-   "SEDOL": "B04D4W4"
+   "Name": "Peninsula Energy Ltd.",
+   "Ticker": "PEN AU",
+   "Identifier": "6486381",
+   "Weight": "0.75",
+   "Market Value": "2100347.59",
+   "Shares Held": "16132486",
+   "SEDOL": "6486381"
   },
   {
    "Name": "Asarian Energy Ltd.",
    "Ticker": "ARN CN",
    "Identifier": "BV87YW9",
-   "Weight": "0.67",
-   "Market Value": "1928810.53",
+   "Weight": "0.69",
+   "Market Value": "1929292.49",
    "Shares Held": "7403726",
    "SEDOL": "BV87YW9"
   },
@@ -251,35 +242,44 @@
    "Name": "F3 Uranium Corp.",
    "Ticker": "FUU CN",
    "Identifier": "BMW5VG9",
-   "Weight": "0.64",
-   "Market Value": "1826699.55",
+   "Weight": "0.69",
+   "Market Value": "1918513.79",
    "Shares Held": "25592974",
    "SEDOL": "BMW5VG9"
   },
   {
-   "Name": "Aura Energy Ltd.",
-   "Ticker": "AEE AU",
-   "Identifier": "B14Z2S9",
-   "Weight": "0.58",
-   "Market Value": "1648821.99",
-   "Shares Held": "32176874",
-   "SEDOL": "B14Z2S9"
+   "Name": "Cauldron Energy Ltd.",
+   "Ticker": "CXU AU",
+   "Identifier": "B04D4W4",
+   "Weight": "0.67",
+   "Market Value": "1868856.03",
+   "Shares Held": "50105088",
+   "SEDOL": "B04D4W4"
   },
   {
    "Name": "Anfield Energy Inc.",
    "Ticker": "AEC CN",
    "Identifier": "BRT7VZ2",
-   "Weight": "0.56",
-   "Market Value": "1610817.92",
+   "Weight": "0.58",
+   "Market Value": "1627536.58",
    "Shares Held": "571351",
    "SEDOL": "BRT7VZ2"
+  },
+  {
+   "Name": "Aura Energy Ltd.",
+   "Ticker": "AEE AU",
+   "Identifier": "B14Z2S9",
+   "Weight": "0.55",
+   "Market Value": "1539823.38",
+   "Shares Held": "32176874",
+   "SEDOL": "B14Z2S9"
   },
   {
    "Name": "CanAlaska Uranium Ltd.",
    "Ticker": "CVV CN",
    "Identifier": "BR1YTV3",
    "Weight": "0.51",
-   "Market Value": "1447313.09",
+   "Market Value": "1418721.24",
    "Shares Held": "8111032",
    "SEDOL": "BR1YTV3"
   },
@@ -287,44 +287,53 @@
    "Name": "Myriad Uranium Corp.",
    "Ticker": "M CN",
    "Identifier": "BQWNP70",
-   "Weight": "0.47",
-   "Market Value": "1351584.7",
+   "Weight": "0.48",
+   "Market Value": "1331744.48",
    "Shares Held": "5652650",
    "SEDOL": "BQWNP70"
-  },
-  {
-   "Name": "Stallion Uranium Corp.",
-   "Ticker": "STUD CN",
-   "Identifier": "BSJQPC1",
-   "Weight": "0.4",
-   "Market Value": "1148682.34",
-   "Shares Held": "12379703",
-   "SEDOL": "BSJQPC1"
   },
   {
    "Name": "Cosa Resources Corp.",
    "Ticker": "COSA CN",
    "Identifier": "BN4QDM7",
-   "Weight": "0.36",
-   "Market Value": "1043170.5",
+   "Weight": "0.4",
+   "Market Value": "1122478.98",
    "Shares Held": "4428891",
    "SEDOL": "BN4QDM7"
+  },
+  {
+   "Name": "Stallion Uranium Corp.",
+   "Ticker": "STUD CN",
+   "Identifier": "BSJQPC1",
+   "Weight": "0.39",
+   "Market Value": "1104778.24",
+   "Shares Held": "12379703",
+   "SEDOL": "BSJQPC1"
   },
   {
    "Name": "Frontier Nuclear and Minerals Inc.",
    "Ticker": "FNUC",
    "Identifier": "BWTYM44",
-   "Weight": "0.34",
-   "Market Value": "976188.66",
+   "Weight": "0.33",
+   "Market Value": "932770.12",
    "Shares Held": "1456998",
    "SEDOL": "BWTYM44"
+  },
+  {
+   "Name": "Western Uranium & Vanadium Corp.",
+   "Ticker": "WUC CN",
+   "Identifier": "BF39VJ4",
+   "Weight": "0.31",
+   "Market Value": "868067.57",
+   "Shares Held": "2702005",
+   "SEDOL": "BF39VJ4"
   },
   {
    "Name": "Jaguar Uranium Corp.",
    "Ticker": "JAGU",
    "Identifier": "BRBPZ30",
    "Weight": "0.29",
-   "Market Value": "825282.35",
+   "Market Value": "805251.23",
    "Shares Held": "801245",
    "SEDOL": "BRBPZ30"
   },
@@ -333,25 +342,16 @@
    "Ticker": "PUR CN",
    "Identifier": "BPG4WM6",
    "Weight": "0.29",
-   "Market Value": "835978.88",
+   "Market Value": "810848.75",
    "Shares Held": "3549237",
    "SEDOL": "BPG4WM6"
-  },
-  {
-   "Name": "Western Uranium & Vanadium Corp.",
-   "Ticker": "WUC CN",
-   "Identifier": "BF39VJ4",
-   "Weight": "0.29",
-   "Market Value": "838922.37",
-   "Shares Held": "2702005",
-   "SEDOL": "BF39VJ4"
   },
   {
    "Name": "NEO ENERGY METALS PLC",
    "Ticker": "NEO LN",
    "Identifier": "BYWLRL8",
    "Weight": "0.26",
-   "Market Value": "751624.17",
+   "Market Value": "719808.76",
    "Shares Held": "113320630",
    "SEDOL": "BYWLRL8"
   },
@@ -360,7 +360,7 @@
    "Ticker": "FTUR CN",
    "Identifier": "BP38ZC2",
    "Weight": "0.23",
-   "Market Value": "669186.74",
+   "Market Value": "655409.08",
    "Shares Held": "3906517",
    "SEDOL": "BP38ZC2"
   },
@@ -369,7 +369,7 @@
    "Ticker": "MANU CN",
    "Identifier": "BSNNS96",
    "Weight": "0.18",
-   "Market Value": "512481.5",
+   "Market Value": "512609.55",
    "Shares Held": "5983435",
    "SEDOL": "BSNNS96"
   },
@@ -377,9 +377,9 @@
    "Name": "Cash Equivalent",
    "Ticker": "",
    "Identifier": "",
-   "Weight": "0.08",
-   "Market Value": "179452.8",
-   "Shares Held": "179452.8",
+   "Weight": "0.05",
+   "Market Value": "163865.59",
+   "Shares Held": "163865.59",
    "SEDOL": ""
   },
   {
@@ -387,7 +387,7 @@
    "Ticker": "V CN",
    "Identifier": "BR1FDY7",
    "Weight": "0.03",
-   "Market Value": "85627.04",
+   "Market Value": "85648.43",
    "Shares Held": "452708.54",
    "SEDOL": "BR1FDY7"
   }
