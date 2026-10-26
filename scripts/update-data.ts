@@ -1741,6 +1741,15 @@ export function nportIsNewer(repPdDate: unknown, published: JsonRecord | null | 
   const current = storedDateIso(published.asOfDate) ?? storedDateIso(published.asOf);
   return filing !== null && current !== null && filing > current;
 }
+/** Why the N-PORT freshness check cannot be decided (a date on either side does not parse), or null when both dates are known or nothing is published. */
+export function nportDateWarning(repPdDate: unknown, published: JsonRecord | null | undefined): string | null {
+  if (!published || !(Number(published.totalRows) > 0)) return null;
+  if (storedDateIso(repPdDate) === null) return `N-PORT report date "${String(repPdDate ?? '')}" cannot be parsed; kept the published holdings`;
+  if ((storedDateIso(published.asOfDate) ?? storedDateIso(published.asOf)) === null) {
+    return `published holdings date "${String(published.asOfDate ?? published.asOf ?? '')}" cannot be parsed; kept them instead of N-PORT as of ${String(repPdDate)}`;
+  }
+  return null;
+}
 async function optional<T>(label:string, action:()=>Promise<T>):Promise<T|null> {
   try {return await action();} catch(e){outputNote(`[ fallback ] ${label}: ${errorMessage(e)}`);return null;}
 }
@@ -1874,6 +1883,8 @@ async function processFund(fund: CatalogFund, config: UpdaterConfig, previousInd
     const filing = await resolveNportFiling(fund, config);
     // An N-PORT filing is weeks old; it must not replace published holdings that are as new or newer (they are kept below).
     if (filing && !nportIsNewer(filing.asOfDate, old.holdings)) {
+      const warning = nportDateWarning(filing.asOfDate, old.holdings);
+      if (warning) console.warn(`[ edgar    ] ${ticker}: ${warning}`);
       throw new Error(`N-PORT as of ${filing.asOfDate || 'an unknown date'} is not newer than the published holdings (${old.holdings?.asOfDate ?? 'unknown date'}); kept them`);
     }
     return filing;
