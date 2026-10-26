@@ -6,7 +6,7 @@ import { join } from 'node:path';
 
 import {
   CONTROL_NAMES, USAGE, configureRequestPacing, createRequestGate, fetchWithRetry, annualizedToTotal, batchSelection, buildMetrics, dividendYieldBasis, withYieldBasis,
-  holdingsGuard, indicatedYield, inferDistributionFrequency, installSystemCa, isCertError, mergeHistory, ADJ_CLOSE_NOISE, monthAnchor, normalizeCusip, nportIsNewer,
+  holdingsGuard, indicatedYield, inferDistributionFrequency, installSystemCa, isCertError, mergeHistory, ADJ_CLOSE_NOISE, monthAnchor, normalizeCusip, nportDateWarning, nportIsNewer,
   parseCatalogNav, parseFeesTable, parseFundPage, parseHoldingsSection, parseMoneyText, parseNport, parsePercentText,
   parseDistributionsSection, parseReturnTable, parseSitemapFundPages, parseSprottPerformance, performanceAsOfDate,
   priceReturns, readConfig, resolveControls, retainReturns, runPool, runtimeControls, samePublishedContent, storedDateIso,
@@ -300,6 +300,10 @@ describe('parsing', () => {
     expect(nportIsNewer('10/31/2026', { totalRows: 26, asOfDate: null, asOf: 'Oct 22 2026' })).toBe(true);
     expect([nportIsNewer('2026-10-31', { totalRows: 26, asOfDate: null, asOf: '—' }), nportIsNewer('', published)]).toEqual([false, false]);
     expect([nportIsNewer('2026-07-31', undefined), nportIsNewer('2026-07-31', { totalRows: 0, asOfDate: null })]).toEqual([true, true]);
+    // an unknown date on either side keeps the published sheet, and the run says why (logged as a warning)
+    expect(nportDateWarning('2026-10-31', { totalRows: 26, asOfDate: null, asOf: '—' })).toContain('cannot be parsed');
+    expect(nportDateWarning('', published)).toContain('cannot be parsed');
+    expect([nportDateWarning('2026-07-31', published), nportDateWarning('2026-07-31', undefined)]).toEqual([null, null]);
   });
 
   test('money and percent text keep decoration out and unknown text as null', () => {
