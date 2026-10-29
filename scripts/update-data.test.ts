@@ -572,6 +572,8 @@ describe('pipeline', () => {
     const keys = Object.keys(index.funds[0].metrics).sort();
     for (const row of index.funds) {
       expect(Object.keys(row.metrics).sort()).toEqual(keys);
+      // the 52-week range keys from the published history pages (shared range-52w block)
+      expect(Object.keys(row.metrics)).toEqual(expect.arrayContaining(['week52Low', 'week52High', 'range52w', 'range52wClose', 'range52wAsOf', 'range52wSince', 'range52wBasis']));
       expect(row.metrics.cagr10y).toBeNull();
       expect(row.metrics.returnsBasis).toBeTruthy();
       expect(row.metrics.dividendYieldBasis).toBe(row.metrics.dividendYield === null ? null : 'indicated');
