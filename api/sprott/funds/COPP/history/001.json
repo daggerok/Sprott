@@ -2,7 +2,7 @@
  "ticker": "COPP",
  "page": 1,
  "pageSize": 1000,
- "totalRows": 662,
+ "totalRows": 666,
  "headers": [
   "Date",
   "Close",
@@ -3981,6 +3981,30 @@
    "Close": "36.783001",
    "Adj Close": "36.78",
    "Volume": "51500"
+  },
+  {
+   "Date": "Oct 26 2026",
+   "Close": "37.25",
+   "Adj Close": "37.25",
+   "Volume": "72800"
+  },
+  {
+   "Date": "Oct 27 2026",
+   "Close": "38.509998",
+   "Adj Close": "38.51",
+   "Volume": "83400"
+  },
+  {
+   "Date": "Oct 28 2026",
+   "Close": "38.709999",
+   "Adj Close": "38.71",
+   "Volume": "39900"
+  },
+  {
+   "Date": "Oct 29 2026",
+   "Close": "38.240002",
+   "Adj Close": "38.24",
+   "Volume": "39449"
   }
  ]
 }

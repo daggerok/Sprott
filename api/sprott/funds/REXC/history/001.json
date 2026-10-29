@@ -2,7 +2,7 @@
  "ticker": "REXC",
  "page": 1,
  "pageSize": 1000,
- "totalRows": 134,
+ "totalRows": 138,
  "headers": [
   "Date",
   "Close",
@@ -813,6 +813,30 @@
    "Close": "12.45",
    "Adj Close": "12.45",
    "Volume": "94400"
+  },
+  {
+   "Date": "Oct 26 2026",
+   "Close": "12.57",
+   "Adj Close": "12.57",
+   "Volume": "179800"
+  },
+  {
+   "Date": "Oct 27 2026",
+   "Close": "13.54",
+   "Adj Close": "13.54",
+   "Volume": "171700"
+  },
+  {
+   "Date": "Oct 28 2026",
+   "Close": "13.95",
+   "Adj Close": "13.95",
+   "Volume": "274000"
+  },
+  {
+   "Date": "Oct 29 2026",
+   "Close": "14.03",
+   "Adj Close": "14.03",
+   "Volume": "128842"
   }
  ]
 }

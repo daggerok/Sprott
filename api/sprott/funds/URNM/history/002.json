@@ -2,7 +2,7 @@
  "ticker": "URNM",
  "page": 2,
  "pageSize": 1000,
- "totalRows": 1731,
+ "totalRows": 1735,
  "headers": [
   "Date",
   "Close",
@@ -4395,6 +4395,30 @@
    "Close": "41.790001",
    "Adj Close": "41.79",
    "Volume": "790200"
+  },
+  {
+   "Date": "Oct 26 2026",
+   "Close": "42.540001",
+   "Adj Close": "42.54",
+   "Volume": "1819900"
+  },
+  {
+   "Date": "Oct 27 2026",
+   "Close": "44.75",
+   "Adj Close": "44.75",
+   "Volume": "864200"
+  },
+  {
+   "Date": "Oct 28 2026",
+   "Close": "45.790001",
+   "Adj Close": "45.79",
+   "Volume": "916400"
+  },
+  {
+   "Date": "Oct 29 2026",
+   "Close": "44.779999",
+   "Adj Close": "44.78",
+   "Volume": "872703"
   }
  ]
 }

@@ -2,7 +2,7 @@
  "ticker": "COPJ",
  "page": 1,
  "pageSize": 1000,
- "totalRows": 936,
+ "totalRows": 939,
  "headers": [
   "Date",
   "Close",
@@ -5624,7 +5624,25 @@
    "Date": "Oct 26 2026",
    "Close": "37.790001",
    "Adj Close": "37.79",
-   "Volume": "53394"
+   "Volume": "53400"
+  },
+  {
+   "Date": "Oct 27 2026",
+   "Close": "39.27",
+   "Adj Close": "39.27",
+   "Volume": "84900"
+  },
+  {
+   "Date": "Oct 28 2026",
+   "Close": "39.450001",
+   "Adj Close": "39.45",
+   "Volume": "157200"
+  },
+  {
+   "Date": "Oct 29 2026",
+   "Close": "38.619999",
+   "Adj Close": "38.62",
+   "Volume": "55718"
   }
  ]
 }
