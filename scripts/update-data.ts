@@ -1560,11 +1560,11 @@ async function processFund(fund: CatalogFund, config: UpdaterConfig, previousInd
     const raw = await fetchJson(chartUrl(ticker, config), `[ chart    ] ${ticker}`, yahooHeaders(), config);
     await storeRaw(ticker, 'yahoo', raw, config);
     const fetched = parseChart(raw);
-    // A HISTORY_RANGE window never shrinks the published history: older published days are rescaled onto the window by the
-    // overlapping days (shared windowed-chart block); a window that does not join keeps the fund as published
-    if (!/^\d+y$/i.test(config.historyRange)) return fetched;
+    // A fresh chart never shrinks the published history: older published days are rescaled onto it by the overlapping days
+    // (shared windowed-chart block); a chart that does not join keeps the fund as published. This covers a HISTORY_RANGE
+    // window and a truncated `max` answer; a full `max` answer starts at inception: unchanged
     const merged = mergeWindowedChart(fetched, await readPreviousSheet(ticker, 'history'), Array.isArray(old.distributions?.rows) ? old.distributions.rows : []);
-    if (!merged) throw new Error(`chart window does not join the published history (${config.historyRange})`);
+    if (!merged) throw new Error(`chart does not join the published history (${config.historyRange}, ${fetched.days.length} days)`);
     return merged;
   });
   if (published && !config.skipYahoo && !chart) throw new Error(requiredSourceFailed('Yahoo chart'));

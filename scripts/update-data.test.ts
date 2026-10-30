@@ -855,6 +855,17 @@ describe('pipeline 4', () => {
     const history = JSON.parse(box.read('funds/URNM/history/001.json'));
     expect(history.rows.map((row: Record<string, string>) => [row.Date, row['Adj Close']])).toEqual([['Sep 28 2026', '46.06'], ['Sep 29 2026', '46.26'], ['Sep 30 2026', '46.55']]);
     expect(JSON.parse(box.read('funds/URNM/meta.json')).history.totalRows).toBe(3);
+    // a truncated `max` answer (Yahoo served 2 bars for some funds on 2026-10-29) never shrinks the history either:
+    // one that joins the published days keeps them all, one that does not join keeps the fund as published
+    const joined = snapshot();
+    windowed(0.98, 1);
+    await box.run({ TICKERS: 'URNM' });
+    expect(snapshot()).toEqual(joined);
+    windowed(1, 2);
+    await box.run({ TICKERS: 'URNM' });
+    expect(snapshot()).toEqual(joined);
+    expect(process.exitCode).toBe(1);
+    process.exitCode = 0;
   });
 
   test('a relaxed guard still keeps numeric published weights from an all-dash sheet (Q24)', async () => {
