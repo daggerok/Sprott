@@ -2,7 +2,7 @@
  "ticker": "URNM",
  "page": 2,
  "pageSize": 1000,
- "totalRows": 1735,
+ "totalRows": 1736,
  "headers": [
   "Date",
   "Close",
@@ -4418,7 +4418,13 @@
    "Date": "Oct 29 2026",
    "Close": "44.779999",
    "Adj Close": "44.78",
-   "Volume": "872703"
+   "Volume": "876200"
+  },
+  {
+   "Date": "Oct 30 2026",
+   "Close": "42.360001",
+   "Adj Close": "42.36",
+   "Volume": "933000"
   }
  ]
 }
