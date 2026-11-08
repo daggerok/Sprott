@@ -2,7 +2,7 @@
  "ticker": "SETM",
  "page": 1,
  "pageSize": 1000,
- "totalRows": 940,
+ "totalRows": 945,
  "headers": [
   "Date",
   "Close",
@@ -5649,6 +5649,36 @@
    "Close": "24.41",
    "Adj Close": "24.41",
    "Volume": "156200"
+  },
+  {
+   "Date": "Nov 02 2026",
+   "Close": "24.381001",
+   "Adj Close": "24.38",
+   "Volume": "171900"
+  },
+  {
+   "Date": "Nov 03 2026",
+   "Close": "23.99",
+   "Adj Close": "23.99",
+   "Volume": "173500"
+  },
+  {
+   "Date": "Nov 04 2026",
+   "Close": "24.889999",
+   "Adj Close": "24.89",
+   "Volume": "114000"
+  },
+  {
+   "Date": "Nov 05 2026",
+   "Close": "24.07",
+   "Adj Close": "24.07",
+   "Volume": "145600"
+  },
+  {
+   "Date": "Nov 06 2026",
+   "Close": "24.52",
+   "Adj Close": "24.52",
+   "Volume": "105900"
   }
  ]
 }
