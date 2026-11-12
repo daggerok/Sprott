@@ -574,6 +574,9 @@ describe('pipeline', () => {
       expect(Object.keys(row.metrics).sort()).toEqual(keys);
       // the 52-week range keys from the published history pages (shared range-52w block)
       expect(Object.keys(row.metrics)).toEqual(expect.arrayContaining(['week52Low', 'week52High', 'range52w', 'range52wClose', 'range52wAsOf', 'range52wSince', 'range52wBasis']));
+      // the swing keys from the Close column of the same pages (shared swing block): ATH and its basis from the first close
+      expect(Object.keys(row.metrics).slice(-11, -2)).toEqual(['pctFrom52wHigh', 'athPrice', 'athDate', 'athBasis', 'pctFromAth', 'volatility1y', 'sigmaFromMean60d', 'high60d', 'low60d']);
+      expect([typeof row.metrics.athPrice, row.metrics.athBasis]).toEqual(['number', expect.stringMatching(/^daily closes since \d{4}-\d{2}-\d{2}$/)]);
       expect(row.metrics.cagr10y).toBeNull();
       expect(row.metrics.returnsBasis).toBeTruthy();
       expect(row.metrics.dividendYieldBasis).toBe(row.metrics.dividendYield === null ? null : 'indicated');
