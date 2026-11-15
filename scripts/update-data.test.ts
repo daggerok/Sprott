@@ -513,9 +513,10 @@ const FUNDS = ['COPJ', 'SETM', 'URNM'];
 const ts = (iso: string): number => Date.parse(`${iso}T00:00:00Z`) / 1000;
 const chartPayload = {
   chart: { result: [{
-    meta: { regularMarketPrice: 47.5, regularMarketTime: ts('2026-09-30'), firstTradeDate: ts('2026-09-01'), fullExchangeName: 'NYSE Arca', longName: 'Sprott ETF' },
+    meta: { dataGranularity: '1d', regularMarketPrice: 47.5, regularMarketTime: ts('2026-09-30'), firstTradeDate: ts('2026-09-01'), fullExchangeName: 'NYSE Arca', longName: 'Sprott ETF' },
     timestamp: [ts('2026-09-28'), ts('2026-09-29'), ts('2026-09-30')],
     indicators: { quote: [{ close: [47, 47.2, 47.5], volume: [100, 200, 300] }], adjclose: [{ adjclose: [47, 47.2, 47.5] }] },
+    events: { dividends: { [ts('2026-09-29')]: { amount: 0.25, date: ts('2026-09-29') } } },
   }] },
 };
 const sitemapXml = FUNDS.map((ticker) => `<url><loc>https://sprottetfs.com/${ticker.toLowerCase()}-sprott-etf/</loc></url>`).join('');
@@ -562,6 +563,8 @@ function sandbox(router: Router = () => undefined) {
   return { api, urls, logs, run, read, files, backdate, touched, module, setDown: (...parts: string[]) => { down = new Set(parts); } };
 }
 
+const dividendRequests = (urls: string[]): string[] => urls.filter((url) => /chart\/[^?]+\?period1=0&.*includePrePost=false/.test(url)).map((url) => /chart\/([^?]+)/.exec(url)![1]).sort();
+
 describe('pipeline', () => {
   test('a first run publishes every fund with the same metrics key set, null (never 0) for unknown horizons', async () => {
     const box = sandbox();
@@ -575,8 +578,11 @@ describe('pipeline', () => {
       // the 52-week range keys from the published history pages (shared range-52w block)
       expect(Object.keys(row.metrics)).toEqual(expect.arrayContaining(['week52Low', 'week52High', 'range52w', 'range52wClose', 'range52wAsOf', 'range52wSince', 'range52wBasis']));
       // the swing keys from the Close column of the same pages (shared swing block): ATH and its basis from the first close
-      expect(Object.keys(row.metrics).slice(-11, -2)).toEqual(['pctFrom52wHigh', 'athPrice', 'athDate', 'athBasis', 'pctFromAth', 'volatility1y', 'sigmaFromMean60d', 'high60d', 'low60d']);
+      expect(Object.keys(row.metrics).slice(-17, -8)).toEqual(['pctFrom52wHigh', 'athPrice', 'athDate', 'athBasis', 'pctFromAth', 'volatility1y', 'sigmaFromMean60d', 'high60d', 'low60d']);
       expect([typeof row.metrics.athPrice, row.metrics.athBasis]).toEqual(['number', expect.stringMatching(/^daily closes since \d{4}-\d{2}-\d{2}$/)]);
+      // the dividend keys from one Yahoo daily chart request per updated fund (shared dividends block): 0.25 in the last year, the rest null
+      expect(Object.keys(row.metrics).slice(-8, -2)).toEqual(['dividendRate', 'dividendGrowth', 'dividendGrowth3y', 'dividendGrowth5y', 'dividendStreak', 'dividendCut10y']);
+      expect([row.metrics.dividendRate, row.metrics.dividendGrowth, row.metrics.dividendGrowth3y, row.metrics.dividendGrowth5y, row.metrics.dividendStreak, row.metrics.dividendCut10y]).toEqual([0.25, null, null, null, null, null]);
       expect(row.metrics.cagr10y).toBeNull();
       expect(row.metrics.returnsBasis).toBeTruthy();
       expect(row.metrics.dividendYieldBasis).toBe(row.metrics.dividendYield === null ? null : 'indicated');
@@ -584,13 +590,17 @@ describe('pipeline', () => {
       expect(row.dataFile).toBe(`./funds/${row.ticker}/meta.json`);
     }
     expect(process.exitCode ?? 0).toBe(0);
+    expect(dividendRequests(box.urls)).toEqual(FUNDS);
   });
 
   test('a one-ticker run keeps every row and every published file', async () => {
     const box = sandbox();
     await box.run();
     const before = box.files();
+    box.urls.length = 0;
     await box.run({ TICKERS: 'URNM' });
+    // the dividend chart request (includePrePost=false) is made for the updated fund only
+    expect(dividendRequests(box.urls)).toEqual(['URNM']);
     expect(JSON.parse(box.read('index.json')).funds.map((row: any) => row.ticker)).toEqual(FUNDS);
     const after = box.files();
     for (const path of before) expect(after).toContain(path);
@@ -1004,7 +1014,7 @@ describe('network', () => {
     const chartUrl = async (range: string): Promise<URL> => {
       const box = sandbox();
       await box.run({ TICKERS: 'URNM', HISTORY_RANGE: range });
-      return new URL(box.urls.find((url) => url.includes('/chart/URNM'))!);
+      return new URL(box.urls.find((url) => url.includes('/chart/URNM') && !url.includes('includePrePost=false'))!);
     };
     const max = await chartUrl('max');
     expect(max.searchParams.get('period1')).toBe('0');
