@@ -2,7 +2,7 @@
  "ticker": "SGDJ",
  "page": 3,
  "pageSize": 1000,
- "totalRows": 2920,
+ "totalRows": 2925,
  "headers": [
   "Date",
   "Close",
@@ -5529,6 +5529,36 @@
    "Close": "81.25",
    "Adj Close": "81.25",
    "Volume": "53900"
+  },
+  {
+   "Date": "Nov 09 2026",
+   "Close": "86.040001",
+   "Adj Close": "86.04",
+   "Volume": "52200"
+  },
+  {
+   "Date": "Nov 10 2026",
+   "Close": "80.879997",
+   "Adj Close": "80.88",
+   "Volume": "46200"
+  },
+  {
+   "Date": "Nov 11 2026",
+   "Close": "80.790001",
+   "Adj Close": "80.79",
+   "Volume": "14600"
+  },
+  {
+   "Date": "Nov 12 2026",
+   "Close": "76.480003",
+   "Adj Close": "76.48",
+   "Volume": "46500"
+  },
+  {
+   "Date": "Nov 13 2026",
+   "Close": "76.290001",
+   "Adj Close": "76.29",
+   "Volume": "26300"
   }
  ]
 }

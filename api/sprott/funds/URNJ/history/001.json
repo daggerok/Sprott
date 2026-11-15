@@ -2,7 +2,7 @@
  "ticker": "URNJ",
  "page": 1,
  "pageSize": 1000,
- "totalRows": 945,
+ "totalRows": 950,
  "headers": [
   "Date",
   "Close",
@@ -5679,6 +5679,36 @@
    "Close": "17.16",
    "Adj Close": "17.16",
    "Volume": "746600"
+  },
+  {
+   "Date": "Nov 09 2026",
+   "Close": "18.5",
+   "Adj Close": "18.5",
+   "Volume": "610300"
+  },
+  {
+   "Date": "Nov 10 2026",
+   "Close": "17.26",
+   "Adj Close": "17.26",
+   "Volume": "1282900"
+  },
+  {
+   "Date": "Nov 11 2026",
+   "Close": "17.49",
+   "Adj Close": "17.49",
+   "Volume": "192200"
+  },
+  {
+   "Date": "Nov 12 2026",
+   "Close": "16.309999",
+   "Adj Close": "16.31",
+   "Volume": "719700"
+  },
+  {
+   "Date": "Nov 13 2026",
+   "Close": "15.92",
+   "Adj Close": "15.92",
+   "Volume": "676500"
   }
  ]
 }
