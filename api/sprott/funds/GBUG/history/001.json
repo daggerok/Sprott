@@ -2,7 +2,7 @@
  "ticker": "GBUG",
  "page": 1,
  "pageSize": 1000,
- "totalRows": 437,
+ "totalRows": 440,
  "headers": [
   "Date",
   "Close",
@@ -2631,6 +2631,24 @@
    "Close": "41.639999",
    "Adj Close": "41.64",
    "Volume": "27900"
+  },
+  {
+   "Date": "Nov 16 2026",
+   "Close": "40.282001",
+   "Adj Close": "40.28",
+   "Volume": "40400"
+  },
+  {
+   "Date": "Nov 17 2026",
+   "Close": "40.326",
+   "Adj Close": "40.33",
+   "Volume": "39600"
+  },
+  {
+   "Date": "Nov 18 2026",
+   "Close": "38.036999",
+   "Adj Close": "38.04",
+   "Volume": "57800"
   }
  ]
 }

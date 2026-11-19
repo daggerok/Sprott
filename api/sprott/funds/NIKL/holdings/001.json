@@ -17,8 +17,8 @@
    "Name": "ANTAM Persero Tbk PT",
    "Ticker": "ANTM IJ",
    "Identifier": "6053859",
-   "Weight": "16.66",
-   "Market Value": "6118046.44",
+   "Weight": "17.04",
+   "Market Value": "5716717.36",
    "Shares Held": "39614895",
    "SEDOL": "6053859"
   },
@@ -27,7 +27,7 @@
    "Ticker": "NIC AU",
    "Identifier": "BZ7NDP2",
    "Weight": "12.8",
-   "Market Value": "4699996.07",
+   "Market Value": "4295093.56",
    "Shares Held": "10838705",
    "SEDOL": "BZ7NDP2"
   },
@@ -35,8 +35,8 @@
    "Name": "Merdeka Battery Materials Tbk PT",
    "Ticker": "MBMA IJ",
    "Identifier": "BMBR1M2",
-   "Weight": "9.52",
-   "Market Value": "3496221.29",
+   "Weight": "9.54",
+   "Market Value": "3201315.14",
    "Shares Held": "188206350",
    "SEDOL": "BMBR1M2"
   },
@@ -44,26 +44,17 @@
    "Name": "IGO Ltd.",
    "Ticker": "IGO AU",
    "Identifier": "6439567",
-   "Weight": "8.1",
-   "Market Value": "2975659.49",
+   "Weight": "8.11",
+   "Market Value": "2722853.17",
    "Shares Held": "844578",
    "SEDOL": "6439567"
-  },
-  {
-   "Name": "Talon Metals Corp.",
-   "Ticker": "TLO CN",
-   "Identifier": "BTZRRJ6",
-   "Weight": "5.54",
-   "Market Value": "2034896.93",
-   "Shares Held": "472063",
-   "SEDOL": "BTZRRJ6"
   },
   {
    "Name": "Trimegah Bangun Persada Tbk PT",
    "Ticker": "NCKL IJ",
    "Identifier": "BP69061",
-   "Weight": "4.99",
-   "Market Value": "1832485.04",
+   "Weight": "5.16",
+   "Market Value": "1731242.1",
    "Shares Held": "44754450",
    "SEDOL": "BP69061"
   },
@@ -71,17 +62,26 @@
    "Name": "Vale Indonesia Tbk PT",
    "Ticker": "INCO IJ",
    "Identifier": "B0217K9",
-   "Weight": "4.79",
-   "Market Value": "1758869.58",
+   "Weight": "4.81",
+   "Market Value": "1613212.18",
    "Shares Held": "8672800",
    "SEDOL": "B0217K9"
+  },
+  {
+   "Name": "Talon Metals Corp.",
+   "Ticker": "TLO CN",
+   "Identifier": "BTZRRJ6",
+   "Weight": "4.79",
+   "Market Value": "1608088.68",
+   "Shares Held": "472063",
+   "SEDOL": "BTZRRJ6"
   },
   {
    "Name": "Nickel Asia Corp.",
    "Ticker": "NIKL PM",
    "Identifier": "B5BNBK9",
-   "Weight": "4.51",
-   "Market Value": "1656685.34",
+   "Weight": "4.72",
+   "Market Value": "1583533",
    "Shares Held": "27414915",
    "SEDOL": "B5BNBK9"
   },
@@ -89,17 +89,26 @@
    "Name": "Lifezone Metals Ltd.",
    "Ticker": "LZM",
    "Identifier": "BLCY1J2",
-   "Weight": "3.99",
-   "Market Value": "1465901.4",
+   "Weight": "4.36",
+   "Market Value": "1462427.7",
    "Shares Held": "347370",
    "SEDOL": "BLCY1J2"
+  },
+  {
+   "Name": "Xinjiang Xinxin Mining Industry Co. Ltd.",
+   "Ticker": "3833 HK",
+   "Identifier": "B24FHB4",
+   "Weight": "3.17",
+   "Market Value": "1063024.13",
+   "Shares Held": "5914900",
+   "SEDOL": "B24FHB4"
   },
   {
    "Name": "Sunrise Energy Metals Ltd.",
    "Ticker": "SRL AU",
    "Identifier": "BN4MX14",
-   "Weight": "3.54",
-   "Market Value": "1299501.19",
+   "Weight": "3.09",
+   "Market Value": "1036286.04",
    "Shares Held": "152460",
    "SEDOL": "BN4MX14"
   },
@@ -107,44 +116,35 @@
    "Name": "Magna Mining Inc.",
    "Ticker": "NICU CN",
    "Identifier": "BLDC8H2",
-   "Weight": "3.23",
-   "Market Value": "1184280.65",
+   "Weight": "3.05",
+   "Market Value": "1022185.22",
    "Shares Held": "1024008",
    "SEDOL": "BLDC8H2"
-  },
-  {
-   "Name": "Xinjiang Xinxin Mining Industry Co. Ltd.",
-   "Ticker": "3833 HK",
-   "Identifier": "B24FHB4",
-   "Weight": "3.18",
-   "Market Value": "1168520.5",
-   "Shares Held": "5914900",
-   "SEDOL": "B24FHB4"
-  },
-  {
-   "Name": "Power Metallic Mines Inc.",
-   "Ticker": "PNPN CN",
-   "Identifier": "BTJWZX7",
-   "Weight": "2.9",
-   "Market Value": "1064178.31",
-   "Shares Held": "1897829",
-   "SEDOL": "BTJWZX7"
   },
   {
    "Name": "Canada Nickel Co. Inc.",
    "Ticker": "CNC CN",
    "Identifier": "BLHTRV6",
-   "Weight": "2.82",
-   "Market Value": "1035988.47",
+   "Weight": "2.84",
+   "Market Value": "952391.89",
    "Shares Held": "1624225",
    "SEDOL": "BLHTRV6"
+  },
+  {
+   "Name": "Power Metallic Mines Inc.",
+   "Ticker": "PNPN CN",
+   "Identifier": "BTJWZX7",
+   "Weight": "2.68",
+   "Market Value": "900857.72",
+   "Shares Held": "1897829",
+   "SEDOL": "BTJWZX7"
   },
   {
    "Name": "Centaurus Metals Ltd.",
    "Ticker": "CTM AU",
    "Identifier": "6087320",
-   "Weight": "2.01",
-   "Market Value": "738698.7",
+   "Weight": "2.18",
+   "Market Value": "732268.63",
    "Shares Held": "3028480",
    "SEDOL": "6087320"
   },
@@ -152,8 +152,8 @@
    "Name": "Central Omega Resources Tbk PT",
    "Ticker": "DKFT IJ",
    "Identifier": "B87HXG6",
-   "Weight": "1.76",
-   "Market Value": "646543.2",
+   "Weight": "1.8",
+   "Market Value": "604882.77",
    "Shares Held": "14797300",
    "SEDOL": "B87HXG6"
   },
@@ -161,7 +161,7 @@
    "Name": "Global Ferronickel Holdings Inc.",
    "Ticker": "FNI PM",
    "Identifier": "BD59J94",
-   "Weight": "1.47",
+   "Weight": "1.61",
    "Market Value": "540455.16",
    "Shares Held": "22358700",
    "SEDOL": "BD59J94"
@@ -170,8 +170,8 @@
    "Name": "Sherritt International Corp.",
    "Ticker": "S CN",
    "Identifier": "2804158",
-   "Weight": "1.46",
-   "Market Value": "536279.27",
+   "Weight": "1.55",
+   "Market Value": "518829.6",
    "Shares Held": "4372055",
    "SEDOL": "2804158"
   },
@@ -179,8 +179,8 @@
    "Name": "Homeland Nickel Inc.",
    "Ticker": "SHL CN",
    "Identifier": "BPJK425",
-   "Weight": "1.2",
-   "Market Value": "441315.65",
+   "Weight": "1.22",
+   "Market Value": "410598.12",
    "Shares Held": "1656908",
    "SEDOL": "BPJK425"
   },
@@ -188,53 +188,53 @@
    "Name": "First Atlantic Nickel & Cobalt Corp.",
    "Ticker": "FAN CN",
    "Identifier": "BVFCDR5",
-   "Weight": "1.19",
-   "Market Value": "436021.59",
+   "Weight": "1.12",
+   "Market Value": "375026.35",
    "Shares Held": "1131040",
    "SEDOL": "BVFCDR5"
-  },
-  {
-   "Name": "Chalice Mining Ltd.",
-   "Ticker": "CHN AU",
-   "Identifier": "B0ZGW28",
-   "Weight": "0.98",
-   "Market Value": "361357.5",
-   "Shares Held": "496122",
-   "SEDOL": "B0ZGW28"
   },
   {
    "Name": "FPX Nickel Corp.",
    "Ticker": "FPX CN",
    "Identifier": "BF497H3",
-   "Weight": "0.92",
-   "Market Value": "337116.77",
+   "Weight": "1.04",
+   "Market Value": "348174.93",
    "Shares Held": "1781350",
    "SEDOL": "BF497H3"
   },
   {
-   "Name": "Pam Mineral Tbk PT",
-   "Ticker": "NICL IJ",
-   "Identifier": "BP2PSH0",
-   "Weight": "0.84",
-   "Market Value": "307796.34",
-   "Shares Held": "21706800",
-   "SEDOL": "BP2PSH0"
+   "Name": "Chalice Mining Ltd.",
+   "Ticker": "CHN AU",
+   "Identifier": "B0ZGW28",
+   "Weight": "0.96",
+   "Market Value": "323223.88",
+   "Shares Held": "496122",
+   "SEDOL": "B0ZGW28"
   },
   {
    "Name": "Ardea Resources Ltd.",
    "Ticker": "ARL AU",
    "Identifier": "BYMC6G9",
-   "Weight": "0.73",
-   "Market Value": "269144.03",
+   "Weight": "0.8",
+   "Market Value": "266801.25",
    "Shares Held": "1471231",
    "SEDOL": "BYMC6G9"
+  },
+  {
+   "Name": "Pam Mineral Tbk PT",
+   "Ticker": "NICL IJ",
+   "Identifier": "BP2PSH0",
+   "Weight": "0.76",
+   "Market Value": "254883.69",
+   "Shares Held": "21706800",
+   "SEDOL": "BP2PSH0"
   },
   {
    "Name": "Lunnon Metals Ltd.",
    "Ticker": "LM8 AU",
    "Identifier": "BMGD5Q7",
-   "Weight": "0.61",
-   "Market Value": "223609.3",
+   "Weight": "0.6",
+   "Market Value": "200881.98",
    "Shares Held": "1031335",
    "SEDOL": "BMGD5Q7"
   },
@@ -242,8 +242,8 @@
    "Name": "NexMetals Mining Corp.",
    "Ticker": "NEXM CN",
    "Identifier": "BPSNBQ8",
-   "Weight": "0.19",
-   "Market Value": "70239.95",
+   "Weight": "0.17",
+   "Market Value": "57634.33",
    "Shares Held": "63026",
    "SEDOL": "BPSNBQ8"
   },
@@ -251,9 +251,9 @@
    "Name": "Cash Equivalent",
    "Ticker": "",
    "Identifier": "",
-   "Weight": "0.07",
-   "Market Value": "14516.81",
-   "Shares Held": "14516.81",
+   "Weight": "0.03",
+   "Market Value": "13447.24",
+   "Shares Held": "13447.24",
    "SEDOL": ""
   }
  ]
