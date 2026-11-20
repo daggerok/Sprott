@@ -17,125 +17,125 @@
    "Name": "Minerals 260 Ltd",
    "Ticker": "MI6 AU",
    "Identifier": "BMT8S71",
-   "Weight": "5.45",
-   "Market Value": "15751295.16",
+   "Weight": "5.57",
+   "Market Value": "15096770.02",
    "Shares Held": "31691393",
    "SEDOL": "BMT8S71"
-  },
-  {
-   "Name": "Seabridge Gold Inc.",
-   "Ticker": "SA",
-   "Identifier": "BW5VLQ4",
-   "Weight": "5.42",
-   "Market Value": "15653539.65",
-   "Shares Held": "612663",
-   "SEDOL": "BW5VLQ4"
   },
   {
    "Name": "West African Resources Ltd.",
    "Ticker": "WAF AU",
    "Identifier": "B4KBBN0",
-   "Weight": "5.17",
-   "Market Value": "14938773.53",
+   "Weight": "5.26",
+   "Market Value": "14271491.65",
    "Shares Held": "6843659",
    "SEDOL": "B4KBBN0"
-  },
-  {
-   "Name": "Emerald Resources NL",
-   "Ticker": "EMR AU",
-   "Identifier": "6107381",
-   "Weight": "5.07",
-   "Market Value": "14646961.23",
-   "Shares Held": "3299156",
-   "SEDOL": "6107381"
   },
   {
    "Name": "Wesdome Gold Mines Ltd.",
    "Ticker": "WDO CN",
    "Identifier": "B0Y90N5",
-   "Weight": "4.93",
-   "Market Value": "14237740.87",
+   "Weight": "5.13",
+   "Market Value": "13914533.04",
    "Shares Held": "819786",
    "SEDOL": "B0Y90N5"
-  },
-  {
-   "Name": "Allied Gold Corp.",
-   "Ticker": "AAUC CN",
-   "Identifier": "BS5YX69",
-   "Weight": "4.8",
-   "Market Value": "13851604.48",
-   "Shares Held": "700675",
-   "SEDOL": "BS5YX69"
   },
   {
    "Name": "TR Anadolu Metal Madencilik Isletmeleri AS",
    "Ticker": "TRMET TI",
    "Identifier": "B03MVQ5",
-   "Weight": "4.77",
-   "Market Value": "13768441.75",
+   "Weight": "5.1",
+   "Market Value": "13821967.97",
    "Shares Held": "6317040",
    "SEDOL": "B03MVQ5"
+  },
+  {
+   "Name": "Emerald Resources NL",
+   "Ticker": "EMR AU",
+   "Identifier": "6107381",
+   "Weight": "4.92",
+   "Market Value": "13342223.49",
+   "Shares Held": "3299156",
+   "SEDOL": "6107381"
   },
   {
    "Name": "Turk Altin Isletmeleri AS",
    "Ticker": "TRALT TI",
    "Identifier": "B3LP189",
-   "Weight": "4.59",
-   "Market Value": "13268342.3",
+   "Weight": "4.85",
+   "Market Value": "13141604.39",
    "Shares Held": "18604736",
    "SEDOL": "B3LP189"
   },
   {
-   "Name": "Kingsgate Consolidated Ltd.",
-   "Ticker": "KCN AU",
-   "Identifier": "6492731",
-   "Weight": "4.25",
-   "Market Value": "12266707.19",
-   "Shares Held": "4719259",
-   "SEDOL": "6492731"
-  },
-  {
-   "Name": "Ora Banda Mining Ltd.",
-   "Ticker": "OBM AU",
-   "Identifier": "BKDX544",
-   "Weight": "4.25",
-   "Market Value": "12270235.67",
-   "Shares Held": "13945638",
-   "SEDOL": "BKDX544"
-  },
-  {
-   "Name": "Alkane Resources Ltd.",
-   "Ticker": "ALK AU",
-   "Identifier": "6014027",
-   "Weight": "4.13",
-   "Market Value": "11934546.52",
-   "Shares Held": "10421694",
-   "SEDOL": "6014027"
+   "Name": "Allied Gold Corp.",
+   "Ticker": "AAUC CN",
+   "Identifier": "BS5YX69",
+   "Weight": "4.81",
+   "Market Value": "13040584.48",
+   "Shares Held": "700675",
+   "SEDOL": "BS5YX69"
   },
   {
    "Name": "DRDGOLD Ltd.",
    "Ticker": "DRD SJ",
    "Identifier": "6267780",
-   "Weight": "4.12",
-   "Market Value": "11890020.3",
+   "Weight": "4.43",
+   "Market Value": "12013161.75",
    "Shares Held": "5668336",
    "SEDOL": "6267780"
+  },
+  {
+   "Name": "Ora Banda Mining Ltd.",
+   "Ticker": "OBM AU",
+   "Identifier": "BKDX544",
+   "Weight": "4.23",
+   "Market Value": "11474717.8",
+   "Shares Held": "13945638",
+   "SEDOL": "BKDX544"
   },
   {
    "Name": "Fortuna Mining Corp.",
    "Ticker": "FVI CN",
    "Identifier": "BPLQGB4",
-   "Weight": "4.11",
-   "Market Value": "11875676.17",
+   "Weight": "4.22",
+   "Market Value": "11448404.96",
    "Shares Held": "1435654",
    "SEDOL": "BPLQGB4"
+  },
+  {
+   "Name": "Kingsgate Consolidated Ltd.",
+   "Ticker": "KCN AU",
+   "Identifier": "6492731",
+   "Weight": "4.14",
+   "Market Value": "11224802.21",
+   "Shares Held": "4719259",
+   "SEDOL": "6492731"
+  },
+  {
+   "Name": "Alkane Resources Ltd.",
+   "Ticker": "ALK AU",
+   "Identifier": "6014027",
+   "Weight": "4.11",
+   "Market Value": "11144228.86",
+   "Shares Held": "10421694",
+   "SEDOL": "6014027"
+  },
+  {
+   "Name": "Seabridge Gold Inc.",
+   "Ticker": "SA",
+   "Identifier": "BW5VLQ4",
+   "Weight": "4.08",
+   "Market Value": "11064693.78",
+   "Shares Held": "612663",
+   "SEDOL": "BW5VLQ4"
   },
   {
    "Name": "PDI Gold Ltd.",
    "Ticker": "PDI AU",
    "Identifier": "B3N05H9",
-   "Weight": "3.89",
-   "Market Value": "11222593.87",
+   "Weight": "3.98",
+   "Market Value": "10805724.56",
    "Shares Held": "4085326",
    "SEDOL": "B3N05H9"
   },
@@ -143,26 +143,17 @@
    "Name": "Endeavour Silver Corp.",
    "Ticker": "EDR CN",
    "Identifier": "2980003",
-   "Weight": "3.87",
-   "Market Value": "11182171.23",
+   "Weight": "3.82",
+   "Market Value": "10370304.08",
    "Shares Held": "1704151",
    "SEDOL": "2980003"
-  },
-  {
-   "Name": "Hycroft Mining Holding Corp.",
-   "Ticker": "HYMC",
-   "Identifier": "BS70KX1",
-   "Weight": "3.48",
-   "Market Value": "10053593",
-   "Shares Held": "659252",
-   "SEDOL": "BS70KX1"
   },
   {
    "Name": "Tongguan Gold Group Ltd.",
    "Ticker": "340 HK",
    "Identifier": "BFMKZ63",
-   "Weight": "3.44",
-   "Market Value": "9944215.51",
+   "Weight": "3.7",
+   "Market Value": "10039989.8",
    "Shares Held": "35788000",
    "SEDOL": "BFMKZ63"
   },
@@ -170,17 +161,26 @@
    "Name": "Catalyst Metals Ltd.",
    "Ticker": "CYL AU",
    "Identifier": "B17P5V0",
-   "Weight": "3.41",
-   "Market Value": "9848997.07",
+   "Weight": "3.42",
+   "Market Value": "9282523.53",
    "Shares Held": "3656827",
    "SEDOL": "B17P5V0"
+  },
+  {
+   "Name": "Hycroft Mining Holding Corp.",
+   "Ticker": "HYMC",
+   "Identifier": "BS70KX1",
+   "Weight": "3.35",
+   "Market Value": "9084492.56",
+   "Shares Held": "659252",
+   "SEDOL": "BS70KX1"
   },
   {
    "Name": "Perpetua Resources Corp.",
    "Ticker": "PPTA CN",
    "Identifier": "BNNNK40",
-   "Weight": "3.08",
-   "Market Value": "8896256.77",
+   "Weight": "3.02",
+   "Market Value": "8180079.55",
    "Shares Held": "528372",
    "SEDOL": "BNNNK40"
   },
@@ -188,8 +188,8 @@
    "Name": "i-80 Gold Corp.",
    "Ticker": "IAU CN",
    "Identifier": "BN96CD6",
-   "Weight": "2.92",
-   "Market Value": "8427669.48",
+   "Weight": "2.87",
+   "Market Value": "7796071.27",
    "Shares Held": "7406784",
    "SEDOL": "BN96CD6"
   },
@@ -197,8 +197,8 @@
    "Name": "Omai Gold Mines Corp.",
    "Ticker": "OMG CN",
    "Identifier": "BN6KMB9",
-   "Weight": "2.12",
-   "Market Value": "6137642.49",
+   "Weight": "2.1",
+   "Market Value": "5687945.94",
    "Shares Held": "6325525",
    "SEDOL": "BN6KMB9"
   },
@@ -206,35 +206,35 @@
    "Name": "Mineros SA",
    "Ticker": "MSA CN",
    "Identifier": "BP0QM95",
-   "Weight": "1.83",
-   "Market Value": "5285053.92",
+   "Weight": "1.85",
+   "Market Value": "5013626.66",
    "Shares Held": "946388",
    "SEDOL": "BP0QM95"
+  },
+  {
+   "Name": "Philex Mining Corp.",
+   "Ticker": "PX PM",
+   "Identifier": "B1FHVG5",
+   "Weight": "1.64",
+   "Market Value": "4461739.23",
+   "Shares Held": "30916600",
+   "SEDOL": "B1FHVG5"
   },
   {
    "Name": "Bellevue Gold Ltd.",
    "Ticker": "BGL AU",
    "Identifier": "BFZ31P0",
    "Weight": "1.61",
-   "Market Value": "4641409.18",
+   "Market Value": "4380275.02",
    "Shares Held": "4798927",
    "SEDOL": "BFZ31P0"
-  },
-  {
-   "Name": "Philex Mining Corp.",
-   "Ticker": "PX PM",
-   "Identifier": "B1FHVG5",
-   "Weight": "1.53",
-   "Market Value": "4415963.9",
-   "Shares Held": "30916600",
-   "SEDOL": "B1FHVG5"
   },
   {
    "Name": "Orezone Gold Corp.",
    "Ticker": "ORE CN",
    "Identifier": "B5BVW11",
-   "Weight": "1.48",
-   "Market Value": "4282539.61",
+   "Weight": "1.5",
+   "Market Value": "4061622.64",
    "Shares Held": "2801348",
    "SEDOL": "B5BVW11"
   },
@@ -242,8 +242,8 @@
    "Name": "Resolute Mining Ltd.",
    "Ticker": "RSG AU",
    "Identifier": "6410636",
-   "Weight": "1.42",
-   "Market Value": "4109537.25",
+   "Weight": "1.4",
+   "Market Value": "3785312.03",
    "Shares Held": "5463006",
    "SEDOL": "6410636"
   },
@@ -252,7 +252,7 @@
    "Ticker": "CNL CN",
    "Identifier": "BN79Z49",
    "Weight": "1.31",
-   "Market Value": "3777912.16",
+   "Market Value": "3542277.59",
    "Shares Held": "344059",
    "SEDOL": "BN79Z49"
   },
@@ -260,8 +260,8 @@
    "Name": "Rio2 Ltd.",
    "Ticker": "RIO CN",
    "Identifier": "BGC0ML4",
-   "Weight": "1.25",
-   "Market Value": "3621648.67",
+   "Weight": "1.28",
+   "Market Value": "3476179.21",
    "Shares Held": "2236290",
    "SEDOL": "BGC0ML4"
   },
@@ -270,7 +270,7 @@
    "Ticker": "SXGC CN",
    "Identifier": "BTFK8C5",
    "Weight": "1.1",
-   "Market Value": "3168073.21",
+   "Market Value": "2994705.19",
    "Shares Held": "637419",
    "SEDOL": "BTFK8C5"
   },
@@ -278,8 +278,8 @@
    "Name": "McEwen Inc.",
    "Ticker": "MUX",
    "Identifier": "BQGD8H7",
-   "Weight": "1",
-   "Market Value": "2889556.8",
+   "Weight": "0.98",
+   "Market Value": "2670061.62",
    "Shares Held": "277842",
    "SEDOL": "BQGD8H7"
   },
@@ -287,9 +287,9 @@
    "Name": "Cash Equivalent",
    "Ticker": "",
    "Identifier": "",
-   "Weight": "0.2",
-   "Market Value": "605520.23",
-   "Shares Held": "605520.23",
+   "Weight": "0.22",
+   "Market Value": "601749.7",
+   "Shares Held": "601749.7",
    "SEDOL": ""
   }
  ]
