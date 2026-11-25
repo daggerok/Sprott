@@ -2,7 +2,7 @@
  "ticker": "SGDJ",
  "page": 3,
  "pageSize": 1000,
- "totalRows": 2932,
+ "totalRows": 2933,
  "headers": [
   "Date",
   "Close",
@@ -5601,6 +5601,12 @@
    "Close": "64.089996",
    "Adj Close": "64.09",
    "Volume": "86400"
+  },
+  {
+   "Date": "Nov 25 2026",
+   "Close": "66.32",
+   "Adj Close": "66.32",
+   "Volume": "103026"
   }
  ]
 }
