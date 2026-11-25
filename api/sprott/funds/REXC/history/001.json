@@ -2,7 +2,7 @@
  "ticker": "REXC",
  "page": 1,
  "pageSize": 1000,
- "totalRows": 154,
+ "totalRows": 156,
  "headers": [
   "Date",
   "Close",
@@ -932,7 +932,19 @@
    "Date": "Nov 20 2026",
    "Close": "10.48",
    "Adj Close": "10.48",
-   "Volume": "186573"
+   "Volume": "186800"
+  },
+  {
+   "Date": "Nov 23 2026",
+   "Close": "11.08",
+   "Adj Close": "11.08",
+   "Volume": "193500"
+  },
+  {
+   "Date": "Nov 24 2026",
+   "Close": "11.09",
+   "Adj Close": "11.09",
+   "Volume": "63200"
   }
  ]
 }

@@ -17,189 +17,189 @@
    "Name": "Freeport-McMoRan Inc.",
    "Ticker": "FCX",
    "Identifier": "2352118",
-   "Weight": "23.42",
-   "Market Value": "45474264.48",
-   "Shares Held": "925779",
+   "Weight": "23.74",
+   "Market Value": "42405384.39",
+   "Shares Held": "888443",
    "SEDOL": "2352118"
   },
   {
    "Name": "Teck Resources Ltd.",
    "Ticker": "TECK",
    "Identifier": "2124533",
-   "Weight": "11.39",
-   "Market Value": "22114254.46",
-   "Shares Held": "428737",
+   "Weight": "11.62",
+   "Market Value": "20765730.09",
+   "Shares Held": "411447",
    "SEDOL": "2124533"
   },
   {
    "Name": "Antofagasta PLC",
    "Ticker": "ANTO LN",
    "Identifier": "0045614",
-   "Weight": "8.47",
-   "Market Value": "16446417.49",
-   "Shares Held": "450809",
+   "Weight": "8.09",
+   "Market Value": "14443827.86",
+   "Shares Held": "432583",
    "SEDOL": "0045614"
   },
   {
    "Name": "Sprott Physical Copper Trust",
    "Ticker": "COP/U",
    "Identifier": "BRF1V03",
-   "Weight": "6.03",
-   "Market Value": "11697086.3",
-   "Shares Held": "1166210",
+   "Weight": "5.93",
+   "Market Value": "10585929.2",
+   "Shares Held": "1119020",
    "SEDOL": "BRF1V03"
   },
   {
    "Name": "Southern Copper Corp.",
    "Ticker": "SCCO",
    "Identifier": "2823777",
-   "Weight": "4.88",
-   "Market Value": "9472897.56",
-   "Shares Held": "66965.2",
+   "Weight": "4.92",
+   "Market Value": "8794117.85",
+   "Shares Held": "64261",
    "SEDOL": "2823777"
   },
   {
    "Name": "Hudbay Minerals Inc.",
    "Ticker": "HBM",
    "Identifier": "B05BQ98",
-   "Weight": "4.72",
-   "Market Value": "9170133.12",
-   "Shares Held": "530679",
+   "Weight": "4.79",
+   "Market Value": "8564794.46",
+   "Shares Held": "509203",
    "SEDOL": "B05BQ98"
   },
   {
    "Name": "KGHM Polska Miedz SA",
    "Ticker": "KGH PW",
    "Identifier": "5263251",
-   "Weight": "4.72",
-   "Market Value": "9161615.97",
-   "Shares Held": "144861",
+   "Weight": "4.48",
+   "Market Value": "8006817.58",
+   "Shares Held": "139011",
    "SEDOL": "5263251"
   },
   {
    "Name": "Lundin Mining Corp.",
    "Ticker": "LUN CN",
    "Identifier": "2866857",
-   "Weight": "4.42",
-   "Market Value": "8575433.9",
-   "Shares Held": "516687",
+   "Weight": "4.48",
+   "Market Value": "8001599.56",
+   "Shares Held": "495783",
    "SEDOL": "2866857"
   },
   {
    "Name": "First Quantum Minerals Ltd.",
    "Ticker": "FM CN",
    "Identifier": "2347608",
-   "Weight": "4.17",
-   "Market Value": "8094075.34",
-   "Shares Held": "415894",
+   "Weight": "3.82",
+   "Market Value": "6829488.24",
+   "Shares Held": "399072",
    "SEDOL": "2347608"
   },
   {
    "Name": "Sandfire Resources Ltd.",
    "Ticker": "SFR AU",
    "Identifier": "6739739",
-   "Weight": "2.85",
-   "Market Value": "5536143.83",
-   "Shares Held": "492556",
+   "Weight": "3.01",
+   "Market Value": "5374048.14",
+   "Shares Held": "472640",
    "SEDOL": "6739739"
   },
   {
    "Name": "Capstone Copper Corp.",
    "Ticker": "CS CN",
    "Identifier": "BMY5XY9",
-   "Weight": "2.66",
-   "Market Value": "5165797.37",
-   "Shares Held": "856746",
+   "Weight": "2.58",
+   "Market Value": "4603162.77",
+   "Shares Held": "822088",
    "SEDOL": "BMY5XY9"
-  },
-  {
-   "Name": "MMG Ltd.",
-   "Ticker": "1208 HK",
-   "Identifier": "6728793",
-   "Weight": "2.25",
-   "Market Value": "4372465.83",
-   "Shares Held": "5901700",
-   "SEDOL": "6728793"
   },
   {
    "Name": "Amman Mineral Internasional PT",
    "Ticker": "AMMN IJ",
    "Identifier": "BRK2Z98",
-   "Weight": "2.13",
-   "Market Value": "4138485.2",
-   "Shares Held": "23963800",
+   "Weight": "2.33",
+   "Market Value": "4163522.63",
+   "Shares Held": "22994000",
    "SEDOL": "BRK2Z98"
+  },
+  {
+   "Name": "MMG Ltd.",
+   "Ticker": "1208 HK",
+   "Identifier": "6728793",
+   "Weight": "2.28",
+   "Market Value": "4073645.37",
+   "Shares Held": "5693700",
+   "SEDOL": "6728793"
   },
   {
    "Name": "Ivanhoe Mines Ltd.",
    "Ticker": "IVN CN",
    "Identifier": "BD73C40",
-   "Weight": "1.91",
-   "Market Value": "3713419.73",
-   "Shares Held": "815815",
+   "Weight": "1.86",
+   "Market Value": "3329985.96",
+   "Shares Held": "782821",
    "SEDOL": "BD73C40"
   },
   {
    "Name": "ERO Copper Corp.",
    "Ticker": "ERO",
    "Identifier": "BD6D4V2",
-   "Weight": "1.45",
-   "Market Value": "2817481.05",
-   "Shares Held": "120663",
+   "Weight": "1.41",
+   "Market Value": "2518106.25",
+   "Shares Held": "115775",
    "SEDOL": "BD6D4V2"
   },
   {
    "Name": "iShares MSCI India ETF",
    "Ticker": "INDA",
    "Identifier": "B6XGR72",
-   "Weight": "1.23",
-   "Market Value": "2390951.71",
-   "Shares Held": "45971",
+   "Weight": "1.31",
+   "Market Value": "2333006.64",
+   "Shares Held": "44236",
    "SEDOL": "B6XGR72"
-  },
-  {
-   "Name": "Trekor Metals Ltd.",
-   "Ticker": "TGB",
-   "Identifier": "BRSCTS7",
-   "Weight": "1.22",
-   "Market Value": "2373585.39",
-   "Shares Held": "423099",
-   "SEDOL": "BRSCTS7"
   },
   {
    "Name": "Minsur SA",
    "Ticker": "MINSURI1",
    "Identifier": "2595797",
-   "Weight": "1.19",
-   "Market Value": "2308852.97",
-   "Shares Held": "1277200",
+   "Weight": "1.24",
+   "Market Value": "2207531.22",
+   "Shares Held": "1227807",
    "SEDOL": "2595797"
+  },
+  {
+   "Name": "Trekor Metals Ltd.",
+   "Ticker": "TGB",
+   "Identifier": "BRSCTS7",
+   "Weight": "1.24",
+   "Market Value": "2208591.04",
+   "Shares Held": "405991",
+   "SEDOL": "BRSCTS7"
   },
   {
    "Name": "NGEx Minerals Ltd.",
    "Ticker": "NGEX CN",
    "Identifier": "BXQ75J9",
-   "Weight": "1.08",
-   "Market Value": "2092912.37",
-   "Shares Held": "181859",
+   "Weight": "1.1",
+   "Market Value": "1970083.82",
+   "Shares Held": "174501",
    "SEDOL": "BXQ75J9"
   },
   {
    "Name": "ATALAYA MINING COPPER SA",
    "Ticker": "ATYM LN",
    "Identifier": "BYZTVM8",
-   "Weight": "0.91",
-   "Market Value": "1763950.48",
-   "Shares Held": "179784",
+   "Weight": "0.88",
+   "Market Value": "1571179.76",
+   "Shares Held": "172504",
    "SEDOL": "BYZTVM8"
   },
   {
    "Name": "Sociedad Minera Cerro Verde SAA",
    "Ticker": "CVERDEC1",
    "Identifier": "2677929",
-   "Weight": "0.7",
-   "Market Value": "1354314",
-   "Shares Held": "23270",
+   "Weight": "0.69",
+   "Market Value": "1229800",
+   "Shares Held": "22360",
    "SEDOL": "2677929"
   },
   {
@@ -207,8 +207,8 @@
    "Ticker": "",
    "Identifier": "",
    "Weight": "0.59",
-   "Market Value": "1113047.64",
-   "Shares Held": "1113047.64",
+   "Market Value": "1072374.45",
+   "Shares Held": "1072374.45",
    "SEDOL": ""
   },
   {
@@ -216,62 +216,62 @@
    "Ticker": "PUCOBREC",
    "Identifier": "BGPFS63",
    "Weight": "0.43",
-   "Market Value": "830280.68",
-   "Shares Held": "45586",
+   "Market Value": "771590.49",
+   "Shares Held": "43792",
    "SEDOL": "BGPFS63"
-  },
-  {
-   "Name": "Ivanhoe Electric Inc. / US",
-   "Ticker": "IE",
-   "Identifier": "BPF0KH6",
-   "Weight": "0.42",
-   "Market Value": "806405.76",
-   "Shares Held": "140001",
-   "SEDOL": "BPF0KH6"
   },
   {
    "Name": "Amerigo Resources Ltd.",
    "Ticker": "ARG CN",
    "Identifier": "2855822",
    "Weight": "0.41",
-   "Market Value": "803294.31",
-   "Shares Held": "172258",
+   "Market Value": "740524.34",
+   "Shares Held": "165108",
    "SEDOL": "2855822"
   },
   {
    "Name": "FireFly Metals Ltd.",
    "Ticker": "FFM AU",
    "Identifier": "BPDXXB2",
-   "Weight": "0.38",
-   "Market Value": "731247.42",
-   "Shares Held": "918459",
+   "Weight": "0.41",
+   "Market Value": "737503.52",
+   "Shares Held": "881305",
    "SEDOL": "BPDXXB2"
+  },
+  {
+   "Name": "Ivanhoe Electric Inc. / US",
+   "Ticker": "IE",
+   "Identifier": "BPF0KH6",
+   "Weight": "0.41",
+   "Market Value": "738831.5",
+   "Shares Held": "134333",
+   "SEDOL": "BPF0KH6"
   },
   {
    "Name": "Solaris Resources Inc.",
    "Ticker": "SLS CN",
    "Identifier": "BMQ5701",
-   "Weight": "0.38",
-   "Market Value": "745642.18",
-   "Shares Held": "135921",
+   "Weight": "0.36",
+   "Market Value": "648084.48",
+   "Shares Held": "130435",
    "SEDOL": "BMQ5701"
   },
   {
    "Name": "Osisko Metals Inc.",
    "Ticker": "OM CN",
    "Identifier": "BYW9WY0",
-   "Weight": "0.36",
-   "Market Value": "695317.06",
-   "Shares Held": "882745",
+   "Weight": "0.35",
+   "Market Value": "617350.91",
+   "Shares Held": "847047",
    "SEDOL": "BYW9WY0"
   },
   {
    "Name": "Faraday Copper Corp.",
    "Ticker": "FDY CN",
    "Identifier": "BLNNJN8",
-   "Weight": "0.34",
-   "Market Value": "654331.34",
-   "Shares Held": "301834",
+   "Weight": "0.32",
+   "Market Value": "580466.06",
+   "Shares Held": "289614",
    "SEDOL": "BLNNJN8"
   },
   {
@@ -279,107 +279,98 @@
    "Ticker": "VISC SS",
    "Identifier": "BNDXB92",
    "Weight": "0.25",
-   "Market Value": "488275.68",
-   "Shares Held": "327482",
+   "Market Value": "445130.18",
+   "Shares Held": "314222",
    "SEDOL": "BNDXB92"
   },
   {
    "Name": "Marimaca Copper Corp.",
    "Ticker": "MARI CN",
    "Identifier": "BKSCZX5",
-   "Weight": "0.21",
-   "Market Value": "412286.92",
-   "Shares Held": "103043",
+   "Weight": "0.22",
+   "Market Value": "401921.16",
+   "Shares Held": "98883",
    "SEDOL": "BKSCZX5"
   },
   {
-   "Name": "Atex Resources Inc.",
-   "Ticker": "ATX CN",
-   "Identifier": "BJLHNG9",
+   "Name": "Anglo Asian Mining PLC",
+   "Ticker": "AAZ LN",
+   "Identifier": "B0C1817",
    "Weight": "0.2",
-   "Market Value": "381972.73",
-   "Shares Held": "399984",
-   "SEDOL": "BJLHNG9"
+   "Market Value": "348739.09",
+   "Shares Held": "88052",
+   "SEDOL": "B0C1817"
   },
   {
    "Name": "Philex Mining Corp.",
    "Ticker": "PX PM",
    "Identifier": "B1FHVG5",
    "Weight": "0.2",
-   "Market Value": "392494.39",
-   "Shares Held": "2719700",
+   "Market Value": "362990.05",
+   "Shares Held": "2610500",
    "SEDOL": "B1FHVG5"
+  },
+  {
+   "Name": "Regulus Resources Inc.",
+   "Ticker": "REG CN",
+   "Identifier": "BRGW934",
+   "Weight": "0.2",
+   "Market Value": "362770.52",
+   "Shares Held": "128770",
+   "SEDOL": "BRGW934"
   },
   {
    "Name": "Aeris Resources Ltd.",
    "Ticker": "AIS AU",
    "Identifier": "BZ8W0K2",
    "Weight": "0.19",
-   "Market Value": "373715.37",
-   "Shares Held": "1674401",
+   "Market Value": "341463.47",
+   "Shares Held": "1606671",
    "SEDOL": "BZ8W0K2"
   },
   {
-   "Name": "Anglo Asian Mining PLC",
-   "Ticker": "AAZ LN",
-   "Identifier": "B0C1817",
+   "Name": "Atex Resources Inc.",
+   "Ticker": "ATX CN",
+   "Identifier": "BJLHNG9",
    "Weight": "0.19",
-   "Market Value": "363646.69",
-   "Shares Held": "91770",
-   "SEDOL": "B0C1817"
-  },
-  {
-   "Name": "Regulus Resources Inc.",
-   "Ticker": "REG CN",
-   "Identifier": "BRGW934",
-   "Weight": "0.19",
-   "Market Value": "370450.19",
-   "Shares Held": "134204",
-   "SEDOL": "BRGW934"
+   "Market Value": "344286.32",
+   "Shares Held": "383812",
+   "SEDOL": "BJLHNG9"
   },
   {
    "Name": "Atlas Consolidated Mining & Development Corp.",
    "Ticker": "AT PM",
    "Identifier": "BD0R0N4",
    "Weight": "0.18",
-   "Market Value": "353811.15",
-   "Shares Held": "1673900",
+   "Market Value": "327353.82",
+   "Shares Held": "1606300",
    "SEDOL": "BD0R0N4"
-  },
-  {
-   "Name": "Trilogy Metals Inc.",
-   "Ticker": "TMQ",
-   "Identifier": "BD89HT7",
-   "Weight": "0.18",
-   "Market Value": "342006",
-   "Shares Held": "195432",
-   "SEDOL": "BD89HT7"
-  },
-  {
-   "Name": "Central Asia Metals PLC",
-   "Ticker": "CAML LN",
-   "Identifier": "B67KBV2",
-   "Weight": "0.17",
-   "Market Value": "327640.75",
-   "Shares Held": "212324",
-   "SEDOL": "B67KBV2"
   },
   {
    "Name": "Imperial Metals Corp.",
    "Ticker": "III CN",
    "Identifier": "2878937",
    "Weight": "0.17",
-   "Market Value": "335598.47",
-   "Shares Held": "99679",
+   "Market Value": "298285.19",
+   "Shares Held": "95649",
    "SEDOL": "2878937"
+  },
+  {
+   "Name": "Central Asia Metals PLC",
+   "Ticker": "CAML LN",
+   "Identifier": "B67KBV2",
+   "Weight": "0.16",
+   "Market Value": "288577.88",
+   "Shares Held": "203744",
+   "SEDOL": "B67KBV2"
   },
   {
    "Name": "Koryx Copper SA",
    "Ticker": "KRY CN",
    "Identifier": "BV4K983",
-   "Weight": "0.17",
-   "Market Value": "339256.27",
-   "Shares Held": "154507",
+   "Weight": "0.16",
+   "Market Value": "286777.34",
+   "Shares Held": "148267",
    "SEDOL": "BV4K983"
   },
   {
@@ -387,8 +378,8 @@
    "Ticker": "A1M AU",
    "Identifier": "BK9PVF7",
    "Weight": "0.15",
-   "Market Value": "297711.87",
-   "Shares Held": "770427",
+   "Market Value": "267582.02",
+   "Shares Held": "739253",
    "SEDOL": "BK9PVF7"
   },
   {
@@ -396,17 +387,35 @@
    "Ticker": "ALDE CN",
    "Identifier": "BVPW762",
    "Weight": "0.15",
-   "Market Value": "291352.7",
-   "Shares Held": "172006",
+   "Market Value": "268326.26",
+   "Shares Held": "165038",
    "SEDOL": "BVPW762"
+  },
+  {
+   "Name": "PECOY COPPER Corp.",
+   "Ticker": "PCU CN",
+   "Identifier": "BTWQNW1",
+   "Weight": "0.15",
+   "Market Value": "270346.03",
+   "Shares Held": "255477",
+   "SEDOL": "BTWQNW1"
+  },
+  {
+   "Name": "Trilogy Metals Inc.",
+   "Ticker": "TMQ",
+   "Identifier": "BD89HT7",
+   "Weight": "0.15",
+   "Market Value": "268165.04",
+   "Shares Held": "187528",
+   "SEDOL": "BD89HT7"
   },
   {
    "Name": "Blue Moon Metals Inc.",
    "Ticker": "MOON CN",
    "Identifier": "BPCQCN7",
-   "Weight": "0.15",
-   "Market Value": "295308.41",
-   "Shares Held": "109188",
+   "Weight": "0.14",
+   "Market Value": "241554.87",
+   "Shares Held": "104768",
    "SEDOL": "BPCQCN7"
   },
   {
@@ -414,8 +423,8 @@
    "Ticker": "ECU CN",
    "Identifier": "BN93CY8",
    "Weight": "0.14",
-   "Market Value": "264528.3",
-   "Shares Held": "240185",
+   "Market Value": "247104.19",
+   "Shares Held": "230461",
    "SEDOL": "BN93CY8"
   },
   {
@@ -423,44 +432,35 @@
    "Ticker": "ETG CN",
    "Identifier": "BDT74S8",
    "Weight": "0.13",
-   "Market Value": "245711.15",
-   "Shares Held": "159501",
+   "Market Value": "224170.97",
+   "Shares Held": "153053",
    "SEDOL": "BDT74S8"
-  },
-  {
-   "Name": "PECOY COPPER Corp.",
-   "Ticker": "PCU CN",
-   "Identifier": "BTWQNW1",
-   "Weight": "0.13",
-   "Market Value": "259819.74",
-   "Shares Held": "266241",
-   "SEDOL": "BTWQNW1"
-  },
-  {
-   "Name": "Panoro Minerals Ltd.",
-   "Ticker": "PML CN",
-   "Identifier": "2001551",
-   "Weight": "0.12",
-   "Market Value": "224205.33",
-   "Shares Held": "353456",
-   "SEDOL": "2001551"
   },
   {
    "Name": "Hercules Metals Corp.",
    "Ticker": "BIG CN",
    "Identifier": "BR2NNV7",
-   "Weight": "0.11",
-   "Market Value": "221017.48",
-   "Shares Held": "368688",
+   "Weight": "0.13",
+   "Market Value": "230562.05",
+   "Shares Held": "353764",
    "SEDOL": "BR2NNV7"
+  },
+  {
+   "Name": "Panoro Minerals Ltd.",
+   "Ticker": "PML CN",
+   "Identifier": "2001551",
+   "Weight": "0.11",
+   "Market Value": "192519.96",
+   "Shares Held": "339156",
+   "SEDOL": "2001551"
   },
   {
    "Name": "Hot Chili Ltd.",
    "Ticker": "HCH AU",
    "Identifier": "BNRNW06",
    "Weight": "0.1",
-   "Market Value": "185346.2",
-   "Shares Held": "239822",
+   "Market Value": "177291.22",
+   "Shares Held": "230124",
    "SEDOL": "BNRNW06"
   },
   {
@@ -468,8 +468,8 @@
    "Ticker": "29M AU",
    "Identifier": "BNNVRL0",
    "Weight": "0.09",
-   "Market Value": "174273.51",
-   "Shares Held": "1089892",
+   "Market Value": "159750.46",
+   "Shares Held": "1045796",
    "SEDOL": "BNNVRL0"
   },
   {
@@ -477,17 +477,17 @@
    "Ticker": "ANDC CN",
    "Identifier": "BTPN222",
    "Weight": "0.09",
-   "Market Value": "173149.73",
-   "Shares Held": "349860",
+   "Market Value": "155277.03",
+   "Shares Held": "335716",
    "SEDOL": "BTPN222"
   },
   {
    "Name": "Cobre Ltd.",
    "Ticker": "CBE AU",
    "Identifier": "BKX8Q80",
-   "Weight": "0.08",
-   "Market Value": "157178.69",
-   "Shares Held": "1241662",
+   "Weight": "0.09",
+   "Market Value": "154301.61",
+   "Shares Held": "1191430",
    "SEDOL": "BKX8Q80"
   },
   {
@@ -495,8 +495,8 @@
    "Ticker": "KAN AU",
    "Identifier": "BQZCG48",
    "Weight": "0.07",
-   "Market Value": "137529.38",
-   "Shares Held": "242851",
+   "Market Value": "131621.63",
+   "Shares Held": "233153",
    "SEDOL": "BQZCG48"
   },
   {
@@ -504,26 +504,17 @@
    "Ticker": "KGL AU",
    "Identifier": "B066SP2",
    "Weight": "0.07",
-   "Market Value": "132926.12",
-   "Shares Held": "1596113",
+   "Market Value": "120599.25",
+   "Shares Held": "1513199",
    "SEDOL": "B066SP2"
-  },
-  {
-   "Name": "King Copper Discovery Corp.",
-   "Ticker": "KCP CN",
-   "Identifier": "BTJTLW9",
-   "Weight": "0.07",
-   "Market Value": "130360.27",
-   "Shares Held": "406554",
-   "SEDOL": "BTJTLW9"
   },
   {
    "Name": "Los Andes Copper Ltd.",
    "Ticker": "LA CN",
    "Identifier": "BN4GHY7",
    "Weight": "0.07",
-   "Market Value": "130734.61",
-   "Shares Held": "15411",
+   "Market Value": "118859.73",
+   "Shares Held": "14787",
    "SEDOL": "BN4GHY7"
   },
   {
@@ -531,53 +522,71 @@
    "Ticker": "AHR CN",
    "Identifier": "2023094",
    "Weight": "0.06",
-   "Market Value": "115757.7",
-   "Shares Held": "186591",
+   "Market Value": "101637.28",
+   "Shares Held": "179051",
    "SEDOL": "2023094"
-  },
-  {
-   "Name": "Gunnison Copper Corp.",
-   "Ticker": "GCU CN",
-   "Identifier": "BT6MDV4",
-   "Weight": "0.06",
-   "Market Value": "118713.02",
-   "Shares Held": "642663",
-   "SEDOL": "BT6MDV4"
-  },
-  {
-   "Name": "Prospect Resources Ltd.",
-   "Ticker": "PSC AU",
-   "Identifier": "B7740P8",
-   "Weight": "0.06",
-   "Market Value": "121642.22",
-   "Shares Held": "793816",
-   "SEDOL": "B7740P8"
   },
   {
    "Name": "Copper 360 Ltd.",
    "Ticker": "CPR SJ",
    "Identifier": "BQBBB22",
-   "Weight": "0.05",
-   "Market Value": "101286.82",
-   "Shares Held": "2812116",
+   "Weight": "0.06",
+   "Market Value": "98422.03",
+   "Shares Held": "2698340",
    "SEDOL": "BQBBB22"
   },
   {
    "Name": "Copper Fox Metals Inc.",
    "Ticker": "CUU CN",
    "Identifier": "B02SP06",
-   "Weight": "0.05",
-   "Market Value": "105785.85",
-   "Shares Held": "312908",
+   "Weight": "0.06",
+   "Market Value": "102049.34",
+   "Shares Held": "300246",
    "SEDOL": "B02SP06"
+  },
+  {
+   "Name": "Gunnison Copper Corp.",
+   "Ticker": "GCU CN",
+   "Identifier": "BT6MDV4",
+   "Weight": "0.06",
+   "Market Value": "105877.88",
+   "Shares Held": "616663",
+   "SEDOL": "BT6MDV4"
+  },
+  {
+   "Name": "King Copper Discovery Corp.",
+   "Ticker": "KCP CN",
+   "Identifier": "BTJTLW9",
+   "Weight": "0.06",
+   "Market Value": "110717.88",
+   "Shares Held": "390096",
+   "SEDOL": "BTJTLW9"
+  },
+  {
+   "Name": "Kingfisher Metals Corp.",
+   "Ticker": "KFR CN",
+   "Identifier": "BQXNYZ0",
+   "Weight": "0.06",
+   "Market Value": "105479.34",
+   "Shares Held": "160121",
+   "SEDOL": "BQXNYZ0"
+  },
+  {
+   "Name": "Prospect Resources Ltd.",
+   "Ticker": "PSC AU",
+   "Identifier": "B7740P8",
+   "Weight": "0.06",
+   "Market Value": "113824.88",
+   "Shares Held": "761706",
+   "SEDOL": "B7740P8"
   },
   {
    "Name": "Cyprium Metals Ltd.",
    "Ticker": "CYM AU",
    "Identifier": "BJDX9R8",
    "Weight": "0.05",
-   "Market Value": "87887",
-   "Shares Held": "462853",
+   "Market Value": "85541.8",
+   "Shares Held": "444133",
    "SEDOL": "BJDX9R8"
   },
   {
@@ -585,8 +594,8 @@
    "Ticker": "FTZ CN",
    "Identifier": "BPDZ1S1",
    "Weight": "0.05",
-   "Market Value": "97194.52",
-   "Shares Held": "340086",
+   "Market Value": "84744.12",
+   "Shares Held": "326826",
    "SEDOL": "BPDZ1S1"
   },
   {
@@ -594,26 +603,17 @@
    "Ticker": "GLAD CN",
    "Identifier": "BP6JW10",
    "Weight": "0.05",
-   "Market Value": "91243.73",
-   "Shares Held": "124665",
+   "Market Value": "84649.74",
+   "Shares Held": "119595",
    "SEDOL": "BP6JW10"
-  },
-  {
-   "Name": "Kingfisher Metals Corp.",
-   "Ticker": "KFR CN",
-   "Identifier": "BQXNYZ0",
-   "Weight": "0.05",
-   "Market Value": "98876.93",
-   "Shares Held": "166881",
-   "SEDOL": "BQXNYZ0"
   },
   {
    "Name": "Austral Resources Australia Ltd.",
    "Ticker": "AR1 AU",
    "Identifier": "BK80SR4",
    "Weight": "0.04",
-   "Market Value": "70562.11",
-   "Shares Held": "2118190",
+   "Market Value": "64741.41",
+   "Shares Held": "2030830",
    "SEDOL": "BK80SR4"
   },
   {
@@ -621,8 +621,8 @@
    "Ticker": "661 HK",
    "Identifier": "6571180",
    "Weight": "0.04",
-   "Market Value": "87022.09",
-   "Shares Held": "7499200",
+   "Market Value": "78828.63",
+   "Shares Held": "7187200",
    "SEDOL": "6571180"
   },
   {
@@ -630,8 +630,8 @@
    "Ticker": "CGNT CN",
    "Identifier": "BPJJX70",
    "Weight": "0.04",
-   "Market Value": "80894.78",
-   "Shares Held": "178541",
+   "Market Value": "73233.77",
+   "Shares Held": "171313",
    "SEDOL": "BPJJX70"
   },
   {
@@ -639,8 +639,8 @@
    "Ticker": "MMA CN",
    "Identifier": "B2NWY60",
    "Weight": "0.04",
-   "Market Value": "71319.01",
-   "Shares Held": "276525",
+   "Market Value": "70661.97",
+   "Shares Held": "265345",
    "SEDOL": "B2NWY60"
   },
   {
@@ -648,17 +648,26 @@
    "Ticker": "OCO CN",
    "Identifier": "B2QFFL8",
    "Weight": "0.04",
-   "Market Value": "74061.79",
-   "Shares Held": "393515",
+   "Market Value": "71448.06",
+   "Shares Held": "377603",
    "SEDOL": "B2QFFL8"
+  },
+  {
+   "Name": "Valiente Resources Inc",
+   "Ticker": "VALX CN",
+   "Identifier": "BXM4CG0",
+   "Weight": "0.04",
+   "Market Value": "68943.21",
+   "Shares Held": "34886",
+   "SEDOL": "BXM4CG0"
   },
   {
    "Name": "Caravel Minerals Ltd.",
    "Ticker": "CVV AU",
    "Identifier": "B90KY77",
    "Weight": "0.03",
-   "Market Value": "66762.61",
-   "Shares Held": "589451",
+   "Market Value": "60104.03",
+   "Shares Held": "565609",
    "SEDOL": "B90KY77"
   },
   {
@@ -666,8 +675,8 @@
    "Ticker": "INTR CN",
    "Identifier": "BQB5NK6",
    "Weight": "0.03",
-   "Market Value": "48740.9",
-   "Shares Held": "114629",
+   "Market Value": "45482.04",
+   "Shares Held": "110001",
    "SEDOL": "BQB5NK6"
   },
   {
@@ -675,8 +684,8 @@
    "Ticker": "KDK CN",
    "Identifier": "BLTZKP7",
    "Weight": "0.03",
-   "Market Value": "53599.87",
-   "Shares Held": "142397",
+   "Market Value": "49797.48",
+   "Shares Held": "136651",
    "SEDOL": "BLTZKP7"
   },
   {
@@ -684,26 +693,17 @@
    "Ticker": "SCMI CN",
    "Identifier": "BQ3RBY0",
    "Weight": "0.03",
-   "Market Value": "64973.36",
-   "Shares Held": "119501",
+   "Market Value": "59463.96",
+   "Shares Held": "114665",
    "SEDOL": "BQ3RBY0"
-  },
-  {
-   "Name": "Valiente Resources Inc",
-   "Ticker": "VALX CN",
-   "Identifier": "BXM4CG0",
-   "Weight": "0.03",
-   "Market Value": "67433.02",
-   "Shares Held": "36368.2",
-   "SEDOL": "BXM4CG0"
   },
   {
    "Name": "Vizsla Copper Corp.",
    "Ticker": "VCU CN",
    "Identifier": "BVLJ6W6",
    "Weight": "0.02",
-   "Market Value": "36107.05",
-   "Shares Held": "101567",
+   "Market Value": "37624.48",
+   "Shares Held": "97615",
    "SEDOL": "BVLJ6W6"
   },
   {
@@ -711,8 +711,8 @@
    "Ticker": "BRO CN",
    "Identifier": "BKBLBG4",
    "Weight": "0.01",
-   "Market Value": "25526.66",
-   "Shares Held": "215415",
+   "Market Value": "21425.31",
+   "Shares Held": "203819",
    "SEDOL": "BKBLBG4"
   },
   {
@@ -720,8 +720,8 @@
    "Ticker": "SAG CN",
    "Identifier": "BTLN356",
    "Weight": "0.01",
-   "Market Value": "24200.63",
-   "Shares Held": "59859",
+   "Market Value": "20951.23",
+   "Shares Held": "57493",
    "SEDOL": "BTLN356"
   },
   {
@@ -729,8 +729,8 @@
    "Ticker": "CENT CN",
    "Identifier": "BV8CYM4",
    "Weight": "0",
-   "Market Value": "9335.75",
-   "Shares Held": "16333",
+   "Market Value": "7000.43",
+   "Shares Held": "13499",
    "SEDOL": "BV8CYM4"
   }
  ]

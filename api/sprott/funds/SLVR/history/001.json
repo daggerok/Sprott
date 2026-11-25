@@ -2,7 +2,7 @@
  "ticker": "SLVR",
  "page": 1,
  "pageSize": 1000,
- "totalRows": 466,
+ "totalRows": 468,
  "headers": [
   "Date",
   "Close",
@@ -2804,7 +2804,19 @@
    "Date": "Nov 20 2026",
    "Close": "35.34",
    "Adj Close": "35.34",
-   "Volume": "335767"
+   "Volume": "336400"
+  },
+  {
+   "Date": "Nov 23 2026",
+   "Close": "37.360001",
+   "Adj Close": "37.36",
+   "Volume": "223500"
+  },
+  {
+   "Date": "Nov 24 2026",
+   "Close": "36.07",
+   "Adj Close": "36.07",
+   "Volume": "273300"
   }
  ]
 }

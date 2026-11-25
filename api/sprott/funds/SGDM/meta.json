@@ -33,23 +33,23 @@
   "net": 0.46
  },
  "nav": {
-  "display": "$61.11",
-  "value": 61.11,
-  "asOfDate": "Nov 19 2026"
+  "display": "$60.67",
+  "value": 60.67,
+  "asOfDate": "Nov 24 2026"
  },
  "marketPrice": {
-  "display": "$61.06",
-  "value": 61.06,
-  "asOfDate": "Nov 19 2026"
+  "display": "$60.84",
+  "value": 60.84,
+  "asOfDate": "Nov 24 2026"
  },
  "premiumDiscount": {
-  "display": "-0.08%",
-  "value": -0.08
+  "display": "0.28%",
+  "value": 0.28
  },
  "aum": {
-  "display": "$524.29 Million",
-  "value": 524290000,
-  "asOfDate": "Nov 19 2026",
+  "display": "$518.11 Million",
+  "value": 518110000,
+  "asOfDate": "Nov 24 2026",
   "source": "sprottetfs.com fund page (Total Net Asset Value)"
  },
  "yields": {
@@ -150,8 +150,8 @@
   ],
   "pageSize": 250,
   "totalRows": 49,
-  "asOfDate": "2026-11-19",
-  "asOf": "Nov 19 2026",
+  "asOfDate": "2026-11-24",
+  "asOf": "Nov 24 2026",
   "source": "sprottetfs.com \"Download All Holdings\" CSV",
   "status": "available"
  },
@@ -163,8 +163,8 @@
    "history/004.json"
   ],
   "pageSize": 1000,
-  "totalRows": 3109,
-  "asOf": "Nov 20 2026",
+  "totalRows": 3111,
+  "asOf": "Nov 24 2026",
   "source": "Yahoo Finance daily market-price closes / adjusted closes (not official NAV)"
  }
 }
