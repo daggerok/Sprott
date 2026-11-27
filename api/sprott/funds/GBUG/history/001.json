@@ -2,7 +2,7 @@
  "ticker": "GBUG",
  "page": 1,
  "pageSize": 1000,
- "totalRows": 445,
+ "totalRows": 446,
  "headers": [
   "Date",
   "Close",
@@ -2679,6 +2679,12 @@
    "Close": "37.187",
    "Adj Close": "37.19",
    "Volume": "40500"
+  },
+  {
+   "Date": "Nov 27 2026",
+   "Close": "40.130001",
+   "Adj Close": "40.13",
+   "Volume": "21448"
   }
  ]
 }

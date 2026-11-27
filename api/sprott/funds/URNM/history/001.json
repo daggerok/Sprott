@@ -2,7 +2,7 @@
  "ticker": "URNM",
  "page": 1,
  "pageSize": 1000,
- "totalRows": 1754,
+ "totalRows": 1755,
  "headers": [
   "Date",
   "Close",
