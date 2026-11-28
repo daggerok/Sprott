@@ -33,28 +33,28 @@
   "net": 0.75
  },
  "nav": {
-  "display": "$9.34",
-  "value": 9.34,
-  "asOfDate": "Nov 25 2026"
+  "display": "$9.89",
+  "value": 9.89,
+  "asOfDate": "Nov 27 2026"
  },
  "marketPrice": {
-  "display": "$9.43",
-  "value": 9.43,
-  "asOfDate": "Nov 25 2026"
+  "display": "$9.84",
+  "value": 9.84,
+  "asOfDate": "Nov 27 2026"
  },
  "premiumDiscount": {
-  "display": "0.96%",
-  "value": 0.96
+  "display": "-0.51%",
+  "value": -0.51
  },
  "aum": {
-  "display": "$30.53 Million",
-  "value": 30530000,
-  "asOfDate": "Nov 25 2026",
+  "display": "$32.32 Million",
+  "value": 32320000,
+  "asOfDate": "Nov 27 2026",
   "source": "sprottetfs.com fund page (Total Net Asset Value)"
  },
  "yields": {
-  "dividendYield": 4.24,
-  "dividendYieldText": "4.24%",
+  "dividendYield": 4.07,
+  "dividendYieldText": "4.07%",
   "dividendYieldKind": "indicated (latest distribution x payments per year / market price)",
   "secYield": null,
   "secYieldText": "—",
@@ -114,8 +114,8 @@
   ],
   "pageSize": 250,
   "totalRows": 27,
-  "asOfDate": "2026-11-25",
-  "asOf": "Nov 25 2026",
+  "asOfDate": "2026-11-27",
+  "asOf": "Nov 27 2026",
   "source": "sprottetfs.com \"Download All Holdings\" CSV",
   "status": "available"
  },
